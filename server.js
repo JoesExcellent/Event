@@ -3,37 +3,26 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
 const app = express();
-
-/* =========================================================
-   PORT
-========================================================= */
-
-const PORT = process.env.PORT || 8080;
-
-/* =========================================================
-   PATHS
-========================================================= */
+const PORT = process.env.PORT || 3000;
 
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
-
-/* =========================================================
-   CREATE UPLOADS FOLDER
-========================================================= */
 
 if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-/* =========================================================
-   MIDDLEWARE
-========================================================= */
+/* ---------------- MIDDLEWARE ---------------- */
 
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -41,66 +30,59 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(UPLOADS_DIR));
 app.use(express.static(PUBLIC_DIR));
 
-/* =========================================================
-   FIREBASE SETUP
-========================================================= */
+/* ---------------- FIREBASE SETUP ---------------- */
 
 let db = null;
 let bucket = null;
 
 try {
     if (!admin.apps.length) {
-
         let serviceAccount = null;
 
         if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+            serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+        } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+            serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        } else if (fs.existsSync(path.join(__dirname, "serviceAccountKey.json"))) {
+            serviceAccount = require("./serviceAccountKey.json");
+        }
 
-            serviceAccount = JSON.parse(
-                process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
-            );
+        if (!serviceAccount) {
+            throw new Error("Firebase service account is missing.");
+        }
 
-            if (serviceAccount.private_key) {
-                serviceAccount.private_key =
-                    serviceAccount.private_key.replace(/\\n/g, "\n");
-            }
+        if (serviceAccount.private_key) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
         }
 
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || undefined
         });
-
-        db = admin.firestore();
-        bucket = admin.storage().bucket();
-
-        console.log("Firebase connected successfully.");
     }
 
+    db = admin.firestore();
+
+    if (process.env.FIREBASE_STORAGE_BUCKET) {
+        bucket = admin.storage().bucket();
+    }
+
+    console.log("Firebase connected successfully.");
+
 } catch (error) {
-
-    console.error("Firebase initialization error:");
-    console.error(error);
-
+    console.error("Firebase setup error:", error.message);
 }
 
-/* =========================================================
-   MULTER STORAGE
-========================================================= */
+/* ---------------- FILE UPLOAD SETUP ---------------- */
 
 const storage = multer.diskStorage({
-
     destination: (req, file, cb) => {
         cb(null, UPLOADS_DIR);
     },
-
     filename: (req, file, cb) => {
-
-        const uniqueName =
-            Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
-
-        cb(null, uniqueName);
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+        cb(null, `${Date.now()}_${safeName}`);
     }
-
 });
 
 const upload = multer({
@@ -110,206 +92,198 @@ const upload = multer({
     }
 });
 
-/* =========================================================
-   HEALTH CHECK
-========================================================= */
+/* ---------------- HELPERS ---------------- */
 
-app.get("/health", (req, res) => {
+function requireDb(res) {
+    if (!db) {
+        res.status(500).json({
+            success: false,
+            message: "Firestore is not connected."
+        });
+        return false;
+    }
 
-    res.json({
-        success: true,
-        message: "TEMC Recruitment backend is running",
-        firebase: Boolean(db && bucket)
-    });
+    return true;
+}
 
-});
+function createToken(email) {
+    return jwt.sign(
+        { email },
+        process.env.JWT_SECRET || "local-dev-secret",
+        { expiresIn: "12h" }
+    );
+}
 
-/* =========================================================
-   ROOT ROUTE
-========================================================= */
+function verifyAdmin(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+            success: false,
+            message: "No admin token provided."
+        });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        req.admin = jwt.verify(
+            token,
+            process.env.JWT_SECRET || "local-dev-secret"
+        );
+
+        next();
+
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid admin token."
+        });
+    }
+}
+
+/* ---------------- PAGE ROUTES ---------------- */
 
 app.get("/", (req, res) => {
-    res.redirect("/admin");
+    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-/* =========================================================
-   ADMIN PAGE
-========================================================= */
-
-app.get("/admin", (req, res) => {
-
-    res.sendFile(
-        path.join(PUBLIC_DIR, "admin.html")
-    );
-
+app.get("/home", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "home.html"));
 });
-
-/* =========================================================
-   CAREERS PAGE
-========================================================= */
 
 app.get("/careers", (req, res) => {
+    const careersPath = path.join(PUBLIC_DIR, "careers.html");
 
-    res.sendFile(
-        path.join(PUBLIC_DIR, "index.html")
-    );
+    if (fs.existsSync(careersPath)) {
+        return res.sendFile(careersPath);
+    }
 
+    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-/* =========================================================
-   APPLICATION SUBMISSION
-========================================================= */
+app.get("/admin", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
 
-app.post(
-    "/api/apply",
-    upload.fields([
-        { name: "cv", maxCount: 1 },
-        { name: "extraFiles", maxCount: 5 }
-    ]),
-    async (req, res) => {
+app.get("/contact", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "contact us.html"));
+});
 
-        try {
+/* ---------------- HEALTH CHECK ---------------- */
 
-            const {
-                firstName,
-                lastName,
-                email,
-                phone,
-                position,
-                message
-            } = req.body;
+app.get("/health", (req, res) => {
+    res.json({
+        success: true,
+        message: "TEMC recruitment backend is running",
+        firebase: Boolean(db)
+    });
+});
 
-            let cvUrl = "";
-            let extraFileUrls = [];
+/* ---------------- ADMIN LOGIN ---------------- */
 
-            /* =========================================
-               UPLOAD CV TO FIREBASE
-            ========================================= */
+app.post("/api/admin/login", (req, res) => {
+    const { email, password } = req.body;
 
-            if (req.files && req.files.cv && bucket) {
+    const adminEmail = process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com";
+    const adminPassword = process.env.ADMIN_PASSWORD || "password123";
 
-                const cvFile = req.files.cv[0];
-
-                const firebaseFile = bucket.file(
-                    `applications/cv/${Date.now()}-${cvFile.filename}`
-                );
-
-                await bucket.upload(cvFile.path, {
-                    destination: firebaseFile.name
-                });
-
-                await firebaseFile.makePublic();
-
-                cvUrl = `https://storage.googleapis.com/${bucket.name}/${firebaseFile.name}`;
+    if (email === adminEmail && password === adminPassword) {
+        return res.json({
+            success: true,
+            token: createToken(email),
+            admin: {
+                name: "Joseph Eldridge",
+                email: adminEmail,
+                role: "owner"
             }
-
-            /* =========================================
-               UPLOAD EXTRA FILES
-            ========================================= */
-
-            if (
-                req.files &&
-                req.files.extraFiles &&
-                bucket
-            ) {
-
-                for (const file of req.files.extraFiles) {
-
-                    const firebaseFile = bucket.file(
-                        `applications/files/${Date.now()}-${file.filename}`
-                    );
-
-                    await bucket.upload(file.path, {
-                        destination: firebaseFile.name
-                    });
-
-                    await firebaseFile.makePublic();
-
-                    extraFileUrls.push(
-                        `https://storage.googleapis.com/${bucket.name}/${firebaseFile.name}`
-                    );
-                }
-            }
-
-            /* =========================================
-               SAVE TO FIRESTORE
-            ========================================= */
-
-            if (db) {
-
-                await db.collection("applications").add({
-
-                    firstName: firstName || "",
-                    lastName: lastName || "",
-                    email: email || "",
-                    phone: phone || "",
-                    position: position || "",
-                    message: message || "",
-
-                    cvUrl,
-                    extraFileUrls,
-
-                    status: "New",
-                    createdAt: new Date()
-
-                });
-
-            }
-
-            /* =========================================
-               RESPONSE
-            ========================================= */
-
-            res.json({
-                success: true,
-                message: "Application submitted successfully"
-            });
-
-        } catch (error) {
-
-            console.error("Application submission error:");
-            console.error(error);
-
-            res.status(500).json({
-                success: false,
-                message: "Server error submitting application"
-            });
-
-        }
-
+        });
     }
-);
 
-/* =========================================================
-   GET APPLICATIONS
-========================================================= */
+    res.status(401).json({
+        success: false,
+        message: "Invalid login details"
+    });
+});
 
-app.get("/api/applications", async (req, res) => {
+/* ---------------- SUBMIT APPLICATION ---------------- */
 
+app.post("/api/apply", upload.any(), async (req, res) => {
     try {
+        if (!requireDb(res)) return;
 
-        if (!db) {
-            return res.status(500).json({
-                success: false,
-                message: "Firestore not connected"
-            });
-        }
+        const uploadedFiles = req.files || [];
+
+        const cvFile = uploadedFiles.length > 0
+            ? uploadedFiles[0].filename
+            : "";
+
+        const extraFiles = uploadedFiles.length > 1
+            ? uploadedFiles.slice(1).map(file => file.filename)
+            : [];
+
+        const cvUrl = cvFile ? `/uploads/${cvFile}` : "";
+
+        const newApplication = {
+            fullName: req.body.fullName || req.body.name || "",
+            firstName: req.body.firstName || "",
+            lastName: req.body.lastName || "",
+            email: req.body.email || "",
+            phone: req.body.phone || "",
+            position: req.body.position || "",
+            about: req.body.about || req.body.message || "",
+            message: req.body.message || req.body.about || "",
+            cvFile,
+            cvUrl,
+            extraFiles,
+            status: "New",
+            rating: 0,
+            notes: "",
+            favourite: false,
+            interviewDate: "",
+            interviewTime: "",
+            interviewLocation: "",
+            invitationSent: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const docRef = await db.collection("applications").add(newApplication);
+
+        res.json({
+            success: true,
+            message: "Application submitted successfully",
+            application: {
+                id: docRef.id,
+                ...newApplication
+            }
+        });
+
+    } catch (error) {
+        console.error("Application submit error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error submitting application"
+        });
+    }
+});
+
+/* ---------------- GET APPLICATIONS ---------------- */
+
+async function getApplications(req, res) {
+    try {
+        if (!requireDb(res)) return;
 
         const snapshot = await db
             .collection("applications")
             .orderBy("createdAt", "desc")
             .get();
 
-        const applications = [];
-
-        snapshot.forEach(doc => {
-
-            applications.push({
-                id: doc.id,
-                ...doc.data()
-            });
-
-        });
+        const applications = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
         res.json({
             success: true,
@@ -317,63 +291,278 @@ app.get("/api/applications", async (req, res) => {
         });
 
     } catch (error) {
-
-        console.error(error);
+        console.error("Get applications error:", error);
 
         res.status(500).json({
             success: false,
-            message: "Failed to fetch applications"
+            message: "Server error loading applications"
+        });
+    }
+}
+
+app.get("/api/applications", getApplications);
+app.get("/api/admin/applications", verifyAdmin, getApplications);
+
+/* ---------------- UPDATE APPLICATION ---------------- */
+
+app.patch("/api/admin/applications/:id", verifyAdmin, async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        const allowedFields = [
+            "status",
+            "rating",
+            "notes",
+            "favourite",
+            "interviewDate",
+            "interviewTime",
+            "interviewLocation",
+            "invitationSent"
+        ];
+
+        const updates = {};
+
+        allowedFields.forEach(field => {
+            if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+                updates[field] = req.body[field];
+            }
         });
 
-    }
+        updates.updatedAt = new Date().toISOString();
 
+        await db.collection("applications").doc(req.params.id).update(updates);
+
+        res.json({
+            success: true,
+            message: "Application updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Application update error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update application"
+        });
+    }
 });
 
-/* =========================================================
-   START SERVER
-========================================================= */
-app.get("/api/admin/applications", async (req, res) => {
+/* ---------------- OLD UPDATE ROUTES KEPT FOR COMPATIBILITY ---------------- */
+
+app.patch("/api/applications/:id/status", async (req, res) => {
     try {
-        if (!db) {
-            return res.status(500).json({
-                success: false,
-                message: "Firestore not connected"
-            });
-        }
+        if (!requireDb(res)) return;
 
-        const snapshot = await db
-            .collection("applications")
-            .orderBy("createdAt", "desc")
-            .get();
+        await db.collection("applications").doc(req.params.id).update({
+            status: req.body.status || "New",
+            updatedAt: new Date().toISOString()
+        });
 
-        const applications = [];
+        res.json({ success: true });
 
-        snapshot.forEach(doc => {
-            applications.push({
-                id: doc.id,
-                ...doc.data()
-            });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update status"
+        });
+    }
+});
+
+app.patch("/api/applications/:id/rating", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            rating: Number(req.body.rating || 0),
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update rating"
+        });
+    }
+});
+
+app.patch("/api/applications/:id/notes", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            notes: req.body.notes || "",
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to save notes"
+        });
+    }
+});
+
+app.patch("/api/applications/:id/interview", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            interviewDate: req.body.interviewDate || "",
+            interviewTime: req.body.interviewTime || "",
+            interviewLocation: req.body.interviewLocation || "",
+            status: "Interview",
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to save interview details"
+        });
+    }
+});
+
+app.patch("/api/applications/:id/favourite", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            favourite: Boolean(req.body.favourite),
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({ success: true });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update shortlist"
+        });
+    }
+});
+
+/* ---------------- INVITATION ---------------- */
+
+app.post("/api/admin/applications/:id/invite", verifyAdmin, async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            invitationSent: true,
+            status: "Interview Invited",
+            interviewDate: req.body.interviewDate || "",
+            interviewTime: req.body.interviewTime || "",
+            updatedAt: new Date().toISOString()
         });
 
         res.json({
             success: true,
-            applications
+            message: "Interview invitation marked as sent"
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Invitation error:", error);
 
         res.status(500).json({
             success: false,
-            message: "Failed to fetch applications"
+            message: "Failed to update invitation"
         });
     }
 });
+
+app.post("/api/applications/:id/send-invitation", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).update({
+            invitationSent: true,
+            status: "Interview",
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            message: "Interview invitation marked as sent"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to send invitation"
+        });
+    }
+});
+
+/* ---------------- DELETE APPLICATION ---------------- */
+
+app.delete("/api/admin/applications/:id", verifyAdmin, async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).delete();
+
+        res.json({
+            success: true,
+            message: "Candidate deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete candidate"
+        });
+    }
+});
+
+app.delete("/api/applications/:id", async (req, res) => {
+    try {
+        if (!requireDb(res)) return;
+
+        await db.collection("applications").doc(req.params.id).delete();
+
+        res.json({
+            success: true,
+            message: "Candidate deleted successfully"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete candidate"
+        });
+    }
+});
+
+/* ---------------- API 404 ---------------- */
+
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        success: false,
+        message: `API route not found: ${req.originalUrl}`
+    });
+});
+
+/* ---------------- ERROR HANDLER ---------------- */
+
+app.use((err, req, res, next) => {
+    console.error("Server error:", err);
+
+    res.status(500).json({
+        success: false,
+        message: err.message || "Server error"
+    });
+});
+
+/* ---------------- START SERVER ---------------- */
 
 app.listen(PORT, "0.0.0.0", () => {
-
-    console.log(
-        `TEMC Recruitment backend running on port ${PORT}`
-    );
-
+    console.log(`TEMC recruitment backend running on port ${PORT}`);
 });
