@@ -1,0 +1,263 @@
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 280px;
+    max-width: 380px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    animation: slideIn 0.3s ease;
+    opacity: 0.97;
+}
+
+.toast-success { background: #27ae60; }
+.toast-error { background: #c0392b; }
+.toast-info { background: #2980b9; }
+
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #071a2f;
+    color: #ffffff;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.container,
+.dashboard {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card,
+.login-box,
+.application-card {
+    background: #102b4a;
+    padding: 28px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.sub-card {
+    border-top: 1px solid rgba(255,255,255,0.18);
+    padding-top: 14px;
+    margin-top: 14px;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: clamp(32px, 5vw, 48px);
+}
+
+h2, h3, p, label {
+    margin-bottom: 12px;
+}
+
+form,
+.login-box,
+.candidate-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+button {
+    background: #ff6a00;
+    color: #ffffff;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #ff7f24;
+    transform: translateY(-1px);
+}
+
+button.danger,
+.danger {
+    background: #c0392b;
+}
+
+button.danger:hover,
+.danger:hover {
+    background: #e74c3c;
+}
+
+a button {
+    display: inline-block;
+}
+
+.uploadLabel {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.form-message,
+#message,
+#loginMessage {
+    margin-top: 12px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.stats-grid,
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.top-actions,
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.interview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.analytics-bar {
+    width: 100%;
+    background: rgba(255,255,255,0.16);
+    border-radius: 999px;
+    overflow: hidden;
+    height: 16px;
+    margin-bottom: 15px;
+}
+
+.analytics-fill {
+    height: 100%;
+    background: #ff6a00;
+    border-radius: 999px;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.86);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    background: #0d2747;
+    width: 92%;
+    max-width: 1050px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 18px;
+    padding: 28px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+    body { padding: 24px 12px; }
+    .card, .login-box, .application-card { padding: 20px; }
+    .modal-header { flex-direction: column; align-items: flex-start; }
+}
+
+
+/* Invite to Interview modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    z-index: 99998;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    width: min(900px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #0d2747;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 28px;
+    line-height: 42px;
+}
+
+.modal-subtitle {
+    margin: 8px 0 18px;
+    opacity: 0.86;
+}
+
+.invitation-textarea {
+    min-height: 360px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
