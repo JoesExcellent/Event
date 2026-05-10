@@ -13,11 +13,10 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 const PUBLIC_DIR = path.join(__dirname, "public");
 
 /* =====================================================
-   BASIC MIDDLEWARE
+   MIDDLEWARE
 ===================================================== */
 
 app.use(express.json());
@@ -37,27 +36,35 @@ app.use(cors({
    FIREBASE SETUP
 ===================================================== */
 
-if (!admin.apps.length) {
+let db = null;
+let bucket = null;
+
+try {
     const firebaseJson =
         process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ||
         process.env.FIREBASE_SERVICE_ACCOUNT;
 
     if (!firebaseJson) {
-        throw new Error(
-            "Missing Firebase service account variable. Add GOOGLE_APPLICATION_CREDENTIALS_JSON in Railway."
-        );
+        throw new Error("Missing Firebase service account environment variable.");
     }
 
-    const serviceAccount = JSON.parse(firebaseJson);
+    if (!admin.apps.length) {
+        const serviceAccount = JSON.parse(firebaseJson);
 
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-    });
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+        });
+    }
+
+    db = admin.firestore();
+    bucket = admin.storage().bucket();
+
+    console.log("Firebase connected successfully.");
+
+} catch (error) {
+    console.error("Firebase setup error:", error.message);
 }
-
-const db = admin.firestore();
-const bucket = admin.storage().bucket();
 
 /* =====================================================
    STATIC FRONTEND
@@ -84,7 +91,8 @@ app.get("/admin.html", (req, res) => {
 app.get("/health", (req, res) => {
     res.json({
         success: true,
-        message: "TEMC Recruitment backend is running"
+        message: "TEMC Recruitment backend is running",
+        firebase: Boolean(db && bucket)
     });
 });
 
@@ -147,6 +155,18 @@ function authenticateAdmin(req, res, next) {
     }
 }
 
+function requireFirebase(res) {
+    if (!db || !bucket) {
+        res.status(500).json({
+            success: false,
+            message: "Firebase is not connected. Check Railway environment variables."
+        });
+        return false;
+    }
+
+    return true;
+}
+
 /* =====================================================
    ADMIN LOGIN
 ===================================================== */
@@ -154,6 +174,13 @@ function authenticateAdmin(req, res, next) {
 app.post("/api/admin/login", (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || !process.env.JWT_SECRET) {
+            return res.status(500).json({
+                success: false,
+                message: "Admin environment variables are missing."
+            });
+        }
 
         if (!email || !password) {
             return res.status(400).json({
@@ -163,7 +190,7 @@ app.post("/api/admin/login", (req, res) => {
         }
 
         if (
-            email.trim() !== process.env.ADMIN_EMAIL ||
+            email.trim() !== process.env.ADMIN_EMAIL.trim() ||
             password !== process.env.ADMIN_PASSWORD
         ) {
             return res.status(401).json({
@@ -196,6 +223,8 @@ app.post("/api/admin/login", (req, res) => {
 
 app.post("/api/apply", upload.single("cv"), async (req, res) => {
     try {
+        if (!requireFirebase(res)) return;
+
         const {
             fullName,
             email,
@@ -223,7 +252,6 @@ app.post("/api/apply", upload.single("cv"), async (req, res) => {
             .toLowerCase();
 
         const filePath = `cvs/${Date.now()}-${safeOriginalName}`;
-
         const file = bucket.file(filePath);
 
         await file.save(req.file.buffer, {
@@ -281,6 +309,8 @@ app.post("/api/apply", upload.single("cv"), async (req, res) => {
 
 app.get("/api/admin/applications", authenticateAdmin, async (req, res) => {
     try {
+        if (!requireFirebase(res)) return;
+
         const snapshot = await db
             .collection("applications")
             .orderBy("createdAt", "desc")
@@ -316,6 +346,8 @@ app.get("/api/admin/applications", authenticateAdmin, async (req, res) => {
 
 app.patch("/api/admin/applications/:id", authenticateAdmin, async (req, res) => {
     try {
+        if (!requireFirebase(res)) return;
+
         const { id } = req.params;
 
         const allowedFields = [
@@ -363,6 +395,8 @@ app.patch("/api/admin/applications/:id", authenticateAdmin, async (req, res) => 
 
 app.delete("/api/admin/applications/:id", authenticateAdmin, async (req, res) => {
     try {
+        if (!requireFirebase(res)) return;
+
         const { id } = req.params;
 
         await db
@@ -391,6 +425,8 @@ app.delete("/api/admin/applications/:id", authenticateAdmin, async (req, res) =>
 
 app.post("/api/admin/applications/:id/invite", authenticateAdmin, async (req, res) => {
     try {
+        if (!requireFirebase(res)) return;
+
         const { id } = req.params;
         const { interviewDate, interviewTime } = req.body;
 
@@ -444,6 +480,6 @@ app.use((req, res) => {
    START SERVER
 ===================================================== */
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`TEMC Recruitment backend running on port ${PORT}`);
 });
