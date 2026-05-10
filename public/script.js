@@ -1,49 +1,35 @@
-const applicationForm = document.getElementById("applicationForm");
+const form = document.getElementById("applicationForm");
 const messageBox = document.getElementById("message");
 
-function showMessage(message, type = "info") {
-    if (!messageBox) return;
-    messageBox.textContent = message;
-    messageBox.style.color = type === "success" ? "#2ecc71" : type === "error" ? "#ff7675" : "#ffffff";
-}
+const API_URL = window.location.origin;
 
-if (applicationForm) {
-    applicationForm.addEventListener("submit", async event => {
-        event.preventDefault();
-        showMessage("Submitting your application...", "info");
+form.addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-        const formData = new FormData(applicationForm);
-        const cv = formData.get("cv");
+    messageBox.textContent = "Submitting application...";
+    messageBox.style.color = "white";
 
-        if (!cv || !cv.name) {
-            showMessage("Please upload your CV before submitting.", "error");
-            return;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(`${API_URL}/api/apply`, {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            messageBox.textContent = "Application submitted successfully.";
+            messageBox.style.color = "#27ae60";
+            form.reset();
+        } else {
+            messageBox.textContent = result.message || "Failed to submit application.";
+            messageBox.style.color = "#ff4d4d";
         }
-
-        if (cv.size > 10 * 1024 * 1024) {
-            showMessage("Your CV must be under 10MB.", "error");
-            return;
-        }
-
-        try {
-            const response = await fetch("/api/apply", {
-                method: "POST",
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.success) {
-                showMessage(result.message || "Failed to submit application.", "error");
-                return;
-            }
-
-            showMessage("Application submitted successfully.", "success");
-            alert("Application submitted successfully");
-            applicationForm.reset();
-        } catch (error) {
-            console.error("Application submit error:", error);
-            showMessage("Server error. Please try again.", "error");
-        }
-    });
-}
+    } catch (error) {
+        console.error("Submit error:", error);
+        messageBox.textContent = "Server error. Please try again.";
+        messageBox.style.color = "#ff4d4d";
+    }
+});
