@@ -3,13 +3,14 @@
    Railway + Firebase + Custom Domain Ready
 ===================================================== */
 
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const admin = require("firebase-admin");
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,7 +46,7 @@ try {
         process.env.FIREBASE_SERVICE_ACCOUNT;
 
     if (!firebaseJson) {
-        throw new Error("Missing Firebase service account environment variable.");
+        throw new Error("Missing Firebase service account variable.");
     }
 
     if (!admin.apps.length) {
@@ -67,12 +68,16 @@ try {
 }
 
 /* =====================================================
-   STATIC FRONTEND
+   STATIC WEBSITE FILES
 ===================================================== */
 
 app.use(express.static(PUBLIC_DIR));
 
 app.get("/", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.get("/index.html", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
@@ -97,7 +102,7 @@ app.get("/health", (req, res) => {
 });
 
 /* =====================================================
-   FILE UPLOAD SETUP
+   FILE UPLOAD
 ===================================================== */
 
 const upload = multer({
@@ -121,8 +126,21 @@ const upload = multer({
 });
 
 /* =====================================================
-   AUTH HELPERS
+   HELPERS
 ===================================================== */
+
+function firebaseReady(res) {
+    if (!db || !bucket) {
+        res.status(500).json({
+            success: false,
+            message: "Firebase is not connected. Check Railway Variables."
+        });
+
+        return false;
+    }
+
+    return true;
+}
 
 function createAdminToken(email) {
     return jwt.sign(
@@ -153,18 +171,6 @@ function authenticateAdmin(req, res, next) {
             message: "Invalid admin token."
         });
     }
-}
-
-function requireFirebase(res) {
-    if (!db || !bucket) {
-        res.status(500).json({
-            success: false,
-            message: "Firebase is not connected. Check Railway environment variables."
-        });
-        return false;
-    }
-
-    return true;
 }
 
 /* =====================================================
@@ -223,7 +229,7 @@ app.post("/api/admin/login", (req, res) => {
 
 app.post("/api/apply", upload.single("cv"), async (req, res) => {
     try {
-        if (!requireFirebase(res)) return;
+        if (!firebaseReady(res)) return;
 
         const {
             fullName,
@@ -309,7 +315,7 @@ app.post("/api/apply", upload.single("cv"), async (req, res) => {
 
 app.get("/api/admin/applications", authenticateAdmin, async (req, res) => {
     try {
-        if (!requireFirebase(res)) return;
+        if (!firebaseReady(res)) return;
 
         const snapshot = await db
             .collection("applications")
@@ -346,7 +352,7 @@ app.get("/api/admin/applications", authenticateAdmin, async (req, res) => {
 
 app.patch("/api/admin/applications/:id", authenticateAdmin, async (req, res) => {
     try {
-        if (!requireFirebase(res)) return;
+        if (!firebaseReady(res)) return;
 
         const { id } = req.params;
 
@@ -395,7 +401,7 @@ app.patch("/api/admin/applications/:id", authenticateAdmin, async (req, res) => 
 
 app.delete("/api/admin/applications/:id", authenticateAdmin, async (req, res) => {
     try {
-        if (!requireFirebase(res)) return;
+        if (!firebaseReady(res)) return;
 
         const { id } = req.params;
 
@@ -420,12 +426,12 @@ app.delete("/api/admin/applications/:id", authenticateAdmin, async (req, res) =>
 });
 
 /* =====================================================
-   MARK INTERVIEW INVITATION SENT
+   INTERVIEW INVITATION
 ===================================================== */
 
 app.post("/api/admin/applications/:id/invite", authenticateAdmin, async (req, res) => {
     try {
-        if (!requireFirebase(res)) return;
+        if (!firebaseReady(res)) return;
 
         const { id } = req.params;
         const { interviewDate, interviewTime } = req.body;
@@ -453,6 +459,27 @@ app.post("/api/admin/applications/:id/invite", authenticateAdmin, async (req, re
         res.status(500).json({
             success: false,
             message: "Failed to update interview invitation."
+        });
+    }
+});
+
+/* =====================================================
+   DEBUG PUBLIC FILES
+===================================================== */
+
+app.get("/debug-files", (req, res) => {
+    const fs = require("fs");
+
+    try {
+        res.json({
+            success: true,
+            publicDir: PUBLIC_DIR,
+            files: fs.readdirSync(PUBLIC_DIR)
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 });
