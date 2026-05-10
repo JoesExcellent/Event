@@ -4,8 +4,7 @@
    Includes Interview Calendar Scheduling
 ===================================================== */
 
-const API_BASE_URL = "https://event-production-111a.up.railway.app";
-
+const API_BASE_URL = "";
 const loginBox = document.getElementById("loginBox");
 const dashboardContent = document.getElementById("dashboardContent");
 const loginBtn = document.getElementById("loginBtn");
