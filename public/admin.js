@@ -1,6 +1,7 @@
 /* =====================================================
    TEMC RECRUITMENT ADMIN DASHBOARD
    Railway + Firebase Ready
+   Includes Interview Calendar Scheduling
 ===================================================== */
 
 const API_BASE_URL = "https://event-production-111a.up.railway.app";
@@ -88,6 +89,28 @@ function formatDate(value) {
     return isNaN(date.getTime()) ? "Not set" : date.toLocaleString();
 }
 
+function formatInterviewDate(dateValue) {
+    if (!dateValue) return "Not set";
+
+    const date = new Date(`${dateValue}T00:00:00`);
+
+    if (isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+    return date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function formatInterviewTime(timeValue) {
+    if (!timeValue) return "Not set";
+    return timeValue;
+}
+
 function showToast(message, type = "info") {
     let toastContainer = document.getElementById("toastContainer");
 
@@ -112,70 +135,74 @@ function showToast(message, type = "info") {
    LOGIN
 ===================================================== */
 
-loginBtn.addEventListener("click", async () => {
-    const email = document.getElementById("adminEmail").value.trim();
-    const password = document.getElementById("adminPassword").value.trim();
+if (loginBtn) {
+    loginBtn.addEventListener("click", async () => {
+        const email = document.getElementById("adminEmail").value.trim();
+        const password = document.getElementById("adminPassword").value.trim();
 
-    if (!email || !password) {
-        loginMessage.textContent = "Please enter admin email and password.";
-        return;
-    }
-
-    loginMessage.textContent = "Logging in...";
-
-    try {
-        const result = await fetchJSON("/api/admin/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email,
-                password
-            })
-        });
-
-        if (result.success && result.token) {
-            setToken(result.token);
-
-            loginBox.style.display = "none";
-            dashboardContent.style.display = "block";
-
-            adminInfo.innerHTML = `
-                <p>Logged in as: <strong>${escapeHTML(email)}</strong></p>
-            `;
-
-            loginMessage.textContent = "";
-
-            await loadApplications();
-        } else {
-            loginMessage.textContent = result.message || "Invalid login details.";
+        if (!email || !password) {
+            loginMessage.textContent = "Please enter admin email and password.";
+            return;
         }
 
-    } catch (error) {
-        console.error("Login error:", error);
-        loginMessage.textContent = error.message || "Login failed.";
-    }
-});
+        loginMessage.textContent = "Logging in...";
+
+        try {
+            const result = await fetchJSON("/api/admin/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email,
+                    password
+                })
+            });
+
+            if (result.success && result.token) {
+                setToken(result.token);
+
+                loginBox.style.display = "none";
+                dashboardContent.style.display = "block";
+
+                adminInfo.innerHTML = `
+                    <p>Logged in as: <strong>${escapeHTML(email)}</strong></p>
+                `;
+
+                loginMessage.textContent = "";
+
+                await loadApplications();
+            } else {
+                loginMessage.textContent = result.message || "Invalid login details.";
+            }
+
+        } catch (error) {
+            console.error("Login error:", error);
+            loginMessage.textContent = error.message || "Login failed.";
+        }
+    });
+}
 
 /* =====================================================
    LOGOUT
 ===================================================== */
 
-logoutBtn.addEventListener("click", () => {
-    clearToken();
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        clearToken();
 
-    allApplications = [];
+        allApplications = [];
 
-    loginBox.style.display = "block";
-    dashboardContent.style.display = "none";
+        loginBox.style.display = "block";
+        dashboardContent.style.display = "none";
 
-    adminInfo.innerHTML = "";
-    statsContainer.innerHTML = "";
-    applicationsContainer.innerHTML = "";
+        adminInfo.innerHTML = "";
+        statsContainer.innerHTML = "";
+        applicationsContainer.innerHTML = "";
 
-    loginMessage.textContent = "Logged out.";
-});
+        loginMessage.textContent = "Logged out.";
+    });
+}
 
 /* =====================================================
    LOAD APPLICATIONS
@@ -203,6 +230,7 @@ async function loadApplications() {
         allApplications = result.applications || [];
 
         renderStats();
+        renderInterviewCalendar();
         renderApplications(allApplications);
 
     } catch (error) {
@@ -222,11 +250,22 @@ async function loadApplications() {
 
 function renderStats() {
     const total = allApplications.length;
-    const newCount = allApplications.filter(app => app.status === "New").length;
-    const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
+
+    const newCount = allApplications.filter(app =>
+        app.status === "New"
+    ).length;
+
+    const reviewedCount = allApplications.filter(app =>
+        app.status === "Reviewed"
+    ).length;
+
     const interviewCount = allApplications.filter(app =>
         app.status === "To Be Interviewed" ||
         app.status === "Interview Invited"
+    ).length;
+
+    const scheduledCount = allApplications.filter(app =>
+        app.interviewDate && app.interviewTime
     ).length;
 
     statsContainer.innerHTML = `
@@ -250,6 +289,56 @@ function renderStats() {
                 <h3>Interview Stage</h3>
                 <p>${interviewCount}</p>
             </div>
+
+            <div class="stat-card">
+                <h3>Scheduled Interviews</h3>
+                <p>${scheduledCount}</p>
+            </div>
+        </div>
+    `;
+}
+
+/* =====================================================
+   INTERVIEW CALENDAR
+===================================================== */
+
+function renderInterviewCalendar() {
+    const scheduled = allApplications
+        .filter(app => app.interviewDate && app.interviewTime)
+        .sort((a, b) => {
+            const dateA = new Date(`${a.interviewDate}T${a.interviewTime}`);
+            const dateB = new Date(`${b.interviewDate}T${b.interviewTime}`);
+            return dateA - dateB;
+        });
+
+    if (!scheduled.length) {
+        statsContainer.innerHTML += `
+            <div class="application-card">
+                <h2>Interview Calendar</h2>
+                <p>No interviews scheduled yet.</p>
+            </div>
+        `;
+        return;
+    }
+
+    statsContainer.innerHTML += `
+        <div class="application-card">
+            <h2>Interview Calendar</h2>
+
+            ${scheduled.map(app => `
+                <div style="border-bottom:1px solid rgba(255,255,255,0.25);padding:15px 0;">
+                    <strong>${escapeHTML(app.fullName || "Unnamed Candidate")}</strong><br>
+                    <span>Role: ${escapeHTML(app.position || "Not set")}</span><br>
+                    <span>Date: ${escapeHTML(formatInterviewDate(app.interviewDate))}</span><br>
+                    <span>Time: ${escapeHTML(formatInterviewTime(app.interviewTime))}</span><br>
+                    <span>Status: ${escapeHTML(app.status || "New")}</span><br>
+                    ${
+                        app.email
+                            ? `<span>Email: ${escapeHTML(app.email)}</span><br>`
+                            : ""
+                    }
+                </div>
+            `).join("")}
         </div>
     `;
 }
@@ -520,7 +609,9 @@ async function markInvitationSent(id) {
    EXPORT CSV
 ===================================================== */
 
-exportCsvBtn.addEventListener("click", exportCSV);
+if (exportCsvBtn) {
+    exportCsvBtn.addEventListener("click", exportCSV);
+}
 
 function exportCSV() {
     if (!allApplications.length) {
