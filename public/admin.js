@@ -3,10 +3,13 @@
    Railway + Firebase Ready
 ===================================================== */
 
+const API_BASE_URL = "https://event-production-111a.up.railway.app";
+
 const loginBox = document.getElementById("loginBox");
 const dashboardContent = document.getElementById("dashboardContent");
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const exportCsvBtn = document.getElementById("exportCsvBtn");
 const loginMessage = document.getElementById("loginMessage");
 const applicationsContainer = document.getElementById("applications");
 const statsContainer = document.getElementById("stats");
@@ -31,11 +34,15 @@ function clearToken() {
 }
 
 /* =====================================================
-   SAFE JSON FETCH HELPER
+   SAFE API FETCH
 ===================================================== */
 
-async function fetchJSON(url, options = {}) {
-    const response = await fetch(url, options);
+async function fetchJSON(path, options = {}) {
+    const fullUrl = path.startsWith("http")
+        ? path
+        : `${API_BASE_URL}${path}`;
+
+    const response = await fetch(fullUrl, options);
     const text = await response.text();
 
     let data;
@@ -44,7 +51,7 @@ async function fetchJSON(url, options = {}) {
         data = JSON.parse(text);
     } catch (error) {
         throw new Error(
-            `Server returned non-JSON response from ${url}. Response: ${text.slice(0, 120)}`
+            `Server returned non-JSON response from ${fullUrl}. Response: ${text.slice(0, 160)}`
         );
     }
 
@@ -105,81 +112,70 @@ function showToast(message, type = "info") {
    LOGIN
 ===================================================== */
 
-if (loginBtn) {
-    loginBtn.addEventListener("click", async () => {
-        const emailInput = document.getElementById("adminEmail");
-        const passwordInput = document.getElementById("adminPassword");
+loginBtn.addEventListener("click", async () => {
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
 
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
+    if (!email || !password) {
+        loginMessage.textContent = "Please enter admin email and password.";
+        return;
+    }
 
-        if (!email || !password) {
-            loginMessage.textContent = "Please enter admin email and password.";
-            return;
+    loginMessage.textContent = "Logging in...";
+
+    try {
+        const result = await fetchJSON("/api/admin/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email,
+                password
+            })
+        });
+
+        if (result.success && result.token) {
+            setToken(result.token);
+
+            loginBox.style.display = "none";
+            dashboardContent.style.display = "block";
+
+            adminInfo.innerHTML = `
+                <p>Logged in as: <strong>${escapeHTML(email)}</strong></p>
+            `;
+
+            loginMessage.textContent = "";
+
+            await loadApplications();
+        } else {
+            loginMessage.textContent = result.message || "Invalid login details.";
         }
 
-        loginMessage.textContent = "Logging in...";
-
-        try {
-            const result = await fetchJSON("/api/admin/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ email, password })
-            });
-
-            if (result.success && result.token) {
-                setToken(result.token);
-
-                loginBox.style.display = "none";
-                dashboardContent.style.display = "block";
-
-                if (adminInfo) {
-                    adminInfo.innerHTML = `
-                        <p>Logged in as: <strong>${escapeHTML(email)}</strong></p>
-                    `;
-                }
-
-                loginMessage.textContent = "";
-                await loadApplications();
-            } else {
-                loginMessage.textContent = result.message || "Invalid login details.";
-            }
-
-        } catch (error) {
-            console.error("Login error:", error);
-            loginMessage.textContent = error.message || "Login failed.";
-        }
-    });
-}
+    } catch (error) {
+        console.error("Login error:", error);
+        loginMessage.textContent = error.message || "Login failed.";
+    }
+});
 
 /* =====================================================
    LOGOUT
 ===================================================== */
 
-if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-        clearToken();
+logoutBtn.addEventListener("click", () => {
+    clearToken();
 
-        dashboardContent.style.display = "none";
-        loginBox.style.display = "block";
+    allApplications = [];
 
-        if (applicationsContainer) {
-            applicationsContainer.innerHTML = "";
-        }
+    loginBox.style.display = "block";
+    dashboardContent.style.display = "none";
 
-        if (statsContainer) {
-            statsContainer.innerHTML = "";
-        }
+    adminInfo.innerHTML = "";
+    statsContainer.innerHTML = "";
+    applicationsContainer.innerHTML = "";
 
-        if (adminInfo) {
-            adminInfo.innerHTML = "";
-        }
-
-        loginMessage.textContent = "Logged out.";
-    });
-}
+    loginMessage.textContent = "Logged out.";
+});
 
 /* =====================================================
    LOAD APPLICATIONS
@@ -213,7 +209,7 @@ async function loadApplications() {
         console.error("Load applications error:", error);
 
         applicationsContainer.innerHTML = `
-            <p style="color:#ff6b6b;font-weight:bold;">
+            <p class="error-message">
                 ${escapeHTML(error.message)}
             </p>
         `;
@@ -225,8 +221,6 @@ async function loadApplications() {
 ===================================================== */
 
 function renderStats() {
-    if (!statsContainer) return;
-
     const total = allApplications.length;
     const newCount = allApplications.filter(app => app.status === "New").length;
     const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
@@ -236,25 +230,25 @@ function renderStats() {
     ).length;
 
     statsContainer.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin:30px 0;">
-            <div class="application-card">
+        <div class="stats-grid">
+            <div class="stat-card">
                 <h3>Total Applications</h3>
-                <p style="font-size:34px;font-weight:bold;">${total}</p>
+                <p>${total}</p>
             </div>
 
-            <div class="application-card">
+            <div class="stat-card">
                 <h3>New</h3>
-                <p style="font-size:34px;font-weight:bold;">${newCount}</p>
+                <p>${newCount}</p>
             </div>
 
-            <div class="application-card">
+            <div class="stat-card">
                 <h3>Reviewed</h3>
-                <p style="font-size:34px;font-weight:bold;">${reviewedCount}</p>
+                <p>${reviewedCount}</p>
             </div>
 
-            <div class="application-card">
+            <div class="stat-card">
                 <h3>Interview Stage</h3>
-                <p style="font-size:34px;font-weight:bold;">${interviewCount}</p>
+                <p>${interviewCount}</p>
             </div>
         </div>
     `;
@@ -265,8 +259,6 @@ function renderStats() {
 ===================================================== */
 
 function renderApplications(applications) {
-    if (!applicationsContainer) return;
-
     if (!applications.length) {
         applicationsContainer.innerHTML = "<p>No applications found yet.</p>";
         return;
@@ -289,7 +281,7 @@ function renderApplications(applications) {
 
                 ${
                     app.cvUrl
-                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank" style="color:orange;font-weight:bold;">View CV</a></p>`
+                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank">View CV</a></p>`
                         : `<p>No CV uploaded</p>`
                 }
 
@@ -321,18 +313,18 @@ function renderApplications(applications) {
                 <label>Interview Time</label>
                 <input type="time" id="interviewTime-${id}" value="${escapeHTML(app.interviewTime || "")}">
 
-                <button onclick="saveApplication('${id}')">Save Updates</button>
-                <button onclick="openInterviewTemplate('${id}')">Invite to Interview</button>
-                <button onclick="deleteApplication('${id}')">Delete Candidate</button>
+                <button type="button" onclick="saveApplication('${id}')">Save Updates</button>
+                <button type="button" onclick="openInterviewTemplate('${id}')">Invite to Interview</button>
+                <button type="button" onclick="deleteApplication('${id}')">Delete Candidate</button>
 
                 <div id="template-${id}" style="display:none;margin-top:25px;">
                     <h3>Interview Invitation Template</h3>
 
                     <textarea id="emailTemplate-${id}" style="min-height:270px;"></textarea>
 
-                    <button onclick="copyInterviewTemplate('${id}')">Copy Template</button>
-                    <button onclick="openEmailClient('${id}')">Open Email</button>
-                    <button onclick="markInvitationSent('${id}')">Mark Invitation Sent</button>
+                    <button type="button" onclick="copyInterviewTemplate('${id}')">Copy Template</button>
+                    <button type="button" onclick="openEmailClient('${id}')">Open Email</button>
+                    <button type="button" onclick="markInvitationSent('${id}')">Mark Invitation Sent</button>
                 </div>
             </div>
         `;
@@ -525,8 +517,10 @@ async function markInvitationSent(id) {
 }
 
 /* =====================================================
-   CSV EXPORT
+   EXPORT CSV
 ===================================================== */
+
+exportCsvBtn.addEventListener("click", exportCSV);
 
 function exportCSV() {
     if (!allApplications.length) {
@@ -561,7 +555,11 @@ function exportCSV() {
     ]);
 
     const csvContent = [headers, ...rows]
-        .map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(","))
+        .map(row =>
+            row.map(value =>
+                `"${String(value).replaceAll('"', '""')}"`
+            ).join(",")
+        )
         .join("\n");
 
     const blob = new Blob([csvContent], {
