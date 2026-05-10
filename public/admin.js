@@ -519,7 +519,7 @@ function openInterviewTemplate(id) {
 
 Dear ${app.fullName || "Candidate"},
 
-Thank you for applying for the role of ${app.position || "the advertised position"} with The Excellent Management Company.
+Thank you for applying for the role of ${app.position || "the advertised position"} with Joe's Excellent Events Management.
 
 We are pleased to invite you to attend an interview.
 
@@ -537,7 +537,7 @@ We look forward to meeting you.
 
 Kind regards,
 
-The Excellent Management Company
+The Joe's Excellent Events Management Company
 Recruitment Team`;
 
     templateArea.value = template;
@@ -571,8 +571,10 @@ function openEmailClient(id) {
 
     const body = encodeURIComponent(templateArea.value);
 
-    window.location.href = `mailto:${app.email}?subject=${subject}&body=${body}`;
-}
+   window.open(
+    `mailto:${app.email}?subject=${subject}&body=${body}`,
+    "_blank"
+);
 
 async function markInvitationSent(id) {
     const token = getToken();
@@ -668,6 +670,13 @@ function exportCSV() {
    AUTO START
 ===================================================== */
 
+function goToAdmin() {
+    window.location.href = "/admin";
+}
+
+function goToCareers() {
+    window.location.href = "/careers";
+}
 document.addEventListener("DOMContentLoaded", async () => {
     const token = getToken();
 
