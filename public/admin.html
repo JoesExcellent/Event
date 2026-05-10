@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMC Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+    <div id="toastContainer"></div>
+
+    <main class="dashboard">
+        <h1>TEMC Recruitment Dashboard</h1>
+
+        <section id="loginBox" class="login-box">
+            <h2>Admin Login</h2>
+            <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="username" required>
+            <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password" required>
+            <button id="loginBtn" type="button">Login</button>
+            <p id="loginMessage" class="form-message"></p>
+        </section>
+
+        <section id="dashboardContent" style="display:none;">
+            <div class="top-actions">
+                <button id="logoutBtn" type="button">Logout</button>
+                <button id="exportCsvBtn" type="button">Export CSV</button>
+            </div>
+            <div id="adminInfo"></div>
+            <div id="stats"></div>
+            <div id="applications"></div>
+        </section>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+</html>

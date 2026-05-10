@@ -1,1 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMC Recruitment System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="container">
+        <section class="card">
+            <h1>Apply Now</h1>
 
+            <form id="applicationForm" enctype="multipart/form-data">
+                <input type="text" name="fullName" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="tel" name="phone" placeholder="Phone Number" required>
+                <input type="text" name="position" placeholder="Position Applying For" required>
+                <textarea name="about" placeholder="Tell us about yourself"></textarea>
+
+                <label class="uploadLabel" for="cvUpload">Upload CV</label>
+                <input id="cvUpload" type="file" name="cv" accept=".pdf,.doc,.docx" required>
+
+                <button type="submit">Submit Application</button>
+            </form>
+
+            <div id="message" class="form-message"></div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
