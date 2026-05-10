@@ -332,6 +332,43 @@ app.get("/api/applications", async (req, res) => {
 /* =========================================================
    START SERVER
 ========================================================= */
+app.get("/api/admin/applications", async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({
+                success: false,
+                message: "Firestore not connected"
+            });
+        }
+
+        const snapshot = await db
+            .collection("applications")
+            .orderBy("createdAt", "desc")
+            .get();
+
+        const applications = [];
+
+        snapshot.forEach(doc => {
+            applications.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        res.json({
+            success: true,
+            applications
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch applications"
+        });
+    }
+});
 
 app.listen(PORT, "0.0.0.0", () => {
 
