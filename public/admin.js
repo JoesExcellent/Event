@@ -59,10 +59,6 @@ function isRecruiter() {
     return currentAdmin?.role === "recruiter";
 }
 
-function isViewer() {
-    return currentAdmin?.role === "viewer";
-}
-
 function canEdit() {
     return isOwner() || isRecruiter();
 }
@@ -83,15 +79,14 @@ function canInvite() {
 
 async function fetchJSON(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, options);
-
     const text = await response.text();
 
     let data;
 
     try {
         data = JSON.parse(text);
-    } catch (error) {
-        throw new Error(`Server returned invalid JSON.`);
+    } catch {
+        throw new Error("Server returned invalid JSON.");
     }
 
     if (!response.ok) {
@@ -116,11 +111,9 @@ function escapeHTML(value) {
 
 function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
-
     if (!toastContainer) return;
 
     const toast = document.createElement("div");
-
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
@@ -169,37 +162,23 @@ async function loginAdmin() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                email,
-                password
-            })
+            body: JSON.stringify({ email, password })
         });
 
-        if (!result.success || !result.token) {
-            loginMessage.textContent = result.message || "Invalid login details.";
-            return;
-        }
-
         setToken(result.token);
-
         currentAdmin = result.admin || null;
-
         setAdmin(currentAdmin);
 
         loginBox.style.display = "none";
         dashboardContent.style.display = "block";
-
-        renderAdminInfo();
-
         loginMessage.textContent = "";
 
+        renderAdminInfo();
         await loadApplications();
 
     } catch (error) {
         console.error("Login error:", error);
-
-        loginMessage.textContent =
-            error.message || "Login failed.";
+        loginMessage.textContent = error.message || "Login failed.";
     }
 }
 
@@ -239,7 +218,6 @@ async function restoreSavedLogin() {
     dashboardContent.style.display = "block";
 
     renderAdminInfo();
-
     await loadApplications();
 }
 
@@ -251,11 +229,8 @@ function renderAdminInfo() {
     adminInfo.innerHTML = `
         <div class="application-card">
             <h2>Admin Information</h2>
-
             <p><strong>Name:</strong> ${escapeHTML(currentAdmin.name || "Unknown")}</p>
-
             <p><strong>Email:</strong> ${escapeHTML(currentAdmin.email || "")}</p>
-
             <p><strong>Role:</strong>
                 <span style="color:#ff9900;text-transform:uppercase;">
                     ${escapeHTML(currentAdmin.role || "viewer")}
@@ -264,10 +239,8 @@ function renderAdminInfo() {
         </div>
     `;
 
-    if (!canExport() && exportCsvBtn) {
-        exportCsvBtn.style.display = "none";
-    } else if (exportCsvBtn) {
-        exportCsvBtn.style.display = "inline-block";
+    if (exportCsvBtn) {
+        exportCsvBtn.style.display = canExport() ? "inline-block" : "none";
     }
 }
 
@@ -282,8 +255,7 @@ async function loadApplications() {
         return;
     }
 
-    applicationsContainer.innerHTML =
-        "<p>Loading applications...</p>";
+    applicationsContainer.innerHTML = "<p>Loading applications...</p>";
 
     try {
         const result = await fetchJSON("/api/admin/applications", {
@@ -296,15 +268,14 @@ async function loadApplications() {
         allApplications = result.applications || [];
 
         renderStats();
-        renderApplications(allApplications);
+        renderFilters();
+        applyFilters();
 
     } catch (error) {
         console.error("Load applications error:", error);
 
         applicationsContainer.innerHTML = `
-            <p class="error-message">
-                ${escapeHTML(error.message)}
-            </p>
+            <p class="error-message">${escapeHTML(error.message)}</p>
         `;
     }
 }
@@ -313,74 +284,168 @@ async function loadApplications() {
 
 function renderStats() {
     const total = allApplications.length;
-
-    const newCount = allApplications.filter(
-        app => app.status === "New"
+    const newCount = allApplications.filter(app => app.status === "New").length;
+    const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
+    const interviewCount = allApplications.filter(app =>
+        app.status === "To Be Interviewed" ||
+        app.status === "Interview Invited"
     ).length;
-
-    const reviewedCount = allApplications.filter(
-        app => app.status === "Reviewed"
-    ).length;
-
-    const interviewCount = allApplications.filter(
-        app =>
-            app.status === "To Be Interviewed" ||
-            app.status === "Interview Invited"
-    ).length;
-
-    const hiredCount = allApplications.filter(
-        app => app.status === "Hired"
-    ).length;
+    const hiredCount = allApplications.filter(app => app.status === "Hired").length;
 
     statsContainer.innerHTML = `
         <div class="stats-grid">
-
-            <div class="stat-card">
-                <h3>Total Applications</h3>
-                <p>${total}</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>New</h3>
-                <p>${newCount}</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Reviewed</h3>
-                <p>${reviewedCount}</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Interview Stage</h3>
-                <p>${interviewCount}</p>
-            </div>
-
-            <div class="stat-card">
-                <h3>Hired</h3>
-                <p>${hiredCount}</p>
-            </div>
-
+            <div class="stat-card"><h3>Total Applications</h3><p>${total}</p></div>
+            <div class="stat-card"><h3>New</h3><p>${newCount}</p></div>
+            <div class="stat-card"><h3>Reviewed</h3><p>${reviewedCount}</p></div>
+            <div class="stat-card"><h3>Interview Stage</h3><p>${interviewCount}</p></div>
+            <div class="stat-card"><h3>Hired</h3><p>${hiredCount}</p></div>
         </div>
     `;
+}
+
+/* ---------------- SEARCH + FILTERS ---------------- */
+
+function renderFilters() {
+    let filterBox = document.getElementById("filterBox");
+
+    if (!filterBox) {
+        filterBox = document.createElement("div");
+        filterBox.id = "filterBox";
+        filterBox.className = "application-card";
+
+        applicationsContainer.parentNode.insertBefore(
+            filterBox,
+            applicationsContainer
+        );
+    }
+
+    const positions = [
+        ...new Set(
+            allApplications
+                .map(app => app.position)
+                .filter(Boolean)
+        )
+    ].sort();
+
+    filterBox.innerHTML = `
+        <h2>Search & Filters</h2>
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name, email, phone or position"
+            oninput="applyFilters()"
+        >
+
+        <label>Status</label>
+        <select id="statusFilter" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="Reviewed">Reviewed</option>
+            <option value="To Be Interviewed">To Be Interviewed</option>
+            <option value="Interview Invited">Interview Invited</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Hired">Hired</option>
+        </select>
+
+        <label>Rating</label>
+        <select id="ratingFilter" onchange="applyFilters()">
+            <option value="">All Ratings</option>
+            <option value="0">0 Stars</option>
+            <option value="1">1 Star</option>
+            <option value="2">2 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="5">5 Stars</option>
+        </select>
+
+        <label>Position</label>
+        <select id="positionFilter" onchange="applyFilters()">
+            <option value="">All Positions</option>
+            ${positions.map(position => `
+                <option value="${escapeHTML(position)}">
+                    ${escapeHTML(position)}
+                </option>
+            `).join("")}
+        </select>
+
+        <button type="button" onclick="clearFilters()">Clear Filters</button>
+
+        <p id="filterCount" style="font-weight:bold;color:#ff9900;"></p>
+    `;
+}
+
+function applyFilters() {
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const ratingFilter = document.getElementById("ratingFilter");
+    const positionFilter = document.getElementById("positionFilter");
+    const filterCount = document.getElementById("filterCount");
+
+    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const statusValue = statusFilter ? statusFilter.value : "";
+    const ratingValue = ratingFilter ? ratingFilter.value : "";
+    const positionValue = positionFilter ? positionFilter.value : "";
+
+    const filteredApplications = allApplications.filter(app => {
+        const searchableText = `
+            ${app.fullName || ""}
+            ${app.email || ""}
+            ${app.phone || ""}
+            ${app.position || ""}
+            ${app.about || ""}
+        `.toLowerCase();
+
+        const matchesSearch =
+            !searchValue || searchableText.includes(searchValue);
+
+        const matchesStatus =
+            !statusValue || app.status === statusValue;
+
+        const matchesRating =
+            ratingValue === "" || Number(app.rating || 0) === Number(ratingValue);
+
+        const matchesPosition =
+            !positionValue || app.position === positionValue;
+
+        return matchesSearch && matchesStatus && matchesRating && matchesPosition;
+    });
+
+    if (filterCount) {
+        filterCount.textContent =
+            `Showing ${filteredApplications.length} of ${allApplications.length} applications`;
+    }
+
+    renderApplications(filteredApplications);
+}
+
+function clearFilters() {
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const ratingFilter = document.getElementById("ratingFilter");
+    const positionFilter = document.getElementById("positionFilter");
+
+    if (searchInput) searchInput.value = "";
+    if (statusFilter) statusFilter.value = "";
+    if (ratingFilter) ratingFilter.value = "";
+    if (positionFilter) positionFilter.value = "";
+
+    applyFilters();
 }
 
 /* ---------------- RENDER APPLICATIONS ---------------- */
 
 function renderApplications(applications) {
-
     if (!applications.length) {
-        applicationsContainer.innerHTML =
-            "<p>No applications found.</p>";
+        applicationsContainer.innerHTML = "<p>No applications found.</p>";
         return;
     }
 
     applicationsContainer.innerHTML = applications.map(app => {
-
         const id = escapeHTML(app.id);
 
         return `
             <div class="application-card">
-
                 <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
 
                 <div class="card-image-placeholder">
@@ -388,402 +453,133 @@ function renderApplications(applications) {
                 </div>
 
                 <div class="text-placeholder">
-                    Add recruiter observations,
-                    candidate summary notes,
-                    assessment information and
-                    interview highlights here.
+                    Add recruiter observations, candidate summary notes,
+                    assessment information and interview highlights here.
                 </div>
 
                 <p><strong>Email:</strong> ${escapeHTML(app.email)}</p>
-
                 <p><strong>Phone:</strong> ${escapeHTML(app.phone)}</p>
-
                 <p><strong>Position:</strong> ${escapeHTML(app.position)}</p>
-
                 <p><strong>About:</strong> ${escapeHTML(app.about)}</p>
-
                 <p><strong>Status:</strong> ${escapeHTML(app.status || "New")}</p>
-
                 <p><strong>Rating:</strong> ${escapeHTML(app.rating || 0)} / 5</p>
-
                 <p><strong>Applied:</strong> ${formatDate(app.createdAt)}</p>
 
                 ${
                     app.cvUrl
-                        ? `<p>
-                            <a href="${escapeHTML(app.cvUrl)}" target="_blank">
-                                View CV
-                            </a>
-                           </p>`
+                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank">View CV</a></p>`
                         : `<p>No CV uploaded</p>`
                 }
 
                 <label>Status</label>
-
                 <select id="status-${id}" ${!canEdit() ? "disabled" : ""}>
-
                     <option value="New" ${app.status === "New" ? "selected" : ""}>New</option>
-
                     <option value="Reviewed" ${app.status === "Reviewed" ? "selected" : ""}>Reviewed</option>
-
                     <option value="To Be Interviewed" ${app.status === "To Be Interviewed" ? "selected" : ""}>To Be Interviewed</option>
-
                     <option value="Interview Invited" ${app.status === "Interview Invited" ? "selected" : ""}>Interview Invited</option>
-
                     <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
-
                     <option value="Hired" ${app.status === "Hired" ? "selected" : ""}>Hired</option>
-
                 </select>
 
                 <label>Rating</label>
-
                 <select id="rating-${id}" ${!canEdit() ? "disabled" : ""}>
-
                     ${[0,1,2,3,4,5].map(num => `
-                        <option
-                            value="${num}"
-                            ${Number(app.rating || 0) === num ? "selected" : ""}
-                        >
+                        <option value="${num}" ${Number(app.rating || 0) === num ? "selected" : ""}>
                             ${num}
                         </option>
                     `).join("")}
-
                 </select>
 
                 <label>Notes</label>
-
-                <textarea
-                    id="notes-${id}"
-                    ${!canEdit() ? "readonly" : ""}
-                >${escapeHTML(app.notes || "")}</textarea>
+                <textarea id="notes-${id}" ${!canEdit() ? "readonly" : ""}>${escapeHTML(app.notes || "")}</textarea>
 
                 <label>Interview Date</label>
-
-                <input
-                    type="date"
-                    id="interviewDate-${id}"
-                    value="${escapeHTML(app.interviewDate || "")}"
-                    ${!canEdit() ? "disabled" : ""}
-                >
+                <input type="date" id="interviewDate-${id}" value="${escapeHTML(app.interviewDate || "")}" ${!canEdit() ? "disabled" : ""}>
 
                 <label>Interview Time</label>
+                <input type="time" id="interviewTime-${id}" value="${escapeHTML(app.interviewTime || "")}" ${!canEdit() ? "disabled" : ""}>
 
-                <input
-                    type="time"
-                    id="interviewTime-${id}"
-                    value="${escapeHTML(app.interviewTime || "")}"
-                    ${!canEdit() ? "disabled" : ""}
-                >
-
-                ${
-                    canEdit()
-                    ? `
-                        <button
-                            type="button"
-                            onclick="saveApplication('${id}')"
-                        >
-                            Save Updates
-                        </button>
-                    `
-                    : ""
-                }
-
-                ${
-                    canInvite()
-                    ? `
-                        <button
-                            type="button"
-                            onclick="openInterviewTemplate('${id}')"
-                        >
-                            Invite to Interview
-                        </button>
-                    `
-                    : ""
-                }
-
-                ${
-                    canDelete()
-                    ? `
-                        <button
-                            type="button"
-                            onclick="deleteApplication('${id}')"
-                        >
-                            Delete Candidate
-                        </button>
-                    `
-                    : ""
-                }
-
-                <div
-                    id="template-${id}"
-                    style="display:none;margin-top:25px;"
-                >
-
-                    <h3>Interview Invitation Template</h3>
-
-                    <textarea
-                        id="emailTemplate-${id}"
-                        style="min-height:270px;"
-                    ></textarea>
-
-                    <button
-                        type="button"
-                        onclick="copyInterviewTemplate('${id}')"
-                    >
-                        Copy Template
-                    </button>
-
-                    <button
-                        type="button"
-                        onclick="openEmailClient('${id}')"
-                    >
-                        Open Email
-                    </button>
-
-                </div>
-
+                ${canEdit() ? `<button type="button" onclick="saveApplication('${id}')">Save Updates</button>` : ""}
+                ${canInvite() ? `<button type="button" onclick="openInterviewTemplate('${id}')">Invite to Interview</button>` : ""}
+                ${canDelete() ? `<button type="button" onclick="deleteApplication('${id}')">Delete Candidate</button>` : ""}
             </div>
         `;
-
     }).join("");
 }
 
-/* ---------------- SAVE APPLICATION ---------------- */
+/* ---------------- SAVE / DELETE / EXPORT ---------------- */
 
 async function saveApplication(id) {
-
-    if (!canEdit()) {
-        showToast("Permission denied.", "error");
-        return;
-    }
+    if (!canEdit()) return showToast("Permission denied.", "error");
 
     const token = getToken();
 
     try {
+        await fetchJSON(`/api/admin/applications/${id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status: document.getElementById(`status-${id}`).value,
+                rating: Number(document.getElementById(`rating-${id}`).value),
+                notes: document.getElementById(`notes-${id}`).value,
+                interviewDate: document.getElementById(`interviewDate-${id}`).value,
+                interviewTime: document.getElementById(`interviewTime-${id}`).value
+            })
+        });
 
-        const result = await fetchJSON(
-            `/api/admin/applications/${id}`,
-            {
-                method: "PATCH",
-
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-
-                body: JSON.stringify({
-                    status: document.getElementById(`status-${id}`).value,
-                    rating: Number(document.getElementById(`rating-${id}`).value),
-                    notes: document.getElementById(`notes-${id}`).value,
-                    interviewDate: document.getElementById(`interviewDate-${id}`).value,
-                    interviewTime: document.getElementById(`interviewTime-${id}`).value
-                })
-            }
-        );
-
-        if (result.success) {
-            showToast("Application updated successfully.", "success");
-            await loadApplications();
-        }
+        showToast("Application updated successfully.", "success");
+        await loadApplications();
 
     } catch (error) {
-        console.error(error);
-
-        showToast(
-            error.message || "Failed to save application.",
-            "error"
-        );
+        showToast(error.message || "Failed to save.", "error");
     }
 }
 
-/* ---------------- DELETE APPLICATION ---------------- */
-
 async function deleteApplication(id) {
-
-    if (!canDelete()) {
-        showToast("Only owners can delete candidates.", "error");
-        return;
-    }
-
+    if (!canDelete()) return showToast("Only owners can delete candidates.", "error");
     if (!confirm("Delete this candidate?")) return;
 
     const token = getToken();
 
     try {
-
-        const result = await fetchJSON(
-            `/api/admin/applications/${id}`,
-            {
-                method: "DELETE",
-
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+        await fetchJSON(`/api/admin/applications/${id}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
             }
-        );
+        });
 
-        if (result.success) {
-            showToast("Candidate deleted.", "success");
-            await loadApplications();
-        }
+        showToast("Candidate deleted.", "success");
+        await loadApplications();
 
     } catch (error) {
-        console.error(error);
-
-        showToast(
-            error.message || "Failed to delete candidate.",
-            "error"
-        );
+        showToast(error.message || "Failed to delete.", "error");
     }
 }
-
-/* ---------------- INTERVIEW TEMPLATE ---------------- */
-
-function openInterviewTemplate(id) {
-
-    if (!canInvite()) {
-        showToast("Permission denied.", "error");
-        return;
-    }
-
-    const app = findApplication(id);
-
-    if (!app) {
-        showToast("Candidate not found.", "error");
-        return;
-    }
-
-    const templateBox =
-        document.getElementById(`template-${id}`);
-
-    const templateArea =
-        document.getElementById(`emailTemplate-${id}`);
-
-    const interviewDate =
-        document.getElementById(`interviewDate-${id}`).value ||
-        "[INSERT INTERVIEW DATE]";
-
-    const interviewTime =
-        document.getElementById(`interviewTime-${id}`).value ||
-        "[INSERT INTERVIEW TIME]";
-
-    templateArea.value = `Subject: Invitation to Interview - ${app.position || "Your Application"}
-
-Dear ${app.fullName || "Candidate"},
-
-Thank you for applying for the role of ${app.position || "the advertised position"} with The Excellent Management Company.
-
-We are pleased to invite you to attend an interview.
-
-Interview details:
-
-Date: ${interviewDate}
-Time: ${interviewTime}
-Location: [INSERT LOCATION]
-
-We look forward to meeting you.
-
-Kind regards,
-
-The Excellent Management Company`;
-
-    templateBox.style.display = "block";
-}
-
-async function copyInterviewTemplate(id) {
-
-    const templateArea =
-        document.getElementById(`emailTemplate-${id}`);
-
-    try {
-
-        await navigator.clipboard.writeText(
-            templateArea.value
-        );
-
-        showToast("Template copied.", "success");
-
-    } catch {
-        showToast("Copy failed.", "error");
-    }
-}
-
-function openEmailClient(id) {
-
-    const app = findApplication(id);
-
-    const templateArea =
-        document.getElementById(`emailTemplate-${id}`);
-
-    if (!app || !app.email) {
-        showToast("Candidate email missing.", "error");
-        return;
-    }
-
-    const subject = encodeURIComponent(
-        `Invitation to Interview - ${app.position || "Application"}`
-    );
-
-    const body = encodeURIComponent(templateArea.value);
-
-    window.open(
-        `mailto:${app.email}?subject=${subject}&body=${body}`,
-        "_blank"
-    );
-}
-
-/* ---------------- EXPORT CSV ---------------- */
 
 function exportCSV() {
+    if (!canExport()) return showToast("Permission denied.", "error");
 
-    if (!canExport()) {
-        showToast("Permission denied.", "error");
-        return;
-    }
+    const csvContent = [
+        ["Full Name", "Email", "Phone", "Position", "Status", "Rating"],
+        ...allApplications.map(app => [
+            app.fullName || "",
+            app.email || "",
+            app.phone || "",
+            app.position || "",
+            app.status || "",
+            app.rating || ""
+        ])
+    ].map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
 
-    if (!allApplications.length) {
-        showToast("No applications to export.", "info");
-        return;
-    }
-
-    const headers = [
-        "Full Name",
-        "Email",
-        "Phone",
-        "Position",
-        "Status",
-        "Rating",
-        "Notes"
-    ];
-
-    const rows = allApplications.map(app => [
-        app.fullName || "",
-        app.email || "",
-        app.phone || "",
-        app.position || "",
-        app.status || "",
-        app.rating || "",
-        app.notes || ""
-    ]);
-
-    const csvContent = [headers, ...rows]
-        .map(row =>
-            row.map(value =>
-                `"${String(value).replaceAll('"', '""')}"`
-            ).join(",")
-        )
-        .join("\n");
-
-    const blob = new Blob([csvContent], {
-        type: "text/csv;charset=utf-8;"
-    });
-
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
 
     link.href = URL.createObjectURL(blob);
     link.download = "temc-applications.csv";
-
     link.click();
 
     URL.revokeObjectURL(link.href);
@@ -792,32 +588,17 @@ function exportCSV() {
 /* ---------------- START ---------------- */
 
 document.addEventListener("DOMContentLoaded", () => {
+    if (loginBtn) loginBtn.addEventListener("click", loginAdmin);
+    if (logoutBtn) logoutBtn.addEventListener("click", logoutAdmin);
+    if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportCSV);
 
-    if (loginBtn) {
-        loginBtn.addEventListener("click", loginAdmin);
-    }
-
-    const passwordInput =
-        document.getElementById("adminPassword");
+    const passwordInput = document.getElementById("adminPassword");
 
     if (passwordInput) {
         passwordInput.addEventListener("keydown", event => {
-
-            if (event.key === "Enter") {
-                loginAdmin();
-            }
-
+            if (event.key === "Enter") loginAdmin();
         });
     }
 
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", logoutAdmin);
-    }
-
-    if (exportCsvBtn) {
-        exportCsvBtn.addEventListener("click", exportCSV);
-    }
-
     restoreSavedLogin();
-
 });
