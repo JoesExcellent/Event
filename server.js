@@ -33,7 +33,6 @@ app.use(express.static(PUBLIC_DIR));
 /* ---------------- FIREBASE SETUP ---------------- */
 
 let db = null;
-let bucket = null;
 
 try {
     if (!admin.apps.length) {
@@ -62,11 +61,6 @@ try {
     }
 
     db = admin.firestore();
-
-    if (process.env.FIREBASE_STORAGE_BUCKET) {
-        bucket = admin.storage().bucket();
-    }
-
     console.log("Firebase connected successfully.");
 
 } catch (error) {
@@ -106,9 +100,36 @@ function requireDb(res) {
     return true;
 }
 
-function createToken(email) {
+function getAdminUsers() {
+    return [
+        {
+            email: process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com",
+            password: process.env.ADMIN_PASSWORD || "password123",
+            name: "Joseph Eldridge",
+            role: "owner"
+        },
+        {
+            email: process.env.RECRUITER_EMAIL || "",
+            password: process.env.RECRUITER_PASSWORD || "",
+            name: "Recruiter",
+            role: "recruiter"
+        },
+        {
+            email: process.env.VIEWER_EMAIL || "",
+            password: process.env.VIEWER_PASSWORD || "",
+            name: "Viewer",
+            role: "viewer"
+        }
+    ].filter(user => user.email && user.password);
+}
+
+function createToken(user) {
     return jwt.sign(
-        { email },
+        {
+            email: user.email,
+            name: user.name,
+            role: user.role
+        },
         process.env.JWT_SECRET || "local-dev-secret",
         { expiresIn: "12h" }
     );
@@ -142,6 +163,19 @@ function verifyAdmin(req, res, next) {
     }
 }
 
+function requireRole(allowedRoles) {
+    return (req, res, next) => {
+        if (!req.admin || !allowedRoles.includes(req.admin.role)) {
+            return res.status(403).json({
+                success: false,
+                message: "You do not have permission to perform this action."
+            });
+        }
+
+        next();
+    };
+}
+
 /* ---------------- PAGE ROUTES ---------------- */
 
 app.get("/", (req, res) => {
@@ -153,13 +187,7 @@ app.get("/home", (req, res) => {
 });
 
 app.get("/careers", (req, res) => {
-    const careersPath = path.join(PUBLIC_DIR, "careers.html");
-
-    if (fs.existsSync(careersPath)) {
-        return res.sendFile(careersPath);
-    }
-
-    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+    res.sendFile(path.join(PUBLIC_DIR, "careers.html"));
 });
 
 app.get("/admin", (req, res) => {
@@ -168,6 +196,10 @@ app.get("/admin", (req, res) => {
 
 app.get("/contact", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "contact us.html"));
+});
+
+app.get("/our-services", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "our-services.html"));
 });
 
 /* ---------------- HEALTH CHECK ---------------- */
@@ -185,24 +217,25 @@ app.get("/health", (req, res) => {
 app.post("/api/admin/login", (req, res) => {
     const { email, password } = req.body;
 
-    const adminEmail = process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com";
-    const adminPassword = process.env.ADMIN_PASSWORD || "password123";
+    const user = getAdminUsers().find(adminUser =>
+        adminUser.email === email && adminUser.password === password
+    );
 
-    if (email === adminEmail && password === adminPassword) {
-        return res.json({
-            success: true,
-            token: createToken(email),
-            admin: {
-                name: "Joseph Eldridge",
-                email: adminEmail,
-                role: "owner"
-            }
+    if (!user) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid login details"
         });
     }
 
-    res.status(401).json({
-        success: false,
-        message: "Invalid login details"
+    res.json({
+        success: true,
+        token: createToken(user),
+        admin: {
+            name: user.name,
+            email: user.email,
+            role: user.role
+        }
     });
 });
 
@@ -214,10 +247,7 @@ app.post("/api/apply", upload.any(), async (req, res) => {
 
         const uploadedFiles = req.files || [];
 
-        const cvFile = uploadedFiles.length > 0
-            ? uploadedFiles[0].filename
-            : "";
-
+        const cvFile = uploadedFiles.length > 0 ? uploadedFiles[0].filename : "";
         const extraFiles = uploadedFiles.length > 1
             ? uploadedFiles.slice(1).map(file => file.filename)
             : [];
@@ -287,7 +317,8 @@ async function getApplications(req, res) {
 
         res.json({
             success: true,
-            applications
+            applications,
+            admin: req.admin || null
         });
 
     } catch (error) {
@@ -300,246 +331,123 @@ async function getApplications(req, res) {
     }
 }
 
-app.get("/api/applications", getApplications);
-app.get("/api/admin/applications", verifyAdmin, getApplications);
+app.get(
+    "/api/admin/applications",
+    verifyAdmin,
+    requireRole(["owner", "recruiter", "viewer"]),
+    getApplications
+);
 
 /* ---------------- UPDATE APPLICATION ---------------- */
 
-app.patch("/api/admin/applications/:id", verifyAdmin, async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
+app.patch(
+    "/api/admin/applications/:id",
+    verifyAdmin,
+    requireRole(["owner", "recruiter"]),
+    async (req, res) => {
+        try {
+            if (!requireDb(res)) return;
 
-        const allowedFields = [
-            "status",
-            "rating",
-            "notes",
-            "favourite",
-            "interviewDate",
-            "interviewTime",
-            "interviewLocation",
-            "invitationSent"
-        ];
+            const allowedFields = [
+                "status",
+                "rating",
+                "notes",
+                "favourite",
+                "interviewDate",
+                "interviewTime",
+                "interviewLocation",
+                "invitationSent"
+            ];
 
-        const updates = {};
+            const updates = {};
 
-        allowedFields.forEach(field => {
-            if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-                updates[field] = req.body[field];
-            }
-        });
+            allowedFields.forEach(field => {
+                if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+                    updates[field] = req.body[field];
+                }
+            });
 
-        updates.updatedAt = new Date().toISOString();
+            updates.updatedAt = new Date().toISOString();
 
-        await db.collection("applications").doc(req.params.id).update(updates);
+            await db.collection("applications").doc(req.params.id).update(updates);
 
-        res.json({
-            success: true,
-            message: "Application updated successfully"
-        });
+            res.json({
+                success: true,
+                message: "Application updated successfully"
+            });
 
-    } catch (error) {
-        console.error("Application update error:", error);
+        } catch (error) {
+            console.error("Application update error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to update application"
-        });
+            res.status(500).json({
+                success: false,
+                message: "Failed to update application"
+            });
+        }
     }
-});
-
-/* ---------------- OLD UPDATE ROUTES KEPT FOR COMPATIBILITY ---------------- */
-
-app.patch("/api/applications/:id/status", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            status: req.body.status || "New",
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({ success: true });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to update status"
-        });
-    }
-});
-
-app.patch("/api/applications/:id/rating", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            rating: Number(req.body.rating || 0),
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({ success: true });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to update rating"
-        });
-    }
-});
-
-app.patch("/api/applications/:id/notes", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            notes: req.body.notes || "",
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({ success: true });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to save notes"
-        });
-    }
-});
-
-app.patch("/api/applications/:id/interview", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            interviewDate: req.body.interviewDate || "",
-            interviewTime: req.body.interviewTime || "",
-            interviewLocation: req.body.interviewLocation || "",
-            status: "Interview",
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({ success: true });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to save interview details"
-        });
-    }
-});
-
-app.patch("/api/applications/:id/favourite", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            favourite: Boolean(req.body.favourite),
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({ success: true });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to update shortlist"
-        });
-    }
-});
+);
 
 /* ---------------- INVITATION ---------------- */
 
-app.post("/api/admin/applications/:id/invite", verifyAdmin, async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
+app.post(
+    "/api/admin/applications/:id/invite",
+    verifyAdmin,
+    requireRole(["owner", "recruiter"]),
+    async (req, res) => {
+        try {
+            if (!requireDb(res)) return;
 
-        await db.collection("applications").doc(req.params.id).update({
-            invitationSent: true,
-            status: "Interview Invited",
-            interviewDate: req.body.interviewDate || "",
-            interviewTime: req.body.interviewTime || "",
-            updatedAt: new Date().toISOString()
-        });
+            await db.collection("applications").doc(req.params.id).update({
+                invitationSent: true,
+                status: "Interview Invited",
+                interviewDate: req.body.interviewDate || "",
+                interviewTime: req.body.interviewTime || "",
+                updatedAt: new Date().toISOString()
+            });
 
-        res.json({
-            success: true,
-            message: "Interview invitation marked as sent"
-        });
+            res.json({
+                success: true,
+                message: "Interview invitation marked as sent"
+            });
 
-    } catch (error) {
-        console.error("Invitation error:", error);
+        } catch (error) {
+            console.error("Invitation error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to update invitation"
-        });
+            res.status(500).json({
+                success: false,
+                message: "Failed to update invitation"
+            });
+        }
     }
-});
-
-app.post("/api/applications/:id/send-invitation", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).update({
-            invitationSent: true,
-            status: "Interview",
-            updatedAt: new Date().toISOString()
-        });
-
-        res.json({
-            success: true,
-            message: "Interview invitation marked as sent"
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to send invitation"
-        });
-    }
-});
+);
 
 /* ---------------- DELETE APPLICATION ---------------- */
 
-app.delete("/api/admin/applications/:id", verifyAdmin, async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
+app.delete(
+    "/api/admin/applications/:id",
+    verifyAdmin,
+    requireRole(["owner"]),
+    async (req, res) => {
+        try {
+            if (!requireDb(res)) return;
 
-        await db.collection("applications").doc(req.params.id).delete();
+            await db.collection("applications").doc(req.params.id).delete();
 
-        res.json({
-            success: true,
-            message: "Candidate deleted successfully"
-        });
+            res.json({
+                success: true,
+                message: "Candidate deleted successfully"
+            });
 
-    } catch (error) {
-        console.error("Delete error:", error);
+        } catch (error) {
+            console.error("Delete error:", error);
 
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete candidate"
-        });
+            res.status(500).json({
+                success: false,
+                message: "Failed to delete candidate"
+            });
+        }
     }
-});
-
-app.delete("/api/applications/:id", async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        await db.collection("applications").doc(req.params.id).delete();
-
-        res.json({
-            success: true,
-            message: "Candidate deleted successfully"
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete candidate"
-        });
-    }
-});
+);
 
 /* ---------------- API 404 ---------------- */
 
