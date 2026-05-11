@@ -433,3 +433,24 @@ a button {
         padding: 20px;
     }
 }
+.analytics-card {
+    max-width: 700px;
+    margin: 0 auto 30px auto;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 280px;
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+@media (max-width: 700px) {
+    .chart-wrapper {
+        height: 220px;
+    }
+}
