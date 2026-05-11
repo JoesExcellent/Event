@@ -1,3 +1,31 @@
+.hero-image-placeholder,
+.section-image-placeholder,
+.card-image-placeholder {
+    width: 100%;
+    height: 260px;
+    background: linear-gradient(135deg, #0b4a70, #123456);
+    border: 3px dashed rgba(255,255,255,0.25);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8fdcff;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 30px 0;
+}
+
+.text-placeholder {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #ff6600;
+    padding: 25px;
+    border-radius: 14px;
+    margin-top: 25px;
+    line-height: 1.8;
+    font-size: 18px;
+}
+
 #toastContainer {
     position: fixed;
     top: 20px;
