@@ -2,8 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joe's Excellent Event Management Admin Dashboard</title>
+
+    <meta
+        name="description"
+        content="Administrative recruitment dashboard for The Excellent Management Company."
+    >
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Admin Dashboard | The Excellent Management Company</title>
 
     <link rel="stylesheet" href="style.css?v=23">
 
@@ -170,40 +179,41 @@
             font-weight: bold;
         }
 
-.role-badge {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-left: 10px;
-}
+        .role-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
 
-.role-owner {
-    background: #c0392b;
-    color: white;
-}
+        .role-owner {
+            background: #c0392b;
+            color: white;
+        }
 
-.role-recruiter {
-    background: #2980b9;
-    color: white;
-}
+        .role-recruiter {
+            background: #2980b9;
+            color: white;
+        }
 
-.role-viewer {
-    background: #7f8c8d;
-    color: white;
-}
+        .role-viewer {
+            background: #7f8c8d;
+            color: white;
+        }
 
-.permission-box {
-    background: rgba(255,255,255,0.08);
-    border-left: 4px solid #ff9900;
-    padding: 20px;
-    border-radius: 14px;
-    margin-bottom: 30px;
-}
+        .permission-box {
+            background: rgba(255,255,255,0.08);
+            border-left: 4px solid #ff9900;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+        }
 
         @media (max-width: 700px) {
+
             .dashboard {
                 padding: 20px;
             }
@@ -231,32 +241,40 @@
 
 <body>
 
-
-  <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="contact%20us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
+    <nav class="navbar" aria-label="Main Navigation">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="contact%20us.html">Contact Us</a>
+        <a href="admin.html" class="active">Admin</a>
+    </nav>
 
     <div id="toastContainer"></div>
 
-    <div class="dashboard">
+    <main class="dashboard">
 
-        <h1>TEMC Recruitment Dashboard</h1><div class="hero-image-placeholder">
-    Admin Dashboard Banner Placeholder
-</div>
+        <h1>TEMC Recruitment Dashboard</h1>
 
-<div class="text-placeholder">
-    Add administrator dashboard information here.
-    Describe recruitment management, reporting,
-    candidate tracking and interview coordination.
-</div>
+        <div
+            class="hero-image-placeholder"
+            role="img"
+            aria-label="Admin dashboard banner placeholder image"
+        >
+            Admin Dashboard Banner Placeholder
+        </div>
+
+        <div class="text-placeholder">
+            Add administrator dashboard information here.
+            Describe recruitment management, reporting,
+            candidate tracking and interview coordination.
+        </div>
 
         <div id="loginBox" class="login-box">
+
             <h2>Admin Login</h2>
+
+            <label for="adminEmail">Admin Email</label>
 
             <input
                 type="email"
@@ -265,6 +283,8 @@
                 autocomplete="username"
             >
 
+            <label for="adminPassword">Admin Password</label>
+
             <input
                 type="password"
                 id="adminPassword"
@@ -272,37 +292,52 @@
                 autocomplete="current-password"
             >
 
-            <button id="loginBtn" type="button" onclick="loginAdmin()">Login</button>
+            <button id="loginBtn" type="button">
+                Login
+            </button>
+
             <p id="loginMessage"></p>
+
         </div>
 
         <div id="dashboardContent" style="display:none;">
 
-            <button id="logoutBtn" type="button">Logout</button>
-            <button id="exportCsvBtn" type="button">Export CSV</button>
+            <button id="logoutBtn" type="button">
+                Logout
+            </button>
+
+            <button id="exportCsvBtn" type="button">
+                Export CSV
+            </button>
 
             <div id="adminInfo"></div>
 
-            <div id="adminInfo"></div>
+            <div id="permissionsInfo" class="permission-box"></div>
 
-<div id="permissionsInfo" class="permission-box"></div>
+            <div id="stats"></div>
 
-<div id="stats"></div>
+            <div class="application-card">
 
-<div class="application-card">
-    <h2>Recruitment Analytics</h2>
-    <canvas id="applicationsChart"></canvas>
-</div>
+                <h2>Recruitment Analytics</h2>
 
-<div id="applications"></div>
+                <canvas
+                    id="applicationsChart"
+                    aria-label="Recruitment analytics chart"
+                ></canvas>
+
+            </div>
+
+            <div id="applications"></div>
 
         </div>
 
-    </div>
+    </main>
 
-   <script src="admin.js?v=28"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="charts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="charts.js" defer></script>
+
+    <script src="admin.js?v=28" defer></script>
 
 </body>
 </html>
