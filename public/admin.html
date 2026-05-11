@@ -316,15 +316,20 @@
 
             <div id="stats"></div>
 
-            <div class="application-card">
+           <div class="application-card analytics-card">
 
-                <h2>Recruitment Analytics</h2>
+    <h2>Recruitment Analytics</h2>
 
-                <canvas
-                    id="applicationsChart"
-                    aria-label="Recruitment analytics chart"
-                ></canvas>
+    <div class="chart-wrapper">
 
+        <canvas
+            id="applicationsChart"
+            aria-label="Recruitment analytics chart"
+        ></canvas>
+
+    </div>
+
+</div>
             </div>
 
             <div id="applications"></div>
@@ -334,10 +339,8 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <script src="charts.js" defer></script>
-
-    <script src="admin.js?v=28" defer></script>
+<script src="charts.js" defer></script>
+<script src="admin.js?v=28" defer></script>
 
 </body>
 </html>
