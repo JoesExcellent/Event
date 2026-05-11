@@ -3,22 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMC Admin Dashboard</title>
+    <title>Joe's Excellent Event Management Admin Dashboard</title>
 
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
 
     <style>
         body {
             background: #061b2f;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 40px;
+            padding: 0;
+            color: white;
+        }
+
+        .navbar {
+            background: #03111f;
+            padding: 18px 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 17px;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #ff6600;
             color: white;
         }
 
         .dashboard {
             max-width: 1400px;
             margin: auto;
+            padding: 40px;
         }
 
         h1 {
@@ -145,7 +171,7 @@
         }
 
         @media (max-width: 700px) {
-            body {
+            .dashboard {
                 padding: 20px;
             }
 
@@ -156,11 +182,29 @@
             button {
                 width: 100%;
             }
+
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navbar a {
+                display: block;
+                text-align: center;
+            }
         }
     </style>
 </head>
 
 <body>
+
+    <nav class="navbar">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="careers.html">Careers</a>
+        <a href="contact%20us.html">Contact Us</a>
+        <a href="admin.html" class="active">Admin</a>
+    </nav>
 
     <div id="toastContainer"></div>
 
@@ -205,7 +249,7 @@
 
     </div>
 
-    <script src="admin.js?v=22"></script>
+    <script src="admin.js?v=23"></script>
 
 </body>
 </html>
