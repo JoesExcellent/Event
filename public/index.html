@@ -2,8 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMC Recruitment System</title>
+
+    <meta
+        name="description"
+        content="Apply online with The Excellent Management Company for recruitment, leadership and management opportunities in Newcastle upon Tyne."
+    >
+
+    <meta
+        name="keywords"
+        content="TEMC recruitment, Newcastle jobs, management careers, recruitment company, leadership opportunities"
+    >
+
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="The Excellent Management Company">
+
+    <title>Apply Online | The Excellent Management Company</title>
 
     <link rel="stylesheet" href="style.css?v=23">
 
@@ -57,6 +72,12 @@
             margin-bottom: 30px;
         }
 
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
         input,
         textarea {
             width: 100%;
@@ -101,7 +122,6 @@
         }
 
         @media (max-width: 700px) {
-
             .navbar {
                 flex-direction: column;
                 align-items: stretch;
@@ -129,62 +149,80 @@
 
 <body>
 
-    <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="contact%20us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
+    <nav class="navbar" aria-label="Main Navigation">
+        <a href="index.html" class="active">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="contact%20us.html">Contact Us</a>
+        <a href="admin.html">Admin</a>
+    </nav>
 
     <main class="container">
 
         <section class="card">
 
             <h1>Apply Now</h1>
-<div class="hero-image-placeholder">
-    Homepage Hero Photograph Placeholder
-</div>
 
-<div class="text-placeholder">
-    Add homepage introduction text here.
-    Introduce The Excellent Management Company,
-    your recruitment services, leadership programmes,
-    company values and candidate opportunities.
-</div>
+            <div
+                class="hero-image-placeholder"
+                role="img"
+                aria-label="Homepage recruitment banner placeholder image"
+            >
+                Homepage Hero Photograph Placeholder
+            </div>
+
+            <div class="text-placeholder">
+                Add homepage introduction text here.
+                Introduce The Excellent Management Company,
+                your recruitment services, leadership programmes,
+                company values and candidate opportunities.
+            </div>
 
             <form id="applicationForm" enctype="multipart/form-data">
 
+                <label for="fullName">Full Name</label>
                 <input
+                    id="fullName"
                     type="text"
                     name="fullName"
                     placeholder="Full Name"
+                    autocomplete="name"
                     required
                 >
 
+                <label for="email">Email Address</label>
                 <input
+                    id="email"
                     type="email"
                     name="email"
                     placeholder="Email Address"
+                    autocomplete="email"
                     required
                 >
 
+                <label for="phone">Phone Number</label>
                 <input
+                    id="phone"
                     type="tel"
                     name="phone"
                     placeholder="Phone Number"
+                    autocomplete="tel"
                     required
                 >
 
+                <label for="position">Position Applying For</label>
                 <input
+                    id="position"
                     type="text"
                     name="position"
                     placeholder="Position Applying For"
                     required
                 >
 
+                <label for="about">Tell Us About Yourself</label>
                 <textarea
+                    id="about"
                     name="about"
                     placeholder="Tell us about yourself"
                 ></textarea>
@@ -207,13 +245,13 @@
 
             </form>
 
-            <div id="message" class="form-message"></div>
+            <div id="message" class="form-message" aria-live="polite"></div>
 
         </section>
 
     </main>
 
-    <script src="script.js?v=23"></script>
+    <script src="script.js?v=23" defer></script>
 
 </body>
 </html>
