@@ -261,3 +261,147 @@ a button {
     line-height: 1.55;
     white-space: pre-wrap;
 }
+/* ================================
+   OUR SERVICES PAGE
+================================ */
+
+.site-header {
+    background: #071326;
+    border-bottom: 2px solid #ff7a00;
+}
+
+.navbar {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding: 22px 50px;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar a.active,
+.navbar a:hover {
+    color: #ff7a00;
+}
+
+.services-hero {
+    min-height: 360px;
+    background: linear-gradient(180deg, #071326, #101010);
+    color: white;
+    text-align: center;
+    padding: 90px 30px;
+}
+
+.services-hero h1 {
+    font-size: 64px;
+    margin-bottom: 25px;
+}
+
+.services-hero p {
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 20px;
+    line-height: 1.7;
+}
+
+.services-grid {
+    background: #071326;
+    padding: 80px 50px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 60px;
+}
+
+.service-card {
+    color: white;
+}
+
+.image-placeholder {
+    height: 220px;
+    background: linear-gradient(135deg, #123456, #1f5f7a);
+    border: 2px dashed #00c8ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00c8ff;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.service-card h2 {
+    color: #ff7a00;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.service-card p {
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.why-choose {
+    background: #071326;
+    color: white;
+    padding: 120px 50px;
+}
+
+.why-choose h2 {
+    color: #00c8ff;
+    font-size: 42px;
+}
+
+.why-choose p {
+    font-size: 20px;
+}
+
+.cta-section {
+    background: white;
+    color: #071326;
+    text-align: center;
+    padding: 80px 30px;
+}
+
+.cta-section h2 {
+    color: #76c8e8;
+    font-size: 42px;
+}
+
+.cta-button {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 16px 34px;
+    background: #ff6600;
+    color: white;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.site-footer {
+    background: #071326;
+    color: white;
+    text-align: center;
+    padding: 35px;
+}
+
+@media (max-width: 800px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        padding: 50px 25px;
+    }
+
+    .services-hero h1 {
+        font-size: 44px;
+    }
+
+    .navbar {
+        justify-content: center;
+        padding: 20px;
+    }
+}
