@@ -1,67 +1,16 @@
-.hero-image-placeholder,
-.section-image-placeholder,
-.card-image-placeholder {
-    width: 100%;
-    height: 260px;
-    background: linear-gradient(135deg, #0b4a70, #123456);
-    border: 3px dashed rgba(255,255,255,0.25);
-    border-radius: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8fdcff;
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    margin: 30px 0;
-}
-
-.text-placeholder {
-    background: rgba(255,255,255,0.06);
-    border-left: 4px solid #ff6600;
-    padding: 25px;
-    border-radius: 14px;
-    margin-top: 25px;
-    line-height: 1.8;
-    font-size: 18px;
-}
-
-#toastContainer {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.toast {
-    min-width: 280px;
-    max-width: 380px;
-    padding: 16px 20px;
-    border-radius: 10px;
-    color: #ffffff;
-    font-weight: 700;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-    animation: slideIn 0.3s ease;
-    opacity: 0.97;
-}
-
-.toast-success { background: #27ae60; }
-.toast-error { background: #c0392b; }
-.toast-info { background: #2980b9; }
-
-@keyframes slideIn {
-    from { transform: translateX(120%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
+/* =====================================================
+   GLOBAL RESET
+===================================================== */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
+/* =====================================================
+   GLOBAL BODY
+===================================================== */
 
 body {
     font-family: Arial, sans-serif;
@@ -71,15 +20,53 @@ body {
     padding: 40px 20px;
 }
 
+/* =====================================================
+   LAYOUT
+===================================================== */
+
 .container,
 .dashboard {
     max-width: 1200px;
     margin: auto;
 }
 
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.navbar {
+    background: #03111f;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding: 22px 50px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid #ff6600;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 17px;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.navbar a.active,
+.navbar a:hover {
+    background: #ff6600;
+    color: white;
+}
+
+/* =====================================================
+   CARDS
+===================================================== */
+
 .card,
 .login-box,
-.application-card {
+.application-card,
+.stat-card {
     background: #102b4a;
     padding: 28px;
     border-radius: 18px;
@@ -93,14 +80,29 @@ body {
     margin-top: 14px;
 }
 
+/* =====================================================
+   HEADINGS + TEXT
+===================================================== */
+
 h1 {
     margin-bottom: 30px;
     font-size: clamp(32px, 5vw, 48px);
 }
 
-h2, h3, p, label {
+h2,
+h3,
+p,
+label {
     margin-bottom: 12px;
 }
+
+p {
+    line-height: 1.7;
+}
+
+/* =====================================================
+   FORMS
+===================================================== */
 
 form,
 .login-box,
@@ -108,6 +110,11 @@ form,
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
 }
 
 input,
@@ -124,6 +131,15 @@ textarea {
     min-height: 120px;
     resize: vertical;
 }
+
+.uploadLabel {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
 
 button {
     background: #ff6a00;
@@ -156,10 +172,41 @@ a button {
     display: inline-block;
 }
 
-.uploadLabel {
-    font-size: 18px;
-    font-weight: 700;
+/* =====================================================
+   PLACEHOLDERS
+===================================================== */
+
+.hero-image-placeholder,
+.section-image-placeholder,
+.card-image-placeholder {
+    width: 100%;
+    height: 260px;
+    background: linear-gradient(135deg, #0b4a70, #123456);
+    border: 3px dashed rgba(255,255,255,0.25);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8fdcff;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 30px 0;
 }
+
+.text-placeholder {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #ff6600;
+    padding: 25px;
+    border-radius: 14px;
+    margin-top: 25px;
+    line-height: 1.8;
+    font-size: 18px;
+}
+
+/* =====================================================
+   MESSAGES
+===================================================== */
 
 .form-message,
 #message,
@@ -169,6 +216,66 @@ a button {
     font-weight: 700;
 }
 
+.error-message {
+    color: #ff6b6b;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* =====================================================
+   TOAST NOTIFICATIONS
+===================================================== */
+
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 280px;
+    max-width: 380px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    animation: slideIn 0.3s ease;
+    opacity: 0.97;
+}
+
+.toast-success {
+    background: #27ae60;
+}
+
+.toast-error {
+    background: #c0392b;
+}
+
+.toast-info {
+    background: #2980b9;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* =====================================================
+   DASHBOARD STATS
+===================================================== */
+
 .stats-grid,
 .profile-grid {
     display: grid;
@@ -176,6 +283,73 @@ a button {
     gap: 15px;
     margin: 25px 0;
 }
+
+.stat-card p {
+    font-size: 34px;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* =====================================================
+   ADMIN ROLE BADGES
+===================================================== */
+
+.role-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 10px;
+}
+
+.role-owner {
+    background: #c0392b;
+    color: white;
+}
+
+.role-recruiter {
+    background: #2980b9;
+    color: white;
+}
+
+.role-viewer {
+    background: #7f8c8d;
+    color: white;
+}
+
+.permission-box {
+    background: rgba(255,255,255,0.08);
+    border-left: 4px solid #ff9900;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 30px;
+}
+
+/* =====================================================
+   ANALYTICS CHART
+===================================================== */
+
+.analytics-card {
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 180px;
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* =====================================================
+   ACTION AREAS
+===================================================== */
 
 .top-actions,
 .button-row {
@@ -192,6 +366,10 @@ a button {
     gap: 12px;
 }
 
+/* =====================================================
+   SIMPLE ANALYTICS BARS
+===================================================== */
+
 .analytics-bar {
     width: 100%;
     background: rgba(255,255,255,0.16);
@@ -207,6 +385,10 @@ a button {
     border-radius: 999px;
 }
 
+/* =====================================================
+   MODALS
+===================================================== */
+
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -218,36 +400,10 @@ a button {
     padding: 20px;
 }
 
-.modal-card {
-    background: #0d2747;
-    width: 92%;
-    max-width: 1050px;
-    max-height: 90vh;
-    overflow-y: auto;
-    border-radius: 18px;
-    padding: 28px;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-@media (max-width: 700px) {
-    body { padding: 24px 12px; }
-    .card, .login-box, .application-card { padding: 20px; }
-    .modal-header { flex-direction: column; align-items: flex-start; }
-}
-
-
-/* Invite to Interview modal */
 .modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0,0,0,0.72);
     z-index: 99998;
     align-items: center;
     justify-content: center;
@@ -259,12 +415,20 @@ a button {
     max-height: 90vh;
     overflow-y: auto;
     background: #0d2747;
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.16);
     border-radius: 18px;
     padding: 28px;
     color: white;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .modal-close {
@@ -289,32 +453,14 @@ a button {
     line-height: 1.55;
     white-space: pre-wrap;
 }
-/* ================================
+
+/* =====================================================
    OUR SERVICES PAGE
-================================ */
+===================================================== */
 
 .site-header {
     background: #071326;
     border-bottom: 2px solid #ff7a00;
-}
-
-.navbar {
-    display: flex;
-    gap: 28px;
-    align-items: center;
-    padding: 22px 50px;
-    flex-wrap: wrap;
-}
-
-.navbar a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.navbar a.active,
-.navbar a:hover {
-    color: #ff7a00;
 }
 
 .services-hero {
@@ -349,7 +495,8 @@ a button {
     color: white;
 }
 
-.image-placeholder {
+.image-placeholder,
+.photo-placeholder {
     height: 220px;
     background: linear-gradient(135deg, #123456, #1f5f7a);
     border: 2px dashed #00c8ff;
@@ -360,6 +507,8 @@ a button {
     color: #00c8ff;
     font-weight: bold;
     margin-bottom: 20px;
+    text-align: center;
+    padding: 20px;
 }
 
 .service-card h2 {
@@ -373,18 +522,21 @@ a button {
     line-height: 1.7;
 }
 
-.why-choose {
+.why-choose,
+.why-section {
     background: #071326;
     color: white;
     padding: 120px 50px;
 }
 
-.why-choose h2 {
+.why-choose h2,
+.why-section h2 {
     color: #00c8ff;
     font-size: 42px;
 }
 
-.why-choose p {
+.why-choose p,
+.why-section p {
     font-size: 20px;
 }
 
@@ -400,7 +552,8 @@ a button {
     font-size: 42px;
 }
 
-.cta-button {
+.cta-button,
+.cta-btn {
     display: inline-block;
     margin-top: 25px;
     padding: 16px 34px;
@@ -411,12 +564,17 @@ a button {
     font-weight: bold;
 }
 
-.site-footer {
+.site-footer,
+footer {
     background: #071326;
     color: white;
     text-align: center;
     padding: 35px;
 }
+
+/* =====================================================
+   MOBILE RESPONSIVE
+===================================================== */
 
 @media (max-width: 800px) {
     .services-grid {
@@ -433,24 +591,60 @@ a button {
         padding: 20px;
     }
 }
-.analytics-card {
-    max-width: 700px;
-    margin: 0 auto 30px auto;
-}
-
-.chart-wrapper {
-    position: relative;
-    width: 100%;
-    height: 280px;
-}
-
-.chart-wrapper canvas {
-    width: 100% !important;
-    height: 100% !important;
-}
 
 @media (max-width: 700px) {
+    body {
+        padding: 24px 12px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar a {
+        display: block;
+        text-align: center;
+    }
+
+    .card,
+    .login-box,
+    .application-card,
+    .stat-card {
+        padding: 20px;
+    }
+
+    .hero-image-placeholder,
+    .section-image-placeholder,
+    .card-image-placeholder {
+        height: 200px;
+        font-size: 18px;
+    }
+
+    .text-placeholder {
+        padding: 18px;
+        font-size: 16px;
+    }
+
+    .analytics-card {
+        max-width: 100%;
+    }
+
     .chart-wrapper {
-        height: 220px;
+        height: 160px;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .button-row {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
