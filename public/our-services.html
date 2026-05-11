@@ -2,13 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Services | TEMC Recruitment</title>
+
+    <meta
+        name="description"
+        content="Explore recruitment, leadership development, operations management and customer support services from The Excellent Management Company in Newcastle upon Tyne."
+    >
+
+    <meta
+        name="keywords"
+        content="TEMC services, recruitment services Newcastle, leadership development, operations management, customer support services"
+    >
+
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="The Excellent Management Company">
+
+    <title>Our Services | The Excellent Management Company</title>
 
     <link rel="stylesheet" href="style.css?v=23">
 
     <style>
-
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -92,6 +106,8 @@
             font-size: 24px;
             font-weight: bold;
             border-bottom: 3px solid #ff6600;
+            text-align: center;
+            padding: 20px;
         }
 
         .service-content {
@@ -173,7 +189,6 @@
         }
 
         @media (max-width: 700px) {
-
             .navbar {
                 flex-direction: column;
                 align-items: stretch;
@@ -190,15 +205,13 @@
             .cta-section h2 {
                 font-size: 38px;
             }
-
         }
-
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar">
+    <nav class="navbar" aria-label="Main Navigation">
         <a href="index.html">Home</a>
         <a href="home.html">About</a>
         <a href="our-services.html" class="active">Our Services</a>
@@ -207,139 +220,161 @@
         <a href="admin.html">Admin</a>
     </nav>
 
-    <section class="hero">
+    <main>
 
-        <h1>Our Services</h1>
+        <section class="hero">
 
-        <p>
-            The Excellent Management Company delivers professional recruitment,
-            staffing, leadership support and business development services.
-            Our team focuses on building long-term relationships, delivering
-            operational excellence and helping organisations grow successfully.
-        </p>
+            <h1>Our Services</h1>
 
-    </section>
+            <p>
+                The Excellent Management Company delivers professional recruitment,
+                staffing, leadership support and business development services.
+                Our team focuses on building long-term relationships, delivering
+                operational excellence and helping organisations grow successfully.
+            </p>
 
-    <section class="services-section">
+        </section>
 
-        <div class="services-grid">
+        <section class="services-section" aria-label="Our main services">
 
-            <div class="service-card">
+            <div class="services-grid">
 
-                <div class="photo-placeholder">
-                    Photograph Placeholder
-                </div>
+                <article class="service-card">
 
-                <div class="service-content">
+                    <div
+                        class="photo-placeholder"
+                        role="img"
+                        aria-label="Recruitment solutions placeholder image"
+                    >
+                        Recruitment Solutions Photograph Placeholder
+                    </div>
 
-                    <h2>Recruitment Solutions</h2>
+                    <div class="service-content">
 
-                    <p>
-                        Add your recruitment service information here.
-                        Explain how your company sources, interviews
-                        and develops candidates for employers.
-                    </p>
+                        <h2>Recruitment Solutions</h2>
 
-                </div>
+                        <p>
+                            Add your recruitment service information here.
+                            Explain how your company sources, interviews
+                            and develops candidates for employers.
+                        </p>
+
+                    </div>
+
+                </article>
+
+                <article class="service-card">
+
+                    <div
+                        class="photo-placeholder"
+                        role="img"
+                        aria-label="Leadership development placeholder image"
+                    >
+                        Leadership Development Photograph Placeholder
+                    </div>
+
+                    <div class="service-content">
+
+                        <h2>Leadership Development</h2>
+
+                        <p>
+                            Add leadership and management training
+                            information here. Explain how you support
+                            future managers and organisational growth.
+                        </p>
+
+                    </div>
+
+                </article>
+
+                <article class="service-card">
+
+                    <div
+                        class="photo-placeholder"
+                        role="img"
+                        aria-label="Operations management placeholder image"
+                    >
+                        Operations Management Photograph Placeholder
+                    </div>
+
+                    <div class="service-content">
+
+                        <h2>Operations Management</h2>
+
+                        <p>
+                            Add operational support service text here.
+                            Describe how your company improves workflow,
+                            productivity and business performance.
+                        </p>
+
+                    </div>
+
+                </article>
+
+                <article class="service-card">
+
+                    <div
+                        class="photo-placeholder"
+                        role="img"
+                        aria-label="Customer support services placeholder image"
+                    >
+                        Customer Support Services Photograph Placeholder
+                    </div>
+
+                    <div class="service-content">
+
+                        <h2>Customer Support Services</h2>
+
+                        <p>
+                            Add customer support and client relationship
+                            management information here including
+                            communication and service delivery.
+                        </p>
+
+                    </div>
+
+                </article>
 
             </div>
 
-            <div class="service-card">
+        </section>
 
-                <div class="photo-placeholder">
-                    Photograph Placeholder
-                </div>
+        <section class="why-section">
 
-                <div class="service-content">
+            <h2>Why Choose TEMC</h2>
 
-                    <h2>Leadership Development</h2>
+            <p>
+                Our organisation combines professionalism, leadership,
+                communication and operational excellence to deliver
+                reliable services and successful recruitment outcomes
+                for businesses and candidates alike.
+            </p>
 
-                    <p>
-                        Add leadership and management training
-                        information here. Explain how you support
-                        future managers and organisational growth.
-                    </p>
+        </section>
 
-                </div>
+        <section class="cta-section">
 
-            </div>
+            <h2>Let’s Build Something Great Together</h2>
 
-            <div class="service-card">
+            <p>
+                Ready to explore opportunities with The Excellent
+                Management Company? Contact our team today and
+                discover how we can help support your future growth.
+            </p>
 
-                <div class="photo-placeholder">
-                    Photograph Placeholder
-                </div>
+            <a href="contact%20us.html" class="cta-btn">
+                Contact Us
+            </a>
 
-                <div class="service-content">
+        </section>
 
-                    <h2>Operations Management</h2>
-
-                    <p>
-                        Add operational support service text here.
-                        Describe how your company improves workflow,
-                        productivity and business performance.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="service-card">
-
-                <div class="photo-placeholder">
-                    Photograph Placeholder
-                </div>
-
-                <div class="service-content">
-
-                    <h2>Customer Support Services</h2>
-
-                    <p>
-                        Add customer support and client relationship
-                        management information here including
-                        communication and service delivery.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="why-section">
-
-        <h2>Why Choose TEMC</h2>
-
-        <p>
-            Our organisation combines professionalism, leadership,
-            communication and operational excellence to deliver
-            reliable services and successful recruitment outcomes
-            for businesses and candidates alike.
-        </p>
-
-    </section>
-
-    <section class="cta-section">
-
-        <h2>Let’s Build Something Great Together</h2>
-
-        <p>
-            Ready to explore opportunities with The Excellent
-            Management Company? Contact our team today and
-            discover how we can help support your future growth.
-        </p>
-
-        <a href="contact%20us.html" class="cta-btn">
-            Contact Us
-        </a>
-
-    </section>
+    </main>
 
     <footer>
-        Copyright © 2026 TEMC Recruitment
+        Copyright © 2026 The Excellent Management Company
     </footer>
+
+    <script src="script.js?v=23" defer></script>
 
 </body>
 </html>
