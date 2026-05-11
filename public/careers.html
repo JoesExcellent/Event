@@ -2,8 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Careers | TEMC Recruitment</title>
+
+    <meta
+        name="description"
+        content="Explore careers, leadership opportunities and professional development programmes with The Excellent Management Company in Newcastle upon Tyne."
+    >
+
+    <meta
+        name="keywords"
+        content="TEMC careers, recruitment opportunities, leadership programme, management development, Newcastle jobs"
+    >
+
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="The Excellent Management Company">
+
+    <title>Careers | The Excellent Management Company</title>
 
     <link rel="stylesheet" href="style.css?v=23">
 
@@ -91,7 +106,6 @@
         }
 
         @media (max-width: 700px) {
-
             .navbar {
                 flex-direction: column;
                 align-items: stretch;
@@ -120,28 +134,34 @@
 
 <body>
 
-  <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="contact%20us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
+    <nav class="navbar" aria-label="Main Navigation">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html" class="active">Careers</a>
+        <a href="contact%20us.html">Contact Us</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+
     <main class="container">
 
         <section class="card">
 
             <h1>Careers at TEMC</h1>
-<div class="hero-image-placeholder">
-    Careers Team Photograph Placeholder
-</div>
 
-<div class="text-placeholder">
-    Add careers introduction text here describing
-    workplace culture, employee development,
-    training opportunities and recruitment goals.
-</div>
+            <div
+                class="hero-image-placeholder"
+                role="img"
+                aria-label="Careers team placeholder image"
+            >
+                Careers Team Photograph Placeholder
+            </div>
+
+            <div class="text-placeholder">
+                Add careers introduction text here describing
+                workplace culture, employee development,
+                training opportunities and recruitment goals.
+            </div>
 
             <p>
                 The Excellent Management Company is committed to
@@ -150,9 +170,15 @@
                 ambitious and creative individuals.
             </p>
 
-            <div class="job-box"><div class="card-image-placeholder">
-    Job Opportunity Photograph Placeholder
-</div>
+            <div class="job-box">
+
+                <div
+                    class="card-image-placeholder"
+                    role="img"
+                    aria-label="Management development programme placeholder image"
+                >
+                    Job Opportunity Photograph Placeholder
+                </div>
 
                 <h2>Management Development Programme</h2>
 
@@ -176,6 +202,8 @@
         </section>
 
     </main>
+
+    <script src="script.js?v=23" defer></script>
 
 </body>
 </html>
