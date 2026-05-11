@@ -5,6 +5,9 @@
 const API_BASE_URL = "";
 
 let allApplications = [];
+let currentAdmin = null;
+
+/* ---------------- ELEMENTS ---------------- */
 
 const loginBox = document.getElementById("loginBox");
 const dashboardContent = document.getElementById("dashboardContent");
@@ -30,10 +33,57 @@ function clearToken() {
     localStorage.removeItem("adminToken");
 }
 
+function setAdmin(admin) {
+    localStorage.setItem("adminUser", JSON.stringify(admin));
+}
+
+function getAdmin() {
+    try {
+        return JSON.parse(localStorage.getItem("adminUser"));
+    } catch {
+        return null;
+    }
+}
+
+function clearAdmin() {
+    localStorage.removeItem("adminUser");
+}
+
+/* ---------------- ROLE HELPERS ---------------- */
+
+function isOwner() {
+    return currentAdmin?.role === "owner";
+}
+
+function isRecruiter() {
+    return currentAdmin?.role === "recruiter";
+}
+
+function isViewer() {
+    return currentAdmin?.role === "viewer";
+}
+
+function canEdit() {
+    return isOwner() || isRecruiter();
+}
+
+function canDelete() {
+    return isOwner();
+}
+
+function canExport() {
+    return isOwner() || isRecruiter();
+}
+
+function canInvite() {
+    return isOwner() || isRecruiter();
+}
+
 /* ---------------- SAFE FETCH ---------------- */
 
 async function fetchJSON(path, options = {}) {
     const response = await fetch(`${API_BASE_URL}${path}`, options);
+
     const text = await response.text();
 
     let data;
@@ -41,7 +91,7 @@ async function fetchJSON(path, options = {}) {
     try {
         data = JSON.parse(text);
     } catch (error) {
-        throw new Error(`Server returned non-JSON response: ${text.slice(0, 180)}`);
+        throw new Error(`Server returned invalid JSON.`);
     }
 
     if (!response.ok) {
@@ -66,9 +116,11 @@ function escapeHTML(value) {
 
 function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
+
     if (!toastContainer) return;
 
     const toast = document.createElement("div");
+
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
@@ -86,7 +138,9 @@ function formatDate(value) {
         ? new Date(value._seconds * 1000)
         : new Date(value);
 
-    return isNaN(date.getTime()) ? "Not set" : date.toLocaleString("en-GB");
+    return isNaN(date.getTime())
+        ? "Not set"
+        : date.toLocaleString("en-GB");
 }
 
 function findApplication(id) {
@@ -115,7 +169,10 @@ async function loginAdmin() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({
+                email,
+                password
+            })
         });
 
         if (!result.success || !result.token) {
@@ -125,17 +182,24 @@ async function loginAdmin() {
 
         setToken(result.token);
 
+        currentAdmin = result.admin || null;
+
+        setAdmin(currentAdmin);
+
         loginBox.style.display = "none";
         dashboardContent.style.display = "block";
 
-        adminInfo.innerHTML = `<p>Logged in as: <strong>${escapeHTML(email)}</strong></p>`;
+        renderAdminInfo();
+
         loginMessage.textContent = "";
 
         await loadApplications();
 
     } catch (error) {
         console.error("Login error:", error);
-        loginMessage.textContent = error.message || "Login failed.";
+
+        loginMessage.textContent =
+            error.message || "Login failed.";
     }
 }
 
@@ -143,7 +207,9 @@ async function loginAdmin() {
 
 function logoutAdmin() {
     clearToken();
+    clearAdmin();
 
+    currentAdmin = null;
     allApplications = [];
 
     loginBox.style.display = "block";
@@ -152,6 +218,7 @@ function logoutAdmin() {
     adminInfo.innerHTML = "";
     statsContainer.innerHTML = "";
     applicationsContainer.innerHTML = "";
+
     loginMessage.textContent = "Logged out.";
 }
 
@@ -166,12 +233,42 @@ async function restoreSavedLogin() {
         return;
     }
 
+    currentAdmin = getAdmin();
+
     loginBox.style.display = "none";
     dashboardContent.style.display = "block";
 
-    adminInfo.innerHTML = `<p>Logged in</p>`;
+    renderAdminInfo();
 
     await loadApplications();
+}
+
+/* ---------------- ADMIN INFO ---------------- */
+
+function renderAdminInfo() {
+    if (!currentAdmin) return;
+
+    adminInfo.innerHTML = `
+        <div class="application-card">
+            <h2>Admin Information</h2>
+
+            <p><strong>Name:</strong> ${escapeHTML(currentAdmin.name || "Unknown")}</p>
+
+            <p><strong>Email:</strong> ${escapeHTML(currentAdmin.email || "")}</p>
+
+            <p><strong>Role:</strong>
+                <span style="color:#ff9900;text-transform:uppercase;">
+                    ${escapeHTML(currentAdmin.role || "viewer")}
+                </span>
+            </p>
+        </div>
+    `;
+
+    if (!canExport() && exportCsvBtn) {
+        exportCsvBtn.style.display = "none";
+    } else if (exportCsvBtn) {
+        exportCsvBtn.style.display = "inline-block";
+    }
 }
 
 /* ---------------- LOAD APPLICATIONS ---------------- */
@@ -185,7 +282,8 @@ async function loadApplications() {
         return;
     }
 
-    applicationsContainer.innerHTML = "<p>Loading applications...</p>";
+    applicationsContainer.innerHTML =
+        "<p>Loading applications...</p>";
 
     try {
         const result = await fetchJSON("/api/admin/applications", {
@@ -198,14 +296,15 @@ async function loadApplications() {
         allApplications = result.applications || [];
 
         renderStats();
-        renderInterviewCalendar();
         renderApplications(allApplications);
 
     } catch (error) {
         console.error("Load applications error:", error);
 
         applicationsContainer.innerHTML = `
-            <p class="error-message">${escapeHTML(error.message)}</p>
+            <p class="error-message">
+                ${escapeHTML(error.message)}
+            </p>
         `;
     }
 }
@@ -214,58 +313,53 @@ async function loadApplications() {
 
 function renderStats() {
     const total = allApplications.length;
-    const newCount = allApplications.filter(app => app.status === "New").length;
-    const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
-    const interviewCount = allApplications.filter(app =>
-        app.status === "To Be Interviewed" ||
-        app.status === "Interview Invited"
+
+    const newCount = allApplications.filter(
+        app => app.status === "New"
     ).length;
-    const scheduledCount = allApplications.filter(app =>
-        app.interviewDate && app.interviewTime
+
+    const reviewedCount = allApplications.filter(
+        app => app.status === "Reviewed"
+    ).length;
+
+    const interviewCount = allApplications.filter(
+        app =>
+            app.status === "To Be Interviewed" ||
+            app.status === "Interview Invited"
+    ).length;
+
+    const hiredCount = allApplications.filter(
+        app => app.status === "Hired"
     ).length;
 
     statsContainer.innerHTML = `
         <div class="stats-grid">
-            <div class="stat-card"><h3>Total Applications</h3><p>${total}</p></div>
-            <div class="stat-card"><h3>New</h3><p>${newCount}</p></div>
-            <div class="stat-card"><h3>Reviewed</h3><p>${reviewedCount}</p></div>
-            <div class="stat-card"><h3>Interview Stage</h3><p>${interviewCount}</p></div>
-            <div class="stat-card"><h3>Scheduled Interviews</h3><p>${scheduledCount}</p></div>
-        </div>
-    `;
-}
 
-/* ---------------- INTERVIEW CALENDAR ---------------- */
-
-function renderInterviewCalendar() {
-    const scheduled = allApplications
-        .filter(app => app.interviewDate && app.interviewTime)
-        .sort((a, b) => {
-            return new Date(`${a.interviewDate}T${a.interviewTime}`) -
-                   new Date(`${b.interviewDate}T${b.interviewTime}`);
-        });
-
-    if (!scheduled.length) {
-        statsContainer.innerHTML += `
-            <div class="application-card">
-                <h2>Interview Calendar</h2>
-                <p>No interviews scheduled yet.</p>
+            <div class="stat-card">
+                <h3>Total Applications</h3>
+                <p>${total}</p>
             </div>
-        `;
-        return;
-    }
 
-    statsContainer.innerHTML += `
-        <div class="application-card">
-            <h2>Interview Calendar</h2>
-            ${scheduled.map(app => `
-                <p>
-                    <strong>${escapeHTML(app.fullName || "Unnamed Candidate")}</strong><br>
-                    Role: ${escapeHTML(app.position || "Not set")}<br>
-                    Date: ${escapeHTML(app.interviewDate)}<br>
-                    Time: ${escapeHTML(app.interviewTime)}
-                </p>
-            `).join("")}
+            <div class="stat-card">
+                <h3>New</h3>
+                <p>${newCount}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Reviewed</h3>
+                <p>${reviewedCount}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Interview Stage</h3>
+                <p>${interviewCount}</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Hired</h3>
+                <p>${hiredCount}</p>
+            </div>
+
         </div>
     `;
 }
@@ -273,94 +367,220 @@ function renderInterviewCalendar() {
 /* ---------------- RENDER APPLICATIONS ---------------- */
 
 function renderApplications(applications) {
+
     if (!applications.length) {
-        applicationsContainer.innerHTML = "<p>No applications found yet.</p>";
+        applicationsContainer.innerHTML =
+            "<p>No applications found.</p>";
         return;
     }
 
     applicationsContainer.innerHTML = applications.map(app => {
+
         const id = escapeHTML(app.id);
 
         return `
             <div class="application-card">
+
                 <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
 
+                <div class="card-image-placeholder">
+                    Candidate Photograph Placeholder
+                </div>
+
+                <div class="text-placeholder">
+                    Add recruiter observations,
+                    candidate summary notes,
+                    assessment information and
+                    interview highlights here.
+                </div>
+
                 <p><strong>Email:</strong> ${escapeHTML(app.email)}</p>
+
                 <p><strong>Phone:</strong> ${escapeHTML(app.phone)}</p>
+
                 <p><strong>Position:</strong> ${escapeHTML(app.position)}</p>
+
                 <p><strong>About:</strong> ${escapeHTML(app.about)}</p>
+
                 <p><strong>Status:</strong> ${escapeHTML(app.status || "New")}</p>
+
                 <p><strong>Rating:</strong> ${escapeHTML(app.rating || 0)} / 5</p>
+
                 <p><strong>Applied:</strong> ${formatDate(app.createdAt)}</p>
 
                 ${
                     app.cvUrl
-                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank">View CV</a></p>`
+                        ? `<p>
+                            <a href="${escapeHTML(app.cvUrl)}" target="_blank">
+                                View CV
+                            </a>
+                           </p>`
                         : `<p>No CV uploaded</p>`
                 }
 
                 <label>Status</label>
-                <select id="status-${id}">
+
+                <select id="status-${id}" ${!canEdit() ? "disabled" : ""}>
+
                     <option value="New" ${app.status === "New" ? "selected" : ""}>New</option>
+
                     <option value="Reviewed" ${app.status === "Reviewed" ? "selected" : ""}>Reviewed</option>
+
                     <option value="To Be Interviewed" ${app.status === "To Be Interviewed" ? "selected" : ""}>To Be Interviewed</option>
+
                     <option value="Interview Invited" ${app.status === "Interview Invited" ? "selected" : ""}>Interview Invited</option>
+
                     <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
+
                     <option value="Hired" ${app.status === "Hired" ? "selected" : ""}>Hired</option>
+
                 </select>
 
                 <label>Rating</label>
-                <select id="rating-${id}">
-                    ${[0, 1, 2, 3, 4, 5].map(num => `
-                        <option value="${num}" ${Number(app.rating || 0) === num ? "selected" : ""}>${num}</option>
+
+                <select id="rating-${id}" ${!canEdit() ? "disabled" : ""}>
+
+                    ${[0,1,2,3,4,5].map(num => `
+                        <option
+                            value="${num}"
+                            ${Number(app.rating || 0) === num ? "selected" : ""}
+                        >
+                            ${num}
+                        </option>
                     `).join("")}
+
                 </select>
 
                 <label>Notes</label>
-                <textarea id="notes-${id}">${escapeHTML(app.notes || "")}</textarea>
+
+                <textarea
+                    id="notes-${id}"
+                    ${!canEdit() ? "readonly" : ""}
+                >${escapeHTML(app.notes || "")}</textarea>
 
                 <label>Interview Date</label>
-                <input type="date" id="interviewDate-${id}" value="${escapeHTML(app.interviewDate || "")}">
+
+                <input
+                    type="date"
+                    id="interviewDate-${id}"
+                    value="${escapeHTML(app.interviewDate || "")}"
+                    ${!canEdit() ? "disabled" : ""}
+                >
 
                 <label>Interview Time</label>
-                <input type="time" id="interviewTime-${id}" value="${escapeHTML(app.interviewTime || "")}">
 
-                <button type="button" onclick="saveApplication('${id}')">Save Updates</button>
-                <button type="button" onclick="openInterviewTemplate('${id}')">Invite to Interview</button>
-                <button type="button" onclick="deleteApplication('${id}')">Delete Candidate</button>
+                <input
+                    type="time"
+                    id="interviewTime-${id}"
+                    value="${escapeHTML(app.interviewTime || "")}"
+                    ${!canEdit() ? "disabled" : ""}
+                >
 
-                <div id="template-${id}" style="display:none;margin-top:25px;">
+                ${
+                    canEdit()
+                    ? `
+                        <button
+                            type="button"
+                            onclick="saveApplication('${id}')"
+                        >
+                            Save Updates
+                        </button>
+                    `
+                    : ""
+                }
+
+                ${
+                    canInvite()
+                    ? `
+                        <button
+                            type="button"
+                            onclick="openInterviewTemplate('${id}')"
+                        >
+                            Invite to Interview
+                        </button>
+                    `
+                    : ""
+                }
+
+                ${
+                    canDelete()
+                    ? `
+                        <button
+                            type="button"
+                            onclick="deleteApplication('${id}')"
+                        >
+                            Delete Candidate
+                        </button>
+                    `
+                    : ""
+                }
+
+                <div
+                    id="template-${id}"
+                    style="display:none;margin-top:25px;"
+                >
+
                     <h3>Interview Invitation Template</h3>
-                    <textarea id="emailTemplate-${id}" style="min-height:270px;"></textarea>
-                    <button type="button" onclick="copyInterviewTemplate('${id}')">Copy Template</button>
-                    <button type="button" onclick="openEmailClient('${id}')">Open Email</button>
-                    <button type="button" onclick="markInvitationSent('${id}')">Mark Invitation Sent</button>
+
+                    <textarea
+                        id="emailTemplate-${id}"
+                        style="min-height:270px;"
+                    ></textarea>
+
+                    <button
+                        type="button"
+                        onclick="copyInterviewTemplate('${id}')"
+                    >
+                        Copy Template
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="openEmailClient('${id}')"
+                    >
+                        Open Email
+                    </button>
+
                 </div>
+
             </div>
         `;
+
     }).join("");
 }
 
 /* ---------------- SAVE APPLICATION ---------------- */
 
 async function saveApplication(id) {
+
+    if (!canEdit()) {
+        showToast("Permission denied.", "error");
+        return;
+    }
+
     const token = getToken();
 
     try {
-        const result = await fetchJSON(`/api/admin/applications/${id}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                status: document.getElementById(`status-${id}`).value,
-                rating: Number(document.getElementById(`rating-${id}`).value),
-                notes: document.getElementById(`notes-${id}`).value,
-                interviewDate: document.getElementById(`interviewDate-${id}`).value,
-                interviewTime: document.getElementById(`interviewTime-${id}`).value
-            })
-        });
+
+        const result = await fetchJSON(
+            `/api/admin/applications/${id}`,
+            {
+                method: "PATCH",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+
+                body: JSON.stringify({
+                    status: document.getElementById(`status-${id}`).value,
+                    rating: Number(document.getElementById(`rating-${id}`).value),
+                    notes: document.getElementById(`notes-${id}`).value,
+                    interviewDate: document.getElementById(`interviewDate-${id}`).value,
+                    interviewTime: document.getElementById(`interviewTime-${id}`).value
+                })
+            }
+        );
 
         if (result.success) {
             showToast("Application updated successfully.", "success");
@@ -368,40 +588,65 @@ async function saveApplication(id) {
         }
 
     } catch (error) {
-        console.error("Save error:", error);
-        showToast(error.message || "Failed to save application.", "error");
+        console.error(error);
+
+        showToast(
+            error.message || "Failed to save application.",
+            "error"
+        );
     }
 }
 
 /* ---------------- DELETE APPLICATION ---------------- */
 
 async function deleteApplication(id) {
-    if (!confirm("Are you sure you want to delete this candidate?")) return;
+
+    if (!canDelete()) {
+        showToast("Only owners can delete candidates.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this candidate?")) return;
 
     const token = getToken();
 
     try {
-        const result = await fetchJSON(`/api/admin/applications/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`
+
+        const result = await fetchJSON(
+            `/api/admin/applications/${id}`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
-        });
+        );
 
         if (result.success) {
-            showToast("Candidate deleted successfully.", "success");
+            showToast("Candidate deleted.", "success");
             await loadApplications();
         }
 
     } catch (error) {
-        console.error("Delete error:", error);
-        showToast(error.message || "Failed to delete candidate.", "error");
+        console.error(error);
+
+        showToast(
+            error.message || "Failed to delete candidate.",
+            "error"
+        );
     }
 }
 
 /* ---------------- INTERVIEW TEMPLATE ---------------- */
 
 function openInterviewTemplate(id) {
+
+    if (!canInvite()) {
+        showToast("Permission denied.", "error");
+        return;
+    }
+
     const app = findApplication(id);
 
     if (!app) {
@@ -409,11 +654,19 @@ function openInterviewTemplate(id) {
         return;
     }
 
-    const templateBox = document.getElementById(`template-${id}`);
-    const templateArea = document.getElementById(`emailTemplate-${id}`);
+    const templateBox =
+        document.getElementById(`template-${id}`);
 
-    const interviewDate = document.getElementById(`interviewDate-${id}`).value || "[INSERT INTERVIEW DATE]";
-    const interviewTime = document.getElementById(`interviewTime-${id}`).value || "[INSERT INTERVIEW TIME]";
+    const templateArea =
+        document.getElementById(`emailTemplate-${id}`);
+
+    const interviewDate =
+        document.getElementById(`interviewDate-${id}`).value ||
+        "[INSERT INTERVIEW DATE]";
+
+    const interviewTime =
+        document.getElementById(`interviewTime-${id}`).value ||
+        "[INSERT INTERVIEW TIME]";
 
     templateArea.value = `Subject: Invitation to Interview - ${app.position || "Your Application"}
 
@@ -427,77 +680,68 @@ Interview details:
 
 Date: ${interviewDate}
 Time: ${interviewTime}
-Location: [INSERT INTERVIEW LOCATION OR ONLINE MEETING LINK]
-
-Please bring any relevant documents with you, including proof of identity and any certificates or qualifications that may support your application.
-
-If you are unable to attend this interview time, please contact us as soon as possible so that we can discuss alternative arrangements.
+Location: [INSERT LOCATION]
 
 We look forward to meeting you.
 
 Kind regards,
 
-The Excellent Management Company
-Recruitment Team`;
+The Excellent Management Company`;
 
     templateBox.style.display = "block";
 }
 
 async function copyInterviewTemplate(id) {
-    const templateArea = document.getElementById(`emailTemplate-${id}`);
+
+    const templateArea =
+        document.getElementById(`emailTemplate-${id}`);
 
     try {
-        await navigator.clipboard.writeText(templateArea.value);
-        showToast("Interview template copied.", "success");
-    } catch (error) {
-        showToast("Could not copy template.", "error");
+
+        await navigator.clipboard.writeText(
+            templateArea.value
+        );
+
+        showToast("Template copied.", "success");
+
+    } catch {
+        showToast("Copy failed.", "error");
     }
 }
 
 function openEmailClient(id) {
+
     const app = findApplication(id);
-    const templateArea = document.getElementById(`emailTemplate-${id}`);
+
+    const templateArea =
+        document.getElementById(`emailTemplate-${id}`);
 
     if (!app || !app.email) {
-        showToast("Candidate email not found.", "error");
+        showToast("Candidate email missing.", "error");
         return;
     }
 
-    const subject = encodeURIComponent(`Invitation to Interview - ${app.position || "Your Application"}`);
+    const subject = encodeURIComponent(
+        `Invitation to Interview - ${app.position || "Application"}`
+    );
+
     const body = encodeURIComponent(templateArea.value);
 
-    window.open(`mailto:${app.email}?subject=${subject}&body=${body}`, "_blank");
-}
-
-async function markInvitationSent(id) {
-    const token = getToken();
-
-    try {
-        const result = await fetchJSON(`/api/admin/applications/${id}/invite`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                interviewDate: document.getElementById(`interviewDate-${id}`).value,
-                interviewTime: document.getElementById(`interviewTime-${id}`).value
-            })
-        });
-
-        if (result.success) {
-            showToast("Invitation marked as sent.", "success");
-            await loadApplications();
-        }
-
-    } catch (error) {
-        showToast(error.message || "Failed to mark invitation sent.", "error");
-    }
+    window.open(
+        `mailto:${app.email}?subject=${subject}&body=${body}`,
+        "_blank"
+    );
 }
 
 /* ---------------- EXPORT CSV ---------------- */
 
 function exportCSV() {
+
+    if (!canExport()) {
+        showToast("Permission denied.", "error");
+        return;
+    }
+
     if (!allApplications.length) {
         showToast("No applications to export.", "info");
         return;
@@ -510,10 +754,7 @@ function exportCSV() {
         "Position",
         "Status",
         "Rating",
-        "Notes",
-        "Interview Date",
-        "Interview Time",
-        "CV URL"
+        "Notes"
     ];
 
     const rows = allApplications.map(app => [
@@ -523,14 +764,15 @@ function exportCSV() {
         app.position || "",
         app.status || "",
         app.rating || "",
-        app.notes || "",
-        app.interviewDate || "",
-        app.interviewTime || "",
-        app.cvUrl || ""
+        app.notes || ""
     ]);
 
     const csvContent = [headers, ...rows]
-        .map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(","))
+        .map(row =>
+            row.map(value =>
+                `"${String(value).replaceAll('"', '""')}"`
+            ).join(",")
+        )
         .join("\n");
 
     const blob = new Blob([csvContent], {
@@ -538,8 +780,10 @@ function exportCSV() {
     });
 
     const link = document.createElement("a");
+
     link.href = URL.createObjectURL(blob);
     link.download = "temc-applications.csv";
+
     link.click();
 
     URL.revokeObjectURL(link.href);
@@ -548,17 +792,21 @@ function exportCSV() {
 /* ---------------- START ---------------- */
 
 document.addEventListener("DOMContentLoaded", () => {
+
     if (loginBtn) {
         loginBtn.addEventListener("click", loginAdmin);
     }
 
-    const passwordInput = document.getElementById("adminPassword");
+    const passwordInput =
+        document.getElementById("adminPassword");
 
     if (passwordInput) {
         passwordInput.addEventListener("keydown", event => {
+
             if (event.key === "Enter") {
                 loginAdmin();
             }
+
         });
     }
 
@@ -571,4 +819,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     restoreSavedLogin();
+
 });
