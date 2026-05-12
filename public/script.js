@@ -1,4 +1,3 @@
-
 const form = document.getElementById("applicationForm");
 const messageBox = document.getElementById("message");
 
