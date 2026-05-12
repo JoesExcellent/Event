@@ -448,10 +448,7 @@ function renderApplications(applications) {
             <div class="application-card">
                 <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
 
-                <div class="card-image-placeholder">
-                    Candidate Photograph Placeholder
-                </div>
-
+                
                 <div class="text-placeholder">
                     Add recruiter observations, candidate summary notes,
                     assessment information and interview highlights here.
