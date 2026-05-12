@@ -449,10 +449,7 @@ function renderApplications(applications) {
                 <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
 
                 
-                <div class="text-placeholder">
-                    Add recruiter observations, candidate summary notes,
-                    assessment information and interview highlights here.
-                </div>
+                
 
                 <p><strong>Email:</strong> ${escapeHTML(app.email)}</p>
                 <p><strong>Phone:</strong> ${escapeHTML(app.phone)}</p>
