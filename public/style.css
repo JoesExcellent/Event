@@ -1,1 +1,587 @@
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;background:#061a2d;color:#fff;line-height:1.5}.hidden{display:none!important}.navbar{background:#03111f;border-bottom:3px solid #ff6a00;padding:24px 46px;display:flex;gap:42px;align-items:center;flex-wrap:wrap}.navbar a{color:#fff;text-decoration:none;font-size:1.15rem;font-weight:800}.navbar a.active,.navbar a:hover{background:#ff6a00;padding:12px 18px;border-radius:10px}.page-wrap{width:min(1450px,94%);margin:0 auto;padding:42px 0}.dashboard-header,.login-card,.admin-intro-card,.stat-card,.analytics-card,.filters-card,.applications-card,.admin-info-card{background:#123d66;border-radius:28px;box-shadow:0 18px 45px rgba(0,0,0,.22)}.dashboard-header{padding:46px;margin-bottom:42px}.dashboard-header h1{font-size:clamp(2.2rem,5vw,4.2rem);line-height:1.08;margin-bottom:16px}.dashboard-header p{font-size:clamp(1.1rem,2vw,1.7rem);color:#dbeeff}.login-section{display:flex;justify-content:center}.login-card{width:min(640px,100%);padding:48px}.login-card h2{font-size:2.6rem;margin-bottom:30px}.login-card label{display:block;font-weight:800;margin:16px 0 8px}.login-card input,.filters-card input,.filters-card select,.candidate-card input,.candidate-card select,.candidate-card textarea{width:100%;border:0;border-radius:9px;background:#fff;color:#111;padding:13px 14px;font-size:1rem}.login-card input{padding:18px;font-size:1.15rem}.orange-btn,.danger-btn{border:0;border-radius:12px;padding:12px 20px;background:#ff6a00;color:#fff;font-weight:900;font-size:1rem;cursor:pointer}.danger-btn{background:#c9342b}.orange-btn:hover,.danger-btn:hover{opacity:.9}.form-message{margin-top:15px;color:#ffb000;font-weight:800}.admin-intro-card{padding:38px;margin-bottom:34px}.admin-intro-card h2{font-size:2rem;margin-bottom:24px}.hero-placeholder{min-height:250px;border:3px dashed rgba(154,218,255,.45);border-radius:20px;background:#14547a;display:flex;align-items:center;justify-content:center;text-align:center;color:#9adaff;font-size:1.5rem;font-weight:900;margin-bottom:28px}.intro-text{background:#102d49;border-left:6px solid #ff6a00;border-radius:16px;padding:24px;font-size:1.25rem;line-height:1.75;margin-bottom:18px}.button-row{display:flex;gap:14px;flex-wrap:wrap}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;margin-bottom:34px}.stat-card{padding:22px;border-left:5px solid #00d9ff}.stat-card h3{font-size:1rem;margin-bottom:12px}.stat-card p{font-size:2rem;font-weight:900}.analytics-card{padding:32px;margin-bottom:34px}.analytics-card h2{font-size:2rem;margin-bottom:14px}.chart-box{height:280px;max-height:280px;position:relative}.filters-card{padding:26px;margin-bottom:34px;display:grid;grid-template-columns:1fr 220px auto;gap:14px;align-items:center}.filters-card input,.filters-card select{height:44px}.filters-card button{height:44px;padding:0 18px}#showingCount{grid-column:1/-1;color:#ffae00;font-size:1.35rem;font-weight:900;margin-top:8px}.applications-card{padding:34px;margin-bottom:34px}.applications-card h2{font-size:2rem;margin-bottom:24px}.candidate-list{display:grid;gap:22px}.candidate-card{background:#164a77;border-radius:20px;padding:24px}.candidate-top{display:grid;grid-template-columns:150px 1fr;gap:20px;align-items:start}.candidate-photo-placeholder{height:135px;border:2px dashed rgba(154,218,255,.45);border-radius:14px;background:#14547a;display:flex;align-items:center;justify-content:center;text-align:center;color:#9adaff;font-weight:900;font-size:.95rem;padding:10px}.candidate-card h3{font-size:1.55rem;margin-bottom:8px}.candidate-card p{margin-bottom:6px}.status-badge{display:inline-block;padding:7px 12px;border-radius:999px;font-weight:900;font-size:.85rem;margin-bottom:10px}.status-new{background:#00d9ff;color:#03111f}.status-reviewed{background:#ffc400;color:#03111f}.status-interview{background:#9c27b0}.status-rejected{background:#c9342b}.status-hired{background:#3fa34d}.candidate-form{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.candidate-form label{font-weight:800;font-size:.95rem}.candidate-form textarea{min-height:76px;resize:vertical}.wide{grid-column:span 3}.candidate-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.admin-info-card{padding:38px}.admin-info-card h2{font-size:2.2rem;margin-bottom:24px}.admin-info-card p{font-size:1.35rem;margin-bottom:18px}.admin-info-card span{color:#ffae00}@media(max-width:850px){.navbar{padding:18px;gap:14px}.navbar a{font-size:.95rem}.page-wrap{width:96%;padding:24px 0}.dashboard-header,.login-card,.admin-intro-card,.analytics-card,.filters-card,.applications-card,.admin-info-card{padding:22px;border-radius:18px}.intro-text{font-size:1rem}.hero-placeholder{min-height:150px;font-size:1rem}.chart-box{height:220px}.filters-card{grid-template-columns:1fr}.candidate-top{grid-template-columns:1fr}.candidate-photo-placeholder{height:100px}.candidate-form{grid-template-columns:1fr}.wide{grid-column:span 1}.dashboard-header h1{font-size:2rem}.login-card h2,.analytics-card h2,.applications-card h2{font-size:1.7rem}}
+/* =====================================================
+   THE EXCELLENT MANAGEMENT COMPANY - SHARED SITE CSS
+   Dark navy / orange recruitment theme
+===================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #061b2f;
+    --nav: #03111f;
+    --panel: #123d66;
+    --panel-dark: #102f50;
+    --panel-soft: #174a77;
+    --orange: #ff6600;
+    --orange-hover: #ff7a1a;
+    --white: #ffffff;
+    --muted: #dcecff;
+    --cyan: #00d9ff;
+    --gold: #ffc400;
+    --purple: #9c27b0;
+    --red: #cf352b;
+    --green: #3fa34d;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+a {
+    color: inherit;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* =====================================================
+   NAVIGATION - SAME ON EVERY PAGE
+===================================================== */
+
+.navbar {
+    background: var(--nav);
+    border-bottom: 3px solid var(--orange);
+    padding: 22px 48px;
+    display: flex;
+    align-items: center;
+    gap: 34px;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: var(--white);
+    text-decoration: none;
+    font-size: 1.15rem;
+    font-weight: 800;
+    padding: 13px 20px;
+    border-radius: 12px;
+    transition: 0.2s ease;
+}
+
+.navbar a:hover,
+.navbar a.active {
+    background: var(--orange);
+    color: var(--white);
+}
+
+/* =====================================================
+   PAGE LAYOUT
+===================================================== */
+
+.page-wrap,
+.dashboard {
+    width: min(1320px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 54px 0;
+}
+
+.page-card,
+.dashboard-header,
+.login-box,
+.admin-panel,
+.application-card,
+.stat-card,
+.analytics-card,
+.filters-card,
+.admin-info-card,
+.service-card {
+    background: var(--panel);
+    border-radius: 26px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25);
+}
+
+.page-card {
+    padding: 50px;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: clamp(2.7rem, 6vw, 5.2rem);
+    line-height: 1.05;
+    margin-bottom: 28px;
+    letter-spacing: -1px;
+}
+
+h2 {
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1.15;
+    margin-bottom: 22px;
+}
+
+h3 {
+    font-size: 1.35rem;
+    margin-bottom: 12px;
+}
+
+p {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+}
+
+.lead {
+    font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+    color: var(--muted);
+    max-width: 1000px;
+}
+
+/* =====================================================
+   PHOTOGRAPH PLACEHOLDERS - ALL PAGES
+===================================================== */
+
+.photo-placeholder,
+.hero-image-placeholder,
+.section-image-placeholder,
+.card-image-placeholder {
+    width: 100%;
+    min-height: 270px;
+    background: linear-gradient(135deg, #0d5278, #123d66 60%, #102f50);
+    border: 3px dashed rgba(255, 255, 255, 0.28);
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #9fe8ff;
+    font-size: clamp(1.1rem, 2vw, 1.7rem);
+    font-weight: 800;
+    padding: 28px;
+    margin: 30px 0;
+}
+
+.card-image-placeholder {
+    min-height: 180px;
+    margin: 18px 0;
+    font-size: 1.1rem;
+}
+
+.text-placeholder,
+.info-box {
+    background: rgba(255, 255, 255, 0.07);
+    border-left: 5px solid var(--orange);
+    border-radius: 18px;
+    padding: 24px;
+    font-size: 1.15rem;
+    line-height: 1.75;
+    margin: 24px 0;
+}
+
+/* =====================================================
+   FORMS
+===================================================== */
+
+form {
+    margin-top: 18px;
+}
+
+label {
+    display: block;
+    font-weight: 800;
+    margin: 18px 0 8px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 1rem;
+    background: #ffffff;
+    color: #111827;
+}
+
+textarea {
+    min-height: 145px;
+    resize: vertical;
+}
+
+input[type="file"] {
+    background: transparent;
+    color: var(--white);
+    padding-left: 0;
+}
+
+button,
+.button-link,
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 12px 22px;
+    min-height: 44px;
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.18s ease;
+    line-height: 1;
+}
+
+button:hover,
+.button-link:hover,
+.btn:hover {
+    background: var(--orange-hover);
+    transform: translateY(-1px);
+}
+
+button.small-btn,
+.small-btn {
+    padding: 10px 16px;
+    min-height: 38px;
+    font-size: 0.92rem;
+    border-radius: 12px;
+}
+
+button.reject-btn,
+.reject-btn {
+    background: var(--red);
+}
+
+button.reject-btn:hover,
+.reject-btn:hover {
+    background: #e0463c;
+}
+
+button.delete-btn,
+.delete-btn {
+    background: #0b1b2b;
+}
+
+button.delete-btn:hover,
+.delete-btn:hover {
+    background: #122a42;
+}
+
+button.save-btn,
+.save-btn,
+button.invite-btn,
+.invite-btn,
+button.clear-btn,
+.clear-btn {
+    background: var(--orange);
+}
+
+.form-message,
+#message,
+#loginMessage {
+    margin-top: 14px;
+    font-weight: 800;
+    color: var(--gold);
+}
+
+/* =====================================================
+   HOME / SERVICES / CONTACT / CAREERS
+===================================================== */
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 26px;
+    margin-top: 30px;
+}
+
+.service-card {
+    overflow: hidden;
+}
+
+.service-card .section-image-placeholder {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    margin: 0;
+    min-height: 220px;
+}
+
+.service-content {
+    padding: 28px;
+}
+
+.service-content h2 {
+    color: var(--gold);
+    font-size: 1.75rem;
+}
+
+.contact-details p {
+    font-size: 1.35rem;
+}
+
+/* =====================================================
+   ADMIN DASHBOARD
+===================================================== */
+
+.dashboard-header {
+    padding: 42px;
+    margin-bottom: 34px;
+}
+
+.dashboard-header h1 {
+    font-size: clamp(2.4rem, 5vw, 4.8rem);
+    margin-bottom: 16px;
+}
+
+.dashboard-header p {
+    color: var(--muted);
+    font-size: 1.35rem;
+}
+
+.login-box {
+    width: min(620px, 100%);
+    margin: 50px auto;
+    padding: 42px;
+}
+
+.login-box h2 {
+    font-size: 2.7rem;
+}
+
+.admin-panel {
+    padding: 34px;
+    margin-bottom: 30px;
+}
+
+.top-actions,
+.button-row,
+.candidate-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+    margin: 26px 0;
+}
+
+.stat-card {
+    padding: 24px;
+    border-left: 5px solid var(--cyan);
+}
+
+.stat-card h3 {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+}
+
+.stat-card p {
+    font-size: 2.2rem;
+    font-weight: 900;
+    margin: 0;
+}
+
+.analytics-card {
+    padding: 30px;
+    margin: 28px 0;
+}
+
+.analytics-card h2 {
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    max-height: 320px;
+}
+
+#applicationsChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.filters-card {
+    padding: 28px;
+    margin: 28px 0;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+
+#filterCount {
+    color: var(--gold);
+    font-size: 1.35rem;
+    font-weight: 900;
+    margin-top: 18px;
+}
+
+.application-card {
+    padding: 28px;
+    margin-bottom: 24px;
+}
+
+.application-card h2 {
+    font-size: 1.9rem;
+}
+
+.application-card p {
+    margin-bottom: 8px;
+}
+
+.application-card label {
+    margin-top: 14px;
+}
+
+.interview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.status-badge,
+.role-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 900;
+    margin-bottom: 14px;
+    color: #ffffff;
+}
+
+.status-new { background: var(--cyan); color: #061b2f; }
+.status-reviewed { background: var(--gold); color: #061b2f; }
+.status-interview { background: var(--purple); }
+.status-rejected { background: var(--red); }
+.status-hired { background: var(--green); }
+.status-default { background: #63738a; }
+.role-owner { background: var(--red); }
+.role-recruiter { background: #2980b9; }
+.role-viewer { background: #7f8c8d; }
+
+.admin-info-card {
+    padding: 34px;
+    margin: 28px 0;
+}
+
+.admin-info-card p {
+    font-size: 1.35rem;
+}
+
+.admin-role-text {
+    color: var(--gold);
+    text-transform: uppercase;
+}
+
+.error-message {
+    color: #ff8179;
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 270px;
+    max-width: 380px;
+    padding: 15px 18px;
+    border-radius: 12px;
+    color: var(--white);
+    font-weight: 800;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+}
+
+.toast-success { background: #27ae60; }
+.toast-error { background: var(--red); }
+.toast-info { background: #2980b9; }
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 760px) {
+    .navbar {
+        padding: 18px;
+        gap: 12px;
+    }
+
+    .navbar a {
+        font-size: 1rem;
+        padding: 11px 14px;
+    }
+
+    .page-wrap,
+    .dashboard {
+        width: min(100% - 28px, 1320px);
+        padding: 34px 0;
+    }
+
+    .page-card,
+    .dashboard-header,
+    .login-box,
+    .admin-panel,
+    .application-card,
+    .filters-card,
+    .analytics-card,
+    .admin-info-card {
+        padding: 24px;
+        border-radius: 20px;
+    }
+
+    h1 {
+        font-size: 2.7rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.4rem;
+    }
+
+    .photo-placeholder,
+    .hero-image-placeholder,
+    .section-image-placeholder {
+        min-height: 210px;
+    }
+
+    .chart-wrapper {
+        height: 260px;
+        max-height: 260px;
+    }
+
+    button,
+    .button-link,
+    .btn {
+        width: auto;
+        font-size: 0.95rem;
+        padding: 11px 16px;
+    }
+
+    .top-actions button,
+    .filter-grid button {
+        width: 100%;
+    }
+}
