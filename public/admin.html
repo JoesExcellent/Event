@@ -1,19 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Updated Admin Dashboard</title>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="Administrative recruitment dashboard for Joe's Excellent Events and Management."
+    >
+
+    <meta name="robots" content="noindex, nofollow">
+
+    <title>Admin Dashboard | Joe's Excellent Events & Management</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<h1>Joe's Excellent Event & Management Admin Dashboard</h1>
+    <nav class="navbar" aria-label="Main Navigation">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="contact%20us.html">Contact Us</a>
+        <a href="admin.html" class="active">Admin</a>
+    </nav>
 
-<div id="applications"></div>
+    <div id="toastContainer"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="charts_updated_v2.js"></script>
-<script src="admin_updated_v2.js"></script>
+    <main class="dashboard">
+
+        <h2>Admin Dashboard</h2>
+
+        <img
+            src="images/dashboard.png"
+            alt="Joe's Excellent Events and Management admin dashboard banner"
+            class="hero-image"
+        >
+
+        <div class="text-placeholder">
+           Joe's Excellent Event & Management demonstrates outstanding professionalism through its clear recruitment objectives, efficient candidate tracking systems, and highly organised interview coordination processes that help businesses identify and secure high-quality talent. The company’s structured reporting methods and commitment to smooth communication create a reliable and professional recruitment experience for both employers and candidates alike.
+
+        </div>
+
+        <div id="loginBox" class="login-box">
+
+            <h2>Admin Login</h2>
+
+            <label for="adminEmail">Admin Email</label>
+
+            <input
+                type="email"
+                id="adminEmail"
+                placeholder="Enter admin email"
+                autocomplete="username"
+            >
+
+            <label for="adminPassword">Admin Password</label>
+
+            <input
+                type="password"
+                id="adminPassword"
+                placeholder="Enter admin password"
+                autocomplete="current-password"
+            >
+
+            <button id="loginBtn" type="button">
+                Login
+            </button>
+
+            <p id="loginMessage"></p>
+
+        </div>
+
+        <div id="dashboardContent" style="display:none;">
+
+            <button id="logoutBtn" type="button">
+                Logout
+            </button>
+
+            <button id="exportCsvBtn" type="button">
+                Export CSV
+            </button>
+
+            <div id="adminInfo"></div>
+
+            <div id="permissionsInfo" class="permission-box"></div>
+
+            <div id="stats"></div>
+
+            <div class="application-card analytics-card">
+
+                <h2>Recruitment Analytics</h2>
+
+                <div class="chart-wrapper">
+
+                    <canvas
+                        id="applicationsChart"
+                        aria-label="Recruitment analytics chart"
+                    ></canvas>
+
+                </div>
+
+            </div>
+
+            <div id="applications"></div>
+
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="charts.js" defer></script>
+
+    <script src="admin.js" defer></script>
 
 </body>
 </html>
