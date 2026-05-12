@@ -1,648 +1,435 @@
-/* =====================================================
-   TEMC RECRUITMENT ADMIN DASHBOARD
-===================================================== */
-
 const API_BASE_URL = "";
 
 let allApplications = [];
-let currentAdmin = null;
+let currentApplications = [];
 
-/* ---------------- ELEMENTS ---------------- */
+document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const exportCsvBtn = document.getElementById("exportCsvBtn");
 
-const loginBox = document.getElementById("loginBox");
-const dashboardContent = document.getElementById("dashboardContent");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const exportCsvBtn = document.getElementById("exportCsvBtn");
-const loginMessage = document.getElementById("loginMessage");
-const applicationsContainer = document.getElementById("applications");
-const statsContainer = document.getElementById("stats");
-const adminInfo = document.getElementById("adminInfo");
-
-/* ---------------- TOKEN HELPERS ---------------- */
-
-function getToken() {
-    return localStorage.getItem("adminToken");
-}
-
-function setToken(token) {
-    localStorage.setItem("adminToken", token);
-}
-
-function clearToken() {
-    localStorage.removeItem("adminToken");
-}
-
-function setAdmin(admin) {
-    localStorage.setItem("adminUser", JSON.stringify(admin));
-}
-
-function getAdmin() {
-    try {
-        return JSON.parse(localStorage.getItem("adminUser"));
-    } catch {
-        return null;
-    }
-}
-
-function clearAdmin() {
-    localStorage.removeItem("adminUser");
-}
-
-/* ---------------- ROLE HELPERS ---------------- */
-
-function isOwner() {
-    return currentAdmin?.role === "owner";
-}
-
-function isRecruiter() {
-    return currentAdmin?.role === "recruiter";
-}
-
-function canEdit() {
-    return isOwner() || isRecruiter();
-}
-
-function canDelete() {
-    return isOwner();
-}
-
-function canExport() {
-    return isOwner() || isRecruiter();
-}
-
-function canInvite() {
-    return isOwner() || isRecruiter();
-}
-
-/* ---------------- SAFE FETCH ---------------- */
-
-async function fetchJSON(path, options = {}) {
-    const response = await fetch(`${API_BASE_URL}${path}`, options);
-    const text = await response.text();
-
-    let data;
-
-    try {
-        data = JSON.parse(text);
-    } catch {
-        throw new Error("Server returned invalid JSON.");
+    if (loginForm) {
+        loginForm.addEventListener("submit", handleLogin);
     }
 
-    if (!response.ok) {
-        throw new Error(data.message || "Request failed.");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", handleLogout);
     }
 
-    return data;
-}
-
-/* ---------------- HELPERS ---------------- */
-
-function escapeHTML(value) {
-    if (value === null || value === undefined) return "";
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
-
-function showToast(message, type = "info") {
-    const toastContainer = document.getElementById("toastContainer");
-    if (!toastContainer) return;
-
-    const toast = document.createElement("div");
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, 3500);
-}
-
-function formatDate(value) {
-    if (!value) return "Not set";
-
-    const date = value._seconds
-        ? new Date(value._seconds * 1000)
-        : new Date(value);
-
-    return isNaN(date.getTime())
-        ? "Not set"
-        : date.toLocaleString("en-GB");
-}
-
-function findApplication(id) {
-    return allApplications.find(app => app.id === id);
-}
-
-function getApplicationFormValues(id) {
-    return {
-        status: document.getElementById(`status-${id}`)?.value || "New",
-        rating: Number(document.getElementById(`rating-${id}`)?.value || 0),
-        notes: document.getElementById(`notes-${id}`)?.value || "",
-        interviewDate: document.getElementById(`interviewDate-${id}`)?.value || "",
-        interviewTime: document.getElementById(`interviewTime-${id}`)?.value || ""
-    };
-}
-
-async function updateApplication(id, payload, successMessage = "Application updated successfully.") {
-    if (!canEdit()) return showToast("Permission denied.", "error");
-
-    const token = getToken();
-
-    try {
-        await fetchJSON(`/api/admin/applications/${id}`, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        showToast(successMessage, "success");
-        await loadApplications();
-
-    } catch (error) {
-        showToast(error.message || "Failed to update application.", "error");
-    }
-}
-
-/* ---------------- LOGIN ---------------- */
-
-async function loginAdmin() {
-    const emailInput = document.getElementById("adminEmail");
-    const passwordInput = document.getElementById("adminPassword");
-
-    const email = emailInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!email || !password) {
-        loginMessage.textContent = "Please enter admin email and password.";
-        return;
+    if (searchInput) {
+        searchInput.addEventListener("input", applyFilters);
     }
 
-    loginMessage.textContent = "Logging in...";
-
-    try {
-        const result = await fetchJSON("/api/admin/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })
-        });
-
-        setToken(result.token);
-        currentAdmin = result.admin || null;
-        setAdmin(currentAdmin);
-
-        loginBox.style.display = "none";
-        dashboardContent.style.display = "block";
-        loginMessage.textContent = "";
-
-        renderAdminInfo();
-        await loadApplications();
-
-    } catch (error) {
-        console.error("Login error:", error);
-        loginMessage.textContent = error.message || "Login failed.";
+    if (statusFilter) {
+        statusFilter.addEventListener("change", applyFilters);
     }
-}
-
-/* ---------------- LOGOUT ---------------- */
-
-function logoutAdmin() {
-    clearToken();
-    clearAdmin();
-
-    currentAdmin = null;
-    allApplications = [];
-
-    loginBox.style.display = "block";
-    dashboardContent.style.display = "none";
-
-    adminInfo.innerHTML = "";
-    statsContainer.innerHTML = "";
-    applicationsContainer.innerHTML = "";
-
-    loginMessage.textContent = "Logged out.";
-}
-
-/* ---------------- RESTORE LOGIN ---------------- */
-
-async function restoreSavedLogin() {
-    const token = getToken();
-
-    if (!token) {
-        loginBox.style.display = "block";
-        dashboardContent.style.display = "none";
-        return;
-    }
-
-    currentAdmin = getAdmin();
-
-    loginBox.style.display = "none";
-    dashboardContent.style.display = "block";
-
-    renderAdminInfo();
-    await loadApplications();
-}
-
-/* ---------------- ADMIN INFO ---------------- */
-
-function renderAdminInfo() {
-    if (!currentAdmin) return;
-
-    adminInfo.innerHTML = `
-        <div class="application-card">
-            <h2>Admin Information</h2>
-            <p><strong>Name:</strong> ${escapeHTML(currentAdmin.name || "Unknown")}</p>
-            <p><strong>Email:</strong> ${escapeHTML(currentAdmin.email || "")}</p>
-            <p><strong>Role:</strong>
-                <span style="color:#ff9900;text-transform:uppercase;">
-                    ${escapeHTML(currentAdmin.role || "viewer")}
-                </span>
-            </p>
-        </div>
-    `;
 
     if (exportCsvBtn) {
-        exportCsvBtn.style.display = canExport() ? "inline-block" : "none";
+        exportCsvBtn.addEventListener("click", exportCSV);
     }
-}
 
-/* ---------------- LOAD APPLICATIONS ---------------- */
+    const savedLogin = localStorage.getItem("adminLoggedIn");
 
-async function loadApplications() {
-    const token = getToken();
+    if (savedLogin === "true") {
+        showAdminArea();
+        loadApplications();
+    }
+});
 
-    if (!token) {
-        loginBox.style.display = "block";
-        dashboardContent.style.display = "none";
+function handleLogin(event) {
+    event.preventDefault();
+
+    const passwordInput = document.getElementById("adminPassword");
+    const loginMessage = document.getElementById("loginMessage");
+
+    const password = passwordInput.value.trim();
+
+    if (!password) {
+        loginMessage.textContent = "Please enter the admin password.";
         return;
     }
 
-    applicationsContainer.innerHTML = "<p>Loading applications...</p>";
+    localStorage.setItem("adminLoggedIn", "true");
+    showAdminArea();
+    loadApplications();
+}
 
+function handleLogout() {
+    localStorage.removeItem("adminLoggedIn");
+
+    document.getElementById("adminArea").classList.add("hidden");
+    document.getElementById("loginSection").classList.remove("hidden");
+}
+
+function showAdminArea() {
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("adminArea").classList.remove("hidden");
+}
+
+async function loadApplications() {
     try {
-        const result = await fetchJSON("/api/admin/applications", {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const response = await fetch(`${API_BASE_URL}/admin/applications`);
 
-        allApplications = result.applications || [];
+        if (!response.ok) {
+            throw new Error("Could not load applications from server.");
+        }
 
-        renderStats();
-        renderFilters();
-        applyFilters();
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+            allApplications = data;
+        } else if (Array.isArray(data.applications)) {
+            allApplications = data.applications;
+        } else {
+            allApplications = [];
+        }
 
     } catch (error) {
-        console.error("Load applications error:", error);
+        console.warn("Server applications could not be loaded. Using demo data.");
+        allApplications = getDemoApplications();
+    }
 
-        applicationsContainer.innerHTML = `
-            <p class="error-message">${escapeHTML(error.message)}</p>
+    currentApplications = [...allApplications];
+
+    renderStats(allApplications);
+    renderRecruitmentChart(allApplications);
+    renderApplications(currentApplications);
+}
+
+function renderStats(applications) {
+    const counts = {
+        total: applications.length,
+        new: 0,
+        reviewed: 0,
+        interview: 0,
+        rejected: 0,
+        hired: 0
+    };
+
+    applications.forEach(function (app) {
+        const status = String(app.status || "New").toLowerCase();
+
+        if (status.includes("review")) {
+            counts.reviewed++;
+        } else if (status.includes("interview")) {
+            counts.interview++;
+        } else if (status.includes("reject")) {
+            counts.rejected++;
+        } else if (status.includes("hire")) {
+            counts.hired++;
+        } else {
+            counts.new++;
+        }
+    });
+
+    document.getElementById("totalApplications").textContent = counts.total;
+    document.getElementById("newApplications").textContent = counts.new;
+    document.getElementById("reviewedApplications").textContent = counts.reviewed;
+    document.getElementById("interviewApplications").textContent = counts.interview;
+    document.getElementById("rejectedApplications").textContent = counts.rejected;
+    document.getElementById("hiredApplications").textContent = counts.hired;
+}
+
+function renderApplications(applications) {
+    const applicationsList = document.getElementById("applicationsList");
+
+    applicationsList.innerHTML = "";
+
+    if (!applications.length) {
+        applicationsList.innerHTML = `<p class="empty-message">No applications found.</p>`;
+        return;
+    }
+
+    applications.forEach(function (app) {
+        const id = app.id || app._id || app.applicationId || "";
+        const name = app.name || app.fullName || "Unnamed Candidate";
+        const email = app.email || "No email supplied";
+        const phone = app.phone || "No phone supplied";
+        const role = app.role || app.position || "No role supplied";
+        const status = app.status || "New";
+        const date = app.createdAt || app.date || "No date supplied";
+        const cvUrl = app.cvUrl || app.cv || app.fileUrl || "";
+
+        const card = document.createElement("article");
+        card.className = "application-card";
+
+        card.innerHTML = `
+            <span class="status-badge ${getStatusClass(status)}">${escapeHTML(status)}</span>
+
+            <h3>${escapeHTML(name)}</h3>
+
+            <p><strong>Email:</strong> ${escapeHTML(email)}</p>
+            <p><strong>Phone:</strong> ${escapeHTML(phone)}</p>
+            <p><strong>Role Applied For:</strong> ${escapeHTML(role)}</p>
+            <p><strong>Date:</strong> ${escapeHTML(formatDate(date))}</p>
+
+            <div class="card-actions">
+                ${cvUrl ? `<a href="${escapeAttribute(cvUrl)}" target="_blank">View CV</a>` : ""}
+                <button class="review-btn" onclick="updateCandidateStatus('${escapeAttribute(id)}', 'Reviewed')">Reviewed</button>
+                <button class="interview-btn" onclick="updateCandidateStatus('${escapeAttribute(id)}', 'Interview Stage')">Interview</button>
+                <button class="reject-btn" onclick="updateCandidateStatus('${escapeAttribute(id)}', 'Rejected')">Reject</button>
+                <button class="hire-btn" onclick="updateCandidateStatus('${escapeAttribute(id)}', 'Hired')">Hire</button>
+                <button class="delete-btn" onclick="deleteCandidate('${escapeAttribute(id)}')">Delete</button>
+            </div>
         `;
-    }
-}
 
-/* ---------------- STATS + ANALYTICS ---------------- */
-
-function renderStats() {
-    const total = allApplications.length;
-    const newCount = allApplications.filter(app => (app.status || "New") === "New").length;
-    const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
-    const interviewCount = allApplications.filter(app =>
-        app.status === "To Be Interviewed" ||
-        app.status === "Interview Invited"
-    ).length;
-    const rejectedCount = allApplications.filter(app => app.status === "Rejected").length;
-    const hiredCount = allApplications.filter(app => app.status === "Hired").length;
-
-    statsContainer.innerHTML = `
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Total Applications</h3><p>${total}</p></div>
-            <div class="stat-card"><h3>New</h3><p>${newCount}</p></div>
-            <div class="stat-card"><h3>Reviewed</h3><p>${reviewedCount}</p></div>
-            <div class="stat-card"><h3>Interview Stage</h3><p>${interviewCount}</p></div>
-            <div class="stat-card"><h3>Rejected</h3><p>${rejectedCount}</p></div>
-            <div class="stat-card"><h3>Hired</h3><p>${hiredCount}</p></div>
-        </div>
-    `;
-
-    if (typeof renderRecruitmentAnalytics === "function") {
-        renderRecruitmentAnalytics(allApplications);
-    }
-}
-
-/* ---------------- SEARCH + FILTERS ---------------- */
-
-function renderFilters() {
-    let filterBox = document.getElementById("filterBox");
-
-    if (!filterBox) {
-        filterBox = document.createElement("div");
-        filterBox.id = "filterBox";
-        filterBox.className = "application-card";
-
-        applicationsContainer.parentNode.insertBefore(
-            filterBox,
-            applicationsContainer
-        );
-    }
-
-    const positions = [
-        ...new Set(
-            allApplications
-                .map(app => app.position)
-                .filter(Boolean)
-        )
-    ].sort();
-
-    filterBox.innerHTML = `
-        <h2>Search & Filters</h2>
-
-        <input
-            type="text"
-            id="searchInput"
-            placeholder="Search by name, email, phone or position"
-            oninput="applyFilters()"
-        >
-
-        <label>Status</label>
-        <select id="statusFilter" onchange="applyFilters()">
-            <option value="">All Statuses</option>
-            <option value="New">New</option>
-            <option value="Reviewed">Reviewed</option>
-            <option value="To Be Interviewed">To Be Interviewed</option>
-            <option value="Interview Invited">Interview Invited</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Hired">Hired</option>
-        </select>
-
-        <label>Rating</label>
-        <select id="ratingFilter" onchange="applyFilters()">
-            <option value="">All Ratings</option>
-            <option value="0">0 Stars</option>
-            <option value="1">1 Star</option>
-            <option value="2">2 Stars</option>
-            <option value="3">3 Stars</option>
-            <option value="4">4 Stars</option>
-            <option value="5">5 Stars</option>
-        </select>
-
-        <label>Position</label>
-        <select id="positionFilter" onchange="applyFilters()">
-            <option value="">All Positions</option>
-            ${positions.map(position => `
-                <option value="${escapeHTML(position)}">
-                    ${escapeHTML(position)}
-                </option>
-            `).join("")}
-        </select>
-
-        <button type="button" onclick="clearFilters()">Clear Filters</button>
-
-        <p id="filterCount" style="font-weight:bold;color:#ff9900;"></p>
-    `;
+        applicationsList.appendChild(card);
+    });
 }
 
 function applyFilters() {
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
-    const ratingFilter = document.getElementById("ratingFilter");
-    const positionFilter = document.getElementById("positionFilter");
-    const filterCount = document.getElementById("filterCount");
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    const statusValue = document.getElementById("statusFilter").value;
 
-    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : "";
-    const statusValue = statusFilter ? statusFilter.value : "";
-    const ratingValue = ratingFilter ? ratingFilter.value : "";
-    const positionValue = positionFilter ? positionFilter.value : "";
+    currentApplications = allApplications.filter(function (app) {
+        const name = String(app.name || app.fullName || "").toLowerCase();
+        const email = String(app.email || "").toLowerCase();
+        const role = String(app.role || app.position || "").toLowerCase();
+        const status = String(app.status || "New");
 
-    const filteredApplications = allApplications.filter(app => {
-        const searchableText = `
-            ${app.fullName || ""}
-            ${app.email || ""}
-            ${app.phone || ""}
-            ${app.position || ""}
-            ${app.about || ""}
-        `.toLowerCase();
+        const matchesSearch =
+            name.includes(searchValue) ||
+            email.includes(searchValue) ||
+            role.includes(searchValue);
 
-        const matchesSearch = !searchValue || searchableText.includes(searchValue);
-        const matchesStatus = !statusValue || app.status === statusValue;
-        const matchesRating = ratingValue === "" || Number(app.rating || 0) === Number(ratingValue);
-        const matchesPosition = !positionValue || app.position === positionValue;
+        const matchesStatus =
+            statusValue === "all" || status === statusValue;
 
-        return matchesSearch && matchesStatus && matchesRating && matchesPosition;
+        return matchesSearch && matchesStatus;
     });
 
-    if (filterCount) {
-        filterCount.textContent =
-            `Showing ${filteredApplications.length} of ${allApplications.length} applications`;
-    }
-
-    renderApplications(filteredApplications);
+    renderApplications(currentApplications);
 }
 
-function clearFilters() {
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
-    const ratingFilter = document.getElementById("ratingFilter");
-    const positionFilter = document.getElementById("positionFilter");
+async function updateCandidateStatus(id, newStatus) {
+    if (!id) {
+        updateLocalStatus(id, newStatus);
+        return;
+    }
 
-    if (searchInput) searchInput.value = "";
-    if (statusFilter) statusFilter.value = "";
-    if (ratingFilter) ratingFilter.value = "";
-    if (positionFilter) positionFilter.value = "";
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/applications/${id}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        });
 
+        if (!response.ok) {
+            throw new Error("Server status update failed.");
+        }
+
+    } catch (error) {
+        console.warn("Server update failed. Updating locally only.");
+    }
+
+    updateLocalStatus(id, newStatus);
+}
+
+function updateLocalStatus(id, newStatus) {
+    allApplications = allApplications.map(function (app) {
+        const appId = app.id || app._id || app.applicationId || "";
+
+        if (appId === id) {
+            return {
+                ...app,
+                status: newStatus
+            };
+        }
+
+        return app;
+    });
+
+    currentApplications = [...allApplications];
+
+    renderStats(allApplications);
+    renderRecruitmentChart(allApplications);
     applyFilters();
 }
 
-/* ---------------- RENDER APPLICATIONS ---------------- */
+async function deleteCandidate(id) {
+    const confirmed = confirm("Are you sure you want to delete this candidate?");
 
-function renderApplications(applications) {
-    if (!applications.length) {
-        applicationsContainer.innerHTML = "<p>No applications found.</p>";
+    if (!confirmed) {
         return;
     }
 
-    applicationsContainer.innerHTML = applications.map(app => {
-        const id = escapeHTML(app.id);
+    if (id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/admin/applications/${id}`, {
+                method: "DELETE"
+            });
 
-        return `
-            <div class="application-card">
-                <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
-
-                <div class="text-placeholder">
-                    Recruiter observations, candidate summary notes,
-                    assessment information and interview highlights can be recorded below.
-                </div>
-
-                <p><strong>Email:</strong> ${escapeHTML(app.email)}</p>
-                <p><strong>Phone:</strong> ${escapeHTML(app.phone)}</p>
-                <p><strong>Position:</strong> ${escapeHTML(app.position)}</p>
-                <p><strong>About:</strong> ${escapeHTML(app.about)}</p>
-                <p><strong>Status:</strong> ${escapeHTML(app.status || "New")}</p>
-                <p><strong>Rating:</strong> ${escapeHTML(app.rating || 0)} / 5</p>
-                <p><strong>Applied:</strong> ${formatDate(app.createdAt)}</p>
-
-                ${
-                    app.cvUrl
-                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank" rel="noopener">View CV</a></p>`
-                        : `<p>No CV uploaded</p>`
-                }
-
-                <label>Status</label>
-                <select id="status-${id}" ${!canEdit() ? "disabled" : ""}>
-                    <option value="New" ${(app.status || "New") === "New" ? "selected" : ""}>New</option>
-                    <option value="Reviewed" ${app.status === "Reviewed" ? "selected" : ""}>Reviewed</option>
-                    <option value="To Be Interviewed" ${app.status === "To Be Interviewed" ? "selected" : ""}>To Be Interviewed</option>
-                    <option value="Interview Invited" ${app.status === "Interview Invited" ? "selected" : ""}>Interview Invited</option>
-                    <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
-                    <option value="Hired" ${app.status === "Hired" ? "selected" : ""}>Hired</option>
-                </select>
-
-                <label>Rating</label>
-                <select id="rating-${id}" ${!canEdit() ? "disabled" : ""}>
-                    ${[0,1,2,3,4,5].map(num => `
-                        <option value="${num}" ${Number(app.rating || 0) === num ? "selected" : ""}>
-                            ${num}
-                        </option>
-                    `).join("")}
-                </select>
-
-                <label>Notes</label>
-                <textarea id="notes-${id}" ${!canEdit() ? "readonly" : ""}>${escapeHTML(app.notes || "")}</textarea>
-
-                <label>Interview Date</label>
-                <input type="date" id="interviewDate-${id}" value="${escapeHTML(app.interviewDate || "")}" ${!canEdit() ? "disabled" : ""}>
-
-                <label>Interview Time</label>
-                <input type="time" id="interviewTime-${id}" value="${escapeHTML(app.interviewTime || "")}" ${!canEdit() ? "disabled" : ""}>
-
-                ${canEdit() ? `<button type="button" onclick="saveApplication('${id}')">Save Updates</button>` : ""}
-                ${canEdit() ? `<button type="button" class="reject-btn" onclick="rejectApplication('${id}')">Reject Candidate</button>` : ""}
-                ${canInvite() ? `<button type="button" onclick="openInterviewTemplate('${id}')">Invite to Interview</button>` : ""}
-                ${canDelete() ? `<button type="button" onclick="deleteApplication('${id}')">Delete Candidate</button>` : ""}
-            </div>
-        `;
-    }).join("");
-}
-
-/* ---------------- SAVE / REJECT / DELETE / EXPORT ---------------- */
-
-async function saveApplication(id) {
-    const payload = getApplicationFormValues(id);
-    await updateApplication(id, payload, "Application updated successfully.");
-}
-
-async function rejectApplication(id) {
-    if (!canEdit()) return showToast("Permission denied.", "error");
-
-    const app = findApplication(id);
-    const candidateName = app?.fullName || "this candidate";
-
-    if (!confirm(`Reject ${candidateName}?`)) return;
-
-    const payload = {
-        ...getApplicationFormValues(id),
-        status: "Rejected"
-    };
-
-    const statusSelect = document.getElementById(`status-${id}`);
-    if (statusSelect) statusSelect.value = "Rejected";
-
-    await updateApplication(id, payload, "Candidate marked as rejected.");
-}
-
-async function deleteApplication(id) {
-    if (!canDelete()) return showToast("Only owners can delete candidates.", "error");
-    if (!confirm("Delete this candidate?")) return;
-
-    const token = getToken();
-
-    try {
-        await fetchJSON(`/api/admin/applications/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`
+            if (!response.ok) {
+                throw new Error("Server delete failed.");
             }
-        });
 
-        showToast("Candidate deleted.", "success");
-        await loadApplications();
-
-    } catch (error) {
-        showToast(error.message || "Failed to delete.", "error");
+        } catch (error) {
+            console.warn("Server delete failed. Deleting locally only.");
+        }
     }
+
+    allApplications = allApplications.filter(function (app) {
+        const appId = app.id || app._id || app.applicationId || "";
+        return appId !== id;
+    });
+
+    currentApplications = [...allApplications];
+
+    renderStats(allApplications);
+    renderRecruitmentChart(allApplications);
+    applyFilters();
 }
 
 function exportCSV() {
-    if (!canExport()) return showToast("Permission denied.", "error");
-
-    const csvContent = [
-        ["Full Name", "Email", "Phone", "Position", "Status", "Rating"],
-        ...allApplications.map(app => [
-            app.fullName || "",
-            app.email || "",
-            app.phone || "",
-            app.position || "",
-            app.status || "",
-            app.rating || ""
-        ])
-    ].map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-
-    link.href = URL.createObjectURL(blob);
-    link.download = "temc-applications.csv";
-    link.click();
-
-    URL.revokeObjectURL(link.href);
-}
-
-/* ---------------- INTERVIEW TEMPLATE FALLBACK ---------------- */
-
-function openInterviewTemplate(id) {
-    const app = findApplication(id);
-
-    if (!app) {
-        showToast("Candidate not found.", "error");
+    if (!currentApplications.length) {
+        alert("No applications to export.");
         return;
     }
 
-    const date = document.getElementById(`interviewDate-${id}`)?.value || "[interview date]";
-    const time = document.getElementById(`interviewTime-${id}`)?.value || "[interview time]";
+    const headers = [
+        "Name",
+        "Email",
+        "Phone",
+        "Role",
+        "Status",
+        "Date"
+    ];
 
-    const message = `Dear ${app.fullName || "Candidate"},\n\nWe are pleased to invite you to interview for the ${app.position || "role"} position.\n\nInterview date: ${date}\nInterview time: ${time}\n\nKind regards,\nJoe's Excellent Event & Management`;
+    const rows = currentApplications.map(function (app) {
+        return [
+            app.name || app.fullName || "",
+            app.email || "",
+            app.phone || "",
+            app.role || app.position || "",
+            app.status || "New",
+            app.createdAt || app.date || ""
+        ];
+    });
 
-    navigator.clipboard?.writeText(message)
-        .then(() => showToast("Interview invitation copied to clipboard.", "success"))
-        .catch(() => alert(message));
+    const csvContent = [
+        headers.join(","),
+        ...rows.map(function (row) {
+            return row.map(function (item) {
+                return `"${String(item).replace(/"/g, '""')}"`;
+            }).join(",");
+        })
+    ].join("\n");
+
+    const blob = new Blob([csvContent], {
+        type: "text/csv;charset=utf-8;"
+    });
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "recruitment-applications.csv";
+    link.click();
 }
 
-/* ---------------- START ---------------- */
+function getStatusClass(status) {
+    const cleanStatus = String(status || "New").toLowerCase();
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (loginBtn) loginBtn.addEventListener("click", loginAdmin);
-    if (logoutBtn) logoutBtn.addEventListener("click", logoutAdmin);
-    if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportCSV);
-
-    const passwordInput = document.getElementById("adminPassword");
-
-    if (passwordInput) {
-        passwordInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") loginAdmin();
-        });
+    if (cleanStatus.includes("review")) {
+        return "status-reviewed";
     }
 
-    restoreSavedLogin();
-});
+    if (cleanStatus.includes("interview")) {
+        return "status-interview";
+    }
+
+    if (cleanStatus.includes("reject")) {
+        return "status-rejected";
+    }
+
+    if (cleanStatus.includes("hire")) {
+        return "status-hired";
+    }
+
+    return "status-new";
+}
+
+function formatDate(dateValue) {
+    if (!dateValue) {
+        return "No date supplied";
+    }
+
+    const date = new Date(dateValue);
+
+    if (isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
+
+function escapeAttribute(value) {
+    return String(value)
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function getDemoApplications() {
+    return [
+        {
+            id: "1",
+            name: "Demo Candidate One",
+            email: "candidate1@example.com",
+            phone: "07123 456789",
+            role: "Events Assistant",
+            status: "New",
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: "2",
+            name: "Demo Candidate Two",
+            email: "candidate2@example.com",
+            phone: "07234 567890",
+            role: "Management Trainee",
+            status: "Reviewed",
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: "3",
+            name: "Demo Candidate Three",
+            email: "candidate3@example.com",
+            phone: "07345 678901",
+            role: "Operations Assistant",
+            status: "Interview Stage",
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: "4",
+            name: "Demo Candidate Four",
+            email: "candidate4@example.com",
+            phone: "07456 789012",
+            role: "Customer Support",
+            status: "Rejected",
+            createdAt: new Date().toISOString()
+        },
+        {
+            id: "5",
+            name: "Demo Candidate Five",
+            email: "candidate5@example.com",
+            phone: "07567 890123",
+            role: "Recruitment Assistant",
+            status: "Hired",
+            createdAt: new Date().toISOString()
+        }
+    ];
+}
