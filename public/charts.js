@@ -1,8 +1,17 @@
-function renderRecruitmentChart(applications) {
+let recruitmentChart = null;
 
-    const ctx = document.getElementById("recruitmentChart");
+/* =====================================================
+   RECRUITMENT ANALYTICS CHART
+===================================================== */
 
-    if (!ctx) return;
+function renderRecruitmentChart(applications = []) {
+
+    const canvas = document.getElementById("recruitmentChart");
+
+    if (!canvas) {
+        console.error("Chart canvas not found");
+        return;
+    }
 
     const counts = {
         new: 0,
@@ -14,23 +23,39 @@ function renderRecruitmentChart(applications) {
 
     applications.forEach(app => {
 
-        const status = (app.status || "").toLowerCase();
+        const status = (app.status || "New").toLowerCase();
 
-        if (status.includes("new")) counts.new++;
-        else if (status.includes("review")) counts.reviewed++;
-        else if (status.includes("interview")) counts.interview++;
-        else if (status.includes("reject")) counts.rejected++;
-        else if (status.includes("hire")) counts.hired++;
+        if (status.includes("review")) {
+            counts.reviewed++;
+        }
+
+        else if (status.includes("interview")) {
+            counts.interview++;
+        }
+
+        else if (status.includes("reject")) {
+            counts.rejected++;
+        }
+
+        else if (status.includes("hire")) {
+            counts.hired++;
+        }
+
+        else {
+            counts.new++;
+        }
     });
 
-    if (window.recruitmentChart instanceof Chart) {
-        window.recruitmentChart.destroy();
+    if (recruitmentChart) {
+        recruitmentChart.destroy();
     }
 
-    window.recruitmentChart = new Chart(ctx, {
+    recruitmentChart = new Chart(canvas, {
+
         type: "bar",
 
         data: {
+
             labels: [
                 "New",
                 "Reviewed",
@@ -40,6 +65,7 @@ function renderRecruitmentChart(applications) {
             ],
 
             datasets: [{
+
                 label: "Candidates",
 
                 data: [
@@ -51,11 +77,11 @@ function renderRecruitmentChart(applications) {
                 ],
 
                 backgroundColor: [
-                    "rgba(0, 200, 255, 0.8)",     // Blue
-                    "rgba(255, 193, 7, 0.8)",     // Gold
-                    "rgba(156, 39, 176, 0.8)",    // Purple
-                    "rgba(244, 67, 54, 0.8)",     // Red
-                    "rgba(76, 175, 80, 0.8)"      // Green
+                    "rgba(0, 200, 255, 0.85)",
+                    "rgba(255, 193, 7, 0.85)",
+                    "rgba(156, 39, 176, 0.85)",
+                    "rgba(244, 67, 54, 0.85)",
+                    "rgba(76, 175, 80, 0.85)"
                 ],
 
                 borderColor: [
@@ -67,16 +93,24 @@ function renderRecruitmentChart(applications) {
                 ],
 
                 borderWidth: 2,
-                borderRadius: 10
+                borderRadius: 12,
+                borderSkipped: false
             }]
         },
 
         options: {
+
             responsive: true,
             maintainAspectRatio: false,
 
+            animation: {
+                duration: 1200
+            },
+
             plugins: {
+
                 legend: {
+
                     labels: {
                         color: "#ffffff",
                         font: {
@@ -84,12 +118,31 @@ function renderRecruitmentChart(applications) {
                             weight: "bold"
                         }
                     }
+                },
+
+                title: {
+
+                    display: true,
+                    text: "Recruitment Status Breakdown",
+
+                    color: "#ffffff",
+
+                    font: {
+                        size: 22,
+                        weight: "bold"
+                    },
+
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    }
                 }
             },
 
             scales: {
 
                 x: {
+
                     ticks: {
                         color: "#ffffff",
                         font: {
@@ -104,11 +157,13 @@ function renderRecruitmentChart(applications) {
                 },
 
                 y: {
+
                     beginAtZero: true,
 
                     ticks: {
                         color: "#ffffff",
                         stepSize: 1,
+
                         font: {
                             size: 14
                         }
