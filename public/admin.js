@@ -1,256 +1,158 @@
+const ADMIN_EMAIL = "joseph.eldridge1964@gmail.com";
+const ADMIN_PASSWORD = "password123";
 let allApplications = [];
 let currentApplications = [];
 
-document.addEventListener("DOMContentLoaded", function () {
-    const loginForm = document.getElementById("loginForm");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const exportCsvBtn = document.getElementById("exportCsvBtn");
-    const searchInput = document.getElementById("searchInput");
-    const statusFilter = document.getElementById("statusFilter");
-    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
-
-    loginForm.addEventListener("submit", handleLogin);
-    logoutBtn.addEventListener("click", handleLogout);
-    exportCsvBtn.addEventListener("click", exportCSV);
-    searchInput.addEventListener("input", applyFilters);
-    statusFilter.addEventListener("change", applyFilters);
-    clearFiltersBtn.addEventListener("click", clearFilters);
-
-    if (localStorage.getItem("adminLoggedIn") === "true") {
-        showAdmin();
-    }
+document.addEventListener("DOMContentLoaded", () => {
+    byId("loginForm").addEventListener("submit", handleLogin);
+    byId("logoutBtn").addEventListener("click", logout);
+    byId("exportCsvBtn").addEventListener("click", exportCSV);
+    byId("searchInput").addEventListener("input", applyFilters);
+    byId("statusFilter").addEventListener("change", applyFilters);
+    byId("clearFiltersBtn").addEventListener("click", clearFilters);
+    if (localStorage.getItem("excellentAdminLoggedIn") === "true") showAdmin();
 });
 
-function handleLogin(event) {
+function byId(id){ return document.getElementById(id); }
+
+function handleLogin(event){
     event.preventDefault();
-
-    const email = document.getElementById("adminEmail").value.trim();
-    const password = document.getElementById("adminPassword").value.trim();
-    const message = document.getElementById("loginMessage");
-
-    if (!email || !password) {
-        message.textContent = "Please enter your email and password.";
-        return;
-    }
-
-    localStorage.setItem("adminLoggedIn", "true");
+    const email = byId("adminEmail").value.trim().toLowerCase();
+    const password = byId("adminPassword").value.trim();
+    const message = byId("loginMessage");
+    if (!email || !password){ message.textContent = "Please enter your email and password."; return; }
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD){ message.textContent = "Incorrect email or password."; return; }
+    localStorage.setItem("excellentAdminLoggedIn", "true");
+    message.textContent = "";
     showAdmin();
 }
 
-function showAdmin() {
-    document.getElementById("loginSection").classList.add("hidden");
-    document.getElementById("adminArea").classList.remove("hidden");
+function showAdmin(){
+    byId("loginSection").classList.add("hidden");
+    byId("adminArea").classList.remove("hidden");
     loadApplications();
 }
 
-function handleLogout() {
-    localStorage.removeItem("adminLoggedIn");
-    document.getElementById("adminArea").classList.add("hidden");
-    document.getElementById("loginSection").classList.remove("hidden");
+function logout(){
+    localStorage.removeItem("excellentAdminLoggedIn");
+    byId("adminArea").classList.add("hidden");
+    byId("loginSection").classList.remove("hidden");
 }
 
-function loadApplications() {
-    allApplications = [
-        {
-            id: "1",
-            name: "Demo Candidate One",
-            email: "candidate1@example.com",
-            phone: "07123 456789",
-            role: "Events Assistant",
-            status: "New",
-            date: "2026-05-12"
-        },
-        {
-            id: "2",
-            name: "Demo Candidate Two",
-            email: "candidate2@example.com",
-            phone: "07234 567890",
-            role: "Management Trainee",
-            status: "Reviewed",
-            date: "2026-05-12"
-        },
-        {
-            id: "3",
-            name: "Demo Candidate Three",
-            email: "candidate3@example.com",
-            phone: "07345 678901",
-            role: "Operations Assistant",
-            status: "Interview Stage",
-            date: "2026-05-12"
-        },
-        {
-            id: "4",
-            name: "Demo Candidate Four",
-            email: "candidate4@example.com",
-            phone: "07456 789012",
-            role: "Customer Support",
-            status: "Rejected",
-            date: "2026-05-12"
-        },
-        {
-            id: "5",
-            name: "Demo Candidate Five",
-            email: "candidate5@example.com",
-            phone: "07567 890123",
-            role: "Recruitment Assistant",
-            status: "Hired",
-            date: "2026-05-12"
-        }
-    ];
-
+async function loadApplications(){
+    try {
+        const response = await fetch("/admin/applications");
+        if (!response.ok) throw new Error("No server data");
+        const data = await response.json();
+        allApplications = Array.isArray(data) ? data : (data.applications || []);
+        if (!allApplications.length) allApplications = demoApplications();
+    } catch(error) {
+        allApplications = demoApplications();
+    }
     currentApplications = [...allApplications];
+    refreshDashboard();
+}
 
+function refreshDashboard(){
     renderStats();
     renderApplications();
     renderRecruitmentChart(allApplications);
 }
 
-function renderStats() {
-    const total = allApplications.length;
-    const newCount = countStatus("New");
-    const reviewed = countStatus("Reviewed");
-    const interview = countStatus("Interview Stage");
-    const rejected = countStatus("Rejected");
-    const hired = countStatus("Hired");
-
-    document.getElementById("totalApplications").textContent = total;
-    document.getElementById("newApplications").textContent = newCount;
-    document.getElementById("reviewedApplications").textContent = reviewed;
-    document.getElementById("interviewApplications").textContent = interview;
-    document.getElementById("rejectedApplications").textContent = rejected;
-    document.getElementById("hiredApplications").textContent = hired;
+function renderStats(){
+    byId("totalApplications").textContent = allApplications.length;
+    byId("newApplications").textContent = countStatus("New");
+    byId("reviewedApplications").textContent = countStatus("Reviewed");
+    byId("interviewApplications").textContent = countStatus("Interview Stage");
+    byId("rejectedApplications").textContent = countStatus("Rejected");
+    byId("hiredApplications").textContent = countStatus("Hired");
 }
 
-function countStatus(statusName) {
-    return allApplications.filter(function (app) {
-        return app.status === statusName;
-    }).length;
-}
+function countStatus(status){ return allApplications.filter(app => normalStatus(app.status) === status).length; }
+function normalStatus(status){ return status || "New"; }
 
-function renderApplications() {
-    const list = document.getElementById("applicationsList");
-    const showingCount = document.getElementById("showingCount");
-
+function renderApplications(){
+    const list = byId("applicationsList");
     list.innerHTML = "";
-
-    showingCount.textContent = `Showing ${currentApplications.length} of ${allApplications.length} applications`;
-
-    currentApplications.forEach(function (app) {
-        const card = document.createElement("div");
+    byId("showingCount").textContent = `Showing ${currentApplications.length} of ${allApplications.length} applications`;
+    if (!currentApplications.length){ list.innerHTML = '<p>No applications found.</p>'; return; }
+    currentApplications.forEach(app => {
+        const card = document.createElement("article");
         card.className = "candidate-card";
-
         card.innerHTML = `
-            <span class="status-badge ${getStatusClass(app.status)}">${app.status}</span>
-            <h3>${app.name}</h3>
-            <p><strong>Email:</strong> ${app.email}</p>
-            <p><strong>Phone:</strong> ${app.phone}</p>
-            <p><strong>Role Applied For:</strong> ${app.role}</p>
-            <p><strong>Date:</strong> ${formatDate(app.date)}</p>
-
-            <div class="candidate-actions">
-                <button class="save-btn" onclick="saveCandidate('${app.id}')">Save Updates</button>
-                <button class="reject-btn" onclick="updateStatus('${app.id}', 'Rejected')">Reject Candidate</button>
-                <button class="invite-btn" onclick="updateStatus('${app.id}', 'Interview Stage')">Invite to Interview</button>
-                <button class="delete-btn" onclick="deleteCandidate('${app.id}')">Delete Candidate</button>
+            <div class="candidate-top">
+                <div class="candidate-photo-placeholder">Candidate Photograph Placeholder</div>
+                <div>
+                    <span class="status-badge ${statusClass(app.status)}">${safe(normalStatus(app.status))}</span>
+                    <h3>${safe(app.name || app.fullName || "Unnamed Candidate")}</h3>
+                    <p><strong>Email:</strong> ${safe(app.email || "Not supplied")}</p>
+                    <p><strong>Phone:</strong> ${safe(app.phone || "Not supplied")}</p>
+                    <p><strong>Role Applied For:</strong> ${safe(app.role || app.position || "Not supplied")}</p>
+                    <p><strong>Date:</strong> ${formatDate(app.date || app.createdAt)}</p>
+                </div>
             </div>
-        `;
-
+            <div class="candidate-form">
+                <label>Status<select data-field="status" data-id="${safeAttr(app.id)}"><option>New</option><option>Reviewed</option><option>Interview Stage</option><option>Rejected</option><option>Hired</option></select></label>
+                <label>Rating<input data-field="rating" data-id="${safeAttr(app.id)}" type="number" min="1" max="5" value="${safeAttr(app.rating || "")}"></label>
+                <label>Interview Date<input data-field="interviewDate" data-id="${safeAttr(app.id)}" type="date" value="${safeAttr(app.interviewDate || "")}"></label>
+                <label>Interview Time<input data-field="interviewTime" data-id="${safeAttr(app.id)}" type="time" value="${safeAttr(app.interviewTime || "")}"></label>
+                <label class="wide">Notes<textarea data-field="notes" data-id="${safeAttr(app.id)}">${safe(app.notes || "")}</textarea></label>
+            </div>
+            <div class="candidate-actions">
+                <button class="orange-btn" onclick="saveCandidate('${safeAttr(app.id)}')">Save Updates</button>
+                <button class="danger-btn" onclick="setStatus('${safeAttr(app.id)}','Rejected')">Reject Candidate</button>
+                <button class="orange-btn" onclick="setStatus('${safeAttr(app.id)}','Interview Stage')">Invite to Interview</button>
+                <button class="orange-btn" onclick="deleteCandidate('${safeAttr(app.id)}')">Delete Candidate</button>
+            </div>`;
+        const select = card.querySelector('select[data-field="status"]');
+        if (select) select.value = normalStatus(app.status);
         list.appendChild(card);
     });
 }
 
-function updateStatus(id, status) {
-    allApplications = allApplications.map(function (app) {
-        if (app.id === id) {
-            app.status = status;
-        }
-
-        return app;
+function applyFilters(){
+    const search = byId("searchInput").value.toLowerCase();
+    const status = byId("statusFilter").value;
+    currentApplications = allApplications.filter(app => {
+        const text = `${app.name || app.fullName || ""} ${app.email || ""} ${app.phone || ""} ${app.role || app.position || ""}`.toLowerCase();
+        return text.includes(search) && (status === "all" || normalStatus(app.status) === status);
     });
-
-    applyFilters();
-    renderStats();
-    renderRecruitmentChart(allApplications);
-}
-
-function saveCandidate(id) {
-    alert("Candidate updates saved successfully.");
-}
-
-function deleteCandidate(id) {
-    const confirmed = confirm("Are you sure you want to delete this candidate?");
-
-    if (!confirmed) {
-        return;
-    }
-
-    allApplications = allApplications.filter(function (app) {
-        return app.id !== id;
-    });
-
-    applyFilters();
-    renderStats();
-    renderRecruitmentChart(allApplications);
-}
-
-function applyFilters() {
-    const searchValue = document.getElementById("searchInput").value.toLowerCase();
-    const statusValue = document.getElementById("statusFilter").value;
-
-    currentApplications = allApplications.filter(function (app) {
-        const matchesSearch =
-            app.name.toLowerCase().includes(searchValue) ||
-            app.email.toLowerCase().includes(searchValue) ||
-            app.role.toLowerCase().includes(searchValue);
-
-        const matchesStatus =
-            statusValue === "all" || app.status === statusValue;
-
-        return matchesSearch && matchesStatus;
-    });
-
     renderApplications();
 }
 
-function clearFilters() {
-    document.getElementById("searchInput").value = "";
-    document.getElementById("statusFilter").value = "all";
+function clearFilters(){ byId("searchInput").value=""; byId("statusFilter").value="all"; currentApplications=[...allApplications]; renderApplications(); }
 
-    currentApplications = [...allApplications];
-
-    renderApplications();
+function setStatus(id,status){ const app = allApplications.find(a => String(a.id) === String(id)); if(app) app.status=status; currentApplications=[...allApplications]; refreshDashboard(); }
+function saveCandidate(id){
+    const app = allApplications.find(a => String(a.id) === String(id));
+    if (!app) return;
+    document.querySelectorAll(`[data-id="${CSS.escape(String(id))}"]`).forEach(input => { app[input.dataset.field] = input.value; });
+    renderStats(); renderRecruitmentChart(allApplications); alert("Candidate updates saved successfully.");
 }
+function deleteCandidate(id){ if(!confirm("Are you sure you want to delete this candidate?")) return; allApplications = allApplications.filter(a => String(a.id) !== String(id)); currentApplications=[...allApplications]; refreshDashboard(); }
 
-function exportCSV() {
-    let csv = "Name,Email,Phone,Role,Status,Date\n";
-
-    currentApplications.forEach(function (app) {
-        csv += `"${app.name}","${app.email}","${app.phone}","${app.role}","${app.status}","${app.date}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: "text/csv" });
+function exportCSV(){
+    const rows = [["Name","Email","Phone","Role","Status","Rating","Interview Date","Interview Time","Notes"]];
+    currentApplications.forEach(a => rows.push([a.name||a.fullName||"",a.email||"",a.phone||"",a.role||a.position||"",normalStatus(a.status),a.rating||"",a.interviewDate||"",a.interviewTime||"",a.notes||""]));
+    const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
     const link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
-    link.download = "applications.csv";
+    link.download = "recruitment-applications.csv";
     link.click();
 }
 
-function getStatusClass(status) {
-    if (status === "Reviewed") return "status-reviewed";
-    if (status === "Interview Stage") return "status-interview";
-    if (status === "Rejected") return "status-rejected";
-    if (status === "Hired") return "status-hired";
+function statusClass(status){ const s = normalStatus(status); if(s==="Reviewed") return "status-reviewed"; if(s==="Interview Stage") return "status-interview"; if(s==="Rejected") return "status-rejected"; if(s==="Hired") return "status-hired"; return "status-new"; }
+function formatDate(value){ const date = value ? new Date(value) : new Date(); return isNaN(date) ? safe(value) : date.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}); }
+function safe(value){ return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function safeAttr(value){ return safe(value).replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
 
-    return "status-new";
-}
-
-function formatDate(dateValue) {
-    const date = new Date(dateValue);
-
-    return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
+function demoApplications(){
+    return [
+        {id:"1",name:"Demo Candidate One",email:"candidate1@example.com",phone:"07123 456789",role:"Events Assistant",status:"New",date:"2026-05-12"},
+        {id:"2",name:"Demo Candidate Two",email:"candidate2@example.com",phone:"07234 567890",role:"Management Trainee",status:"Reviewed",date:"2026-05-12"},
+        {id:"3",name:"Demo Candidate Three",email:"candidate3@example.com",phone:"07345 678901",role:"Operations Assistant",status:"Interview Stage",date:"2026-05-12"},
+        {id:"4",name:"Demo Candidate Four",email:"candidate4@example.com",phone:"07456 789012",role:"Customer Support",status:"Rejected",date:"2026-05-12"},
+        {id:"5",name:"Demo Candidate Five",email:"candidate5@example.com",phone:"07567 890123",role:"Recruitment Assistant",status:"Hired",date:"2026-05-12"}
+    ];
 }
