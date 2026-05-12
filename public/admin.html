@@ -1,13 +1,312 @@
-<!-- Replace your existing public/admin.html with this file -->
-<div class="analytics-card">
-    <h2>Recruitment Analytics</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joe's Excellent Event Management Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
 
-    <div style="
-        width: 50%;
-        max-width: 420px;
-        height: 180px;
-        margin: 0 auto;
-    ">
-        <canvas id="recruitmentChart"></canvas>
-    </div>
-</div>
+    <style>
+        /* ADMIN.HTML SAFETY OVERRIDES ONLY */
+
+        .admin-page {
+            width: 92%;
+            max-width: 1400px;
+            margin: 50px auto;
+        }
+
+        .admin-banner-placeholder,
+        .candidate-photo-placeholder {
+            width: 100%;
+            min-height: 260px;
+            border: 4px dashed rgba(122, 201, 255, 0.55);
+            border-radius: 24px;
+            background: linear-gradient(135deg, #14577f, #153d65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ee4ff;
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .admin-intro-box,
+        .candidate-notes-box {
+            background: rgba(255,255,255,0.05);
+            border-left: 6px solid #ff6600;
+            border-radius: 18px;
+            padding: 24px;
+            margin: 25px 0;
+        }
+
+        .admin-top-buttons {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin: 25px 0;
+        }
+
+        .admin-top-buttons button,
+        .candidate-actions button,
+        #clearFiltersBtn {
+            width: auto !important;
+            min-width: 95px !important;
+            max-width: 190px !important;
+            padding: 10px 18px !important;
+            font-size: 0.9rem !important;
+            border-radius: 28px !important;
+        }
+
+        .stats-grid {
+            margin-top: 35px;
+        }
+
+        .admin-chart-card {
+            background: #173f67;
+            border-radius: 22px;
+            padding: 30px;
+            margin: 40px 0;
+        }
+
+        .admin-chart-card h2 {
+            margin-bottom: 18px;
+        }
+
+        .admin-chart-box {
+            width: 50%;
+            max-width: 520px;
+            height: 210px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .admin-chart-box canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .filters-card,
+        .applications-card,
+        .admin-information-card,
+        .candidate-card {
+            background: #173f67;
+            border-radius: 22px;
+            padding: 30px;
+            margin: 35px 0;
+        }
+
+        .filters-card input,
+        .filters-card select,
+        .candidate-card input,
+        .candidate-card select,
+        .candidate-card textarea {
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        .candidate-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+
+        .admin-information-card p {
+            margin-bottom: 15px;
+        }
+
+        .owner-role {
+            color: #ffcc00;
+            font-weight: 800;
+        }
+
+        @media (max-width: 900px) {
+            .admin-chart-box {
+                width: 100%;
+                max-width: 100%;
+                height: 210px;
+            }
+
+            .admin-banner-placeholder,
+            .candidate-photo-placeholder {
+                min-height: 180px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="home.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="contact us.html">Contact Us</a>
+        <a href="admin.html" class="active">Admin</a>
+    </nav>
+
+    <main class="admin-page">
+
+        <header class="admin-header">
+            <h1>TEMC Recruitment Dashboard</h1>
+
+            <div class="admin-banner-placeholder">
+                Admin Dashboard Banner Placeholder
+            </div>
+
+            <div class="admin-intro-box">
+                <p>
+                    Add administrator dashboard information here. Describe recruitment management,
+                    reporting, candidate tracking and interview coordination.
+                </p>
+            </div>
+        </header>
+
+        <section id="loginSection" class="login-wrapper">
+            <form id="loginForm" class="login-card">
+                <h2>Admin Login</h2>
+
+                <label for="adminEmail">Email</label>
+                <input
+                    type="email"
+                    id="adminEmail"
+                    name="adminEmail"
+                    value="joseph.eldridge1964@gmail.com"
+                    autocomplete="email"
+                    required
+                >
+
+                <label for="adminPassword">Password</label>
+                <input
+                    type="password"
+                    id="adminPassword"
+                    name="adminPassword"
+                    placeholder="Enter admin password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button type="submit">Login</button>
+
+                <p id="loginMessage"></p>
+            </form>
+        </section>
+
+        <section id="adminArea" class="hidden">
+
+            <div class="admin-top-buttons">
+                <button id="logoutBtn" type="button">Logout</button>
+                <button id="exportCsvBtn" type="button">Export CSV</button>
+            </div>
+
+            <section class="admin-information-card">
+                <h2>Admin Information</h2>
+                <p><strong>Name:</strong> Joseph Eldridge</p>
+                <p><strong>Email:</strong> joseph.eldridge1964@gmail.com</p>
+                <p><strong>Role:</strong> <span class="owner-role">OWNER</span></p>
+            </section>
+
+            <section class="stats-grid">
+                <div class="stat-box">
+                    <h3>Total Applications</h3>
+                    <p id="totalApplications">0</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>New</h3>
+                    <p id="newApplications">0</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>Reviewed</h3>
+                    <p id="reviewedApplications">0</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>Interview Stage</h3>
+                    <p id="interviewApplications">0</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>Rejected</h3>
+                    <p id="rejectedApplications">0</p>
+                </div>
+
+                <div class="stat-box">
+                    <h3>Hired</h3>
+                    <p id="hiredApplications">0</p>
+                </div>
+            </section>
+
+            <section class="admin-chart-card">
+                <h2>Recruitment Analytics</h2>
+
+                <div class="admin-chart-box">
+                    <canvas id="recruitmentChart"></canvas>
+                </div>
+            </section>
+
+            <section class="filters-card">
+                <h2>Search &amp; Filters</h2>
+
+                <label for="searchInput">Search</label>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search by name, email, phone or position"
+                >
+
+                <label for="statusFilter">Status</label>
+                <select id="statusFilter">
+                    <option value="all">All Statuses</option>
+                    <option value="New">New</option>
+                    <option value="Reviewed">Reviewed</option>
+                    <option value="To Be Interviewed">To Be Interviewed</option>
+                    <option value="Interview Stage">Interview Stage</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Hired">Hired</option>
+                </select>
+
+                <label for="ratingFilter">Rating</label>
+                <select id="ratingFilter">
+                    <option value="all">All Ratings</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+
+                <label for="positionFilter">Position</label>
+                <select id="positionFilter">
+                    <option value="all">All Positions</option>
+                </select>
+
+                <button id="clearFiltersBtn" type="button">Clear Filters</button>
+
+                <p id="showingCount">Showing 0 of 0 applications</p>
+            </section>
+
+            <section class="applications-card">
+                <h2>Candidate Applications</h2>
+
+                <div id="applicationsList">
+                    <p>Loading applications...</p>
+                </div>
+            </section>
+
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="charts.js"></script>
+    <script src="admin.js"></script>
+
+</body>
+</html>
