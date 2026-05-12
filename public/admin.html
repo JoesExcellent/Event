@@ -18,9 +18,9 @@
 
         .navbar {
             background: #03111f;
-            padding: 18px 30px;
+            padding: 18px 40px;
             display: flex;
-            gap: 20px;
+            gap: 38px;
             flex-wrap: wrap;
             align-items: center;
             border-bottom: 2px solid #ff6600;
@@ -30,7 +30,7 @@
             color: white;
             text-decoration: none;
             font-weight: bold;
-            font-size: 17px;
+            font-size: 16px;
             padding: 10px 14px;
             border-radius: 8px;
         }
@@ -42,43 +42,77 @@
         }
 
         .dashboard {
-            max-width: 1400px;
-            margin: auto;
-            padding: 40px;
+            width: 92%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 42px 0 70px;
         }
 
         h1 {
-            font-size: 64px;
-            margin-bottom: 50px;
+            font-size: 52px;
+            line-height: 1.05;
+            margin: 0 0 36px;
+            font-weight: 800;
         }
 
         h2 {
-            font-size: 32px;
+            font-size: 28px;
+            margin: 0 0 22px;
+        }
+
+        .hero-image-placeholder {
+            width: 100%;
+            min-height: 260px;
+            border: 4px dashed rgba(122, 201, 255, 0.55);
+            border-radius: 24px;
+            background: linear-gradient(135deg, #14507d, #173f67);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #9adfff;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 28px;
+            box-sizing: border-box;
+        }
+
+        .text-placeholder {
+            background: rgba(255,255,255,0.06);
+            border-left: 6px solid #ff6600;
+            border-radius: 18px;
+            padding: 24px 28px;
+            margin: 0 0 34px;
+            font-size: 19px;
+            line-height: 1.65;
         }
 
         .login-box,
         .application-card,
-        .stat-card {
-            background: #123456;
-            padding: 30px;
-            border-radius: 20px;
+        .stat-card,
+        .permission-box,
+        #adminInfo {
+            background: #123f68;
+            padding: 28px;
+            border-radius: 18px;
             margin-bottom: 25px;
+            box-sizing: border-box;
         }
 
         input,
         textarea,
         select {
             width: 100%;
-            padding: 18px;
-            border-radius: 10px;
+            padding: 14px 16px;
+            border-radius: 8px;
             border: none;
-            margin: 10px 0 20px 0;
-            font-size: 18px;
+            margin: 8px 0 18px 0;
+            font-size: 15px;
             box-sizing: border-box;
         }
 
         textarea {
-            min-height: 120px;
+            min-height: 110px;
             resize: vertical;
         }
 
@@ -92,35 +126,44 @@
             background: #ff6600;
             border: none;
             color: white;
-            padding: 18px 30px;
-            border-radius: 40px;
+            padding: 10px 18px;
+            border-radius: 28px;
             cursor: pointer;
-            margin: 10px 10px 10px 0;
-            font-size: 20px;
+            margin: 8px 8px 8px 0;
+            font-size: 14px;
             font-weight: bold;
+            line-height: 1.2;
         }
 
         button:hover {
             background: #ff7a1a;
         }
 
+        #logoutBtn,
+        #exportCsvBtn {
+            padding: 11px 22px;
+            font-size: 15px;
+            border-radius: 28px;
+        }
+
         a {
-            color: #ff9900;
+            color: #ffcc00;
         }
 
         #loginMessage {
-            font-size: 20px;
+            font-size: 17px;
             font-weight: bold;
             margin-top: 15px;
         }
 
         #adminInfo {
-            font-size: 20px;
-            margin: 20px 0;
+            font-size: 17px;
+            line-height: 1.7;
+            margin: 24px 0;
         }
 
         #stats {
-            margin-top: 30px;
+            margin-top: 26px;
         }
 
         #toastContainer {
@@ -139,73 +182,47 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
-        .toast-success {
-            background: #27ae60;
-        }
-
-        .toast-error {
-            background: #c0392b;
-        }
-
-        .toast-info {
-            background: #2980b9;
-        }
+        .toast-success { background: #27ae60; }
+        .toast-error { background: #c0392b; }
+        .toast-info { background: #2980b9; }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 22px;
             margin-bottom: 30px;
         }
 
         .stat-card p {
-            font-size: 40px;
+            font-size: 34px;
             font-weight: bold;
             margin: 0;
         }
 
         .error-message {
             color: #ff6b6b;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
         }
 
-.role-badge {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-left: 10px;
-}
+        .role-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
 
-.role-owner {
-    background: #c0392b;
-    color: white;
-}
+        .role-owner { background: #c0392b; color: white; }
+        .role-recruiter { background: #2980b9; color: white; }
+        .role-viewer { background: #7f8c8d; color: white; }
 
-.role-recruiter {
-    background: #2980b9;
-    color: white;
-}
+        .permission-box {
+            border-left: 4px solid #ff9900;
+        }
 
-.role-viewer {
-    background: #7f8c8d;
-    color: white;
-}
-
-.permission-box {
-    background: rgba(255,255,255,0.08);
-    border-left: 4px solid #ff9900;
-    padding: 20px;
-    border-radius: 14px;
-    margin-bottom: 30px;
-}
-
-
-
-        /* STEP 3: keep the recruitment graph from stretching too wide */
         .analytics-card {
             max-width: 920px;
             margin: 30px auto;
@@ -214,40 +231,59 @@
         .chart-wrapper {
             position: relative;
             width: 100%;
-            max-width: 820px;
-            height: 280px !important;
-            max-height: 280px !important;
+            max-width: 780px;
+            height: 260px !important;
+            max-height: 260px !important;
             margin: 0 auto;
         }
 
         #applicationsChart,
         #recruitmentChart {
             width: 100% !important;
-            height: 280px !important;
-            max-height: 280px !important;
+            height: 260px !important;
+            max-height: 260px !important;
         }
 
         @media (max-width: 700px) {
             .dashboard {
-                padding: 20px;
+                width: 92%;
+                padding-top: 28px;
             }
 
             h1 {
-                font-size: 42px;
+                font-size: 34px;
             }
 
-            button {
-                width: 100%;
+            h2 {
+                font-size: 24px;
             }
 
             .navbar {
-                flex-direction: column;
-                align-items: stretch;
+                gap: 16px;
+                padding: 16px 20px;
             }
 
             .navbar a {
-                display: block;
-                text-align: center;
+                font-size: 14px;
+                padding: 8px 10px;
+            }
+
+            .hero-image-placeholder {
+                min-height: 180px;
+                font-size: 20px;
+            }
+
+            .chart-wrapper,
+            #applicationsChart,
+            #recruitmentChart {
+                height: 220px !important;
+                max-height: 220px !important;
+            }
+
+            button {
+                width: auto;
+                font-size: 13px;
+                padding: 9px 14px;
             }
         }
     </style>
@@ -269,7 +305,7 @@
 
     <div class="dashboard">
 
-        <h2>TEMC Recruitment Dashboard</h2><div class="hero-image-placeholder">
+        <h1>TEMC Recruitment Dashboard</h1><div class="hero-image-placeholder">
     Admin Dashboard Banner Placeholder
 </div>
 
@@ -280,7 +316,7 @@
 </div>
 
         <div id="loginBox" class="login-box">
-            <h3>Admin Login</h3>
+            <h2>Admin Login</h2>
 
             <input
                 type="email"
@@ -312,7 +348,7 @@
 <div id="stats"></div>
 
 <div class="application-card analytics-card">
-    <h3>Recruitment Analytics</h3>
+    <h2>Recruitment Analytics</h2>
     <div class="chart-wrapper">
         <canvas id="applicationsChart"></canvas>
     </div>
