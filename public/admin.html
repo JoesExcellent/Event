@@ -1,344 +1,679 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta
-        name="description"
-        content="Administrative recruitment dashboard for The Excellent Management Company."
-    >
-
-    <meta name="robots" content="noindex, nofollow">
-
-    <title>Admin Dashboard | Joe's Excellent Events & Management</title>
-
-    <link rel="stylesheet" href="style.css?v=23">
-
-    <style>
-        body {
-            background: #061b2f;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            color: white;
-        }
-
-        .navbar {
-            background: #03111f;
-            padding: 18px 30px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-            border-bottom: 2px solid #ff6600;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
-        }
-
-        .dashboard {
-            max-width: 1400px;
-            margin: auto;
-            padding: 40px;
-        }
-
-        h1 {
-            font-size: 64px;
-            margin-bottom: 50px;
-        }
-
-        h2 {
-            font-size: 32px;
-        }
-
-        .login-box,
-        .application-card,
-        .stat-card {
-            background: #123456;
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 25px;
-        }
-
-        input,
-        textarea,
-        select {
-            width: 100%;
-            padding: 18px;
-            border-radius: 10px;
-            border: none;
-            margin: 10px 0 20px 0;
-            font-size: 18px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        button {
-            background: #ff6600;
-            border: none;
-            color: white;
-            padding: 18px 30px;
-            border-radius: 40px;
-            cursor: pointer;
-            margin: 10px 10px 10px 0;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: #ff7a1a;
-        }
-
-        a {
-            color: #ff9900;
-        }
-
-        #loginMessage {
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 15px;
-        }
-
-        #adminInfo {
-            font-size: 20px;
-            margin: 20px 0;
-        }
-
-        #stats {
-            margin-top: 30px;
-        }
-
-        #toastContainer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-
-        .toast {
-            padding: 15px 20px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .toast-success {
-            background: #27ae60;
-        }
-
-        .toast-error {
-            background: #c0392b;
-        }
-
-        .toast-info {
-            background: #2980b9;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card p {
-            font-size: 40px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .error-message {
-            color: #ff6b6b;
-            font-size: 22px;
-            font-weight: bold;
-        }
-
-        .role-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-left: 10px;
-        }
-
-        .role-owner {
-            background: #c0392b;
-            color: white;
-        }
-
-        .role-recruiter {
-            background: #2980b9;
-            color: white;
-        }
-
-        .role-viewer {
-            background: #7f8c8d;
-            color: white;
-        }
-
-        .permission-box {
-            background: rgba(255,255,255,0.08);
-            border-left: 4px solid #ff9900;
-            padding: 20px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 700px) {
-
-            .dashboard {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 42px;
-            }
-
-            button {
-                width: 100%;
-            }
-
-            .navbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .navbar a {
-                display: block;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-    <nav class="navbar" aria-label="Main Navigation">
-        <a href="index.html">Home</a>
-        <a href="home.html">About</a>
-        <a href="our-services.html">Our Services</a>
-        <a href="careers.html">Careers</a>
-        <a href="contact%20us.html">Contact Us</a>
-        <a href="admin.html" class="active">Admin</a>
-    </nav>
-
-    <div id="toastContainer"></div>
-
-    <main class="dashboard">
-
-        <h2>Joe's Excellent Events & Management</h2>
-
-       <img
-    src="images/dashboard.png"
-    alt="The Excellent Management Company Recruitment Team"
-    class="hero-image"
->
-
-        <div class="text-placeholder">
-            Add administrator dashboard information here.
-            Describe recruitment management, reporting,
-            candidate tracking and interview coordination.
-        </div>
-
-        <div id="loginBox" class="login-box">
-
-            <h3>Admin Login</h3>
-
-            <label for="adminEmail">Admin Email</label>
-
-            <input
-                type="email"
-                id="adminEmail"
-                placeholder="Enter admin email"
-                autocomplete="username"
-            >
-
-            <label for="adminPassword">Admin Password</label>
-
-            <input
-                type="password"
-                id="adminPassword"
-                placeholder="Enter admin password"
-                autocomplete="current-password"
-            >
-
-            <button id="loginBtn" type="button">
-                Login
-            </button>
-
-            <p id="loginMessage"></p>
-
-        </div>
-
-        <div id="dashboardContent" style="display:none;">
-
-            <button id="logoutBtn" type="button">
-                Logout
-            </button>
-
-            <button id="exportCsvBtn" type="button">
-                Export CSV
-            </button>
-
-            <div id="adminInfo"></div>
-
-            <div id="permissionsInfo" class="permission-box"></div>
-
-            <div id="stats"></div>
-
-           <div class="application-card analytics-card">
-
-    <h3>Recruitment Analytics</h3>
-
-    <div class="chart-wrapper">
-
-        <canvas
-            id="applicationsChart"
-            aria-label="Recruitment analytics chart"
-        ></canvas>
-
-    </div>
-
-</div>
-            </div>
-
-            <div id="applications"></div>
-
-        </div>
-
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="charts.js" defer></script>
-<script src="admin.js?v=28" defer></script>
-
-</body>
-</html>
+/* =====================================================
+   GLOBAL RESET
+===================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =====================================================
+   GLOBAL BODY
+===================================================== */
+
+body {
+    font-family: Arial, sans-serif;
+    background: #071a2f;
+    color: #ffffff;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+/* =====================================================
+   LAYOUT
+===================================================== */
+
+.container,
+.dashboard {
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.navbar {
+    background: #03111f;
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding: 22px 50px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid #ff6600;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 17px;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.navbar a.active,
+.navbar a:hover {
+    background: #ff6600;
+    color: white;
+}
+
+/* =====================================================
+   CARDS
+===================================================== */
+
+.card,
+.login-box,
+.application-card,
+.stat-card {
+    background: #102b4a;
+    padding: 28px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.sub-card {
+    border-top: 1px solid rgba(255,255,255,0.18);
+    padding-top: 14px;
+    margin-top: 14px;
+}
+
+/* =====================================================
+   HEADINGS + TEXT
+===================================================== */
+
+h1 {
+    margin-bottom: 30px;
+    font-size: clamp(32px, 5vw, 48px);
+}
+
+h2,
+h3,
+p,
+label {
+    margin-bottom: 12px;
+}
+
+p {
+    line-height: 1.7;
+}
+
+/* =====================================================
+   FORMS
+===================================================== */
+
+form,
+.login-box,
+.candidate-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.uploadLabel {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+button {
+    background: #ff6a00;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+    line-height: 1.2;
+}
+
+button:hover {
+    background: #ff7f24;
+}
+
+button.danger,
+.danger {
+    background: #c0392b;
+}
+
+button.danger:hover,
+.danger:hover {
+    background: #e74c3c;
+}
+
+a button {
+    display: inline-block;
+}
+
+/* =====================================================
+   IMAGES
+===================================================== */
+
+.hero-image {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 18px;
+    margin: 30px 0;
+    display: block;
+}
+
+.card-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin: 20px 0;
+    display: block;
+}
+
+/* =====================================================
+   PLACEHOLDERS
+===================================================== */
+
+.hero-image-placeholder,
+.section-image-placeholder,
+.card-image-placeholder {
+    width: 100%;
+    height: 260px;
+    background: linear-gradient(135deg, #0b4a70, #123456);
+    border: 3px dashed rgba(255,255,255,0.25);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8fdcff;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 30px 0;
+}
+
+.text-placeholder {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #ff6600;
+    padding: 25px;
+    border-radius: 14px;
+    margin-top: 25px;
+    line-height: 1.8;
+    font-size: 18px;
+}
+
+/* =====================================================
+   MESSAGES
+===================================================== */
+
+.form-message,
+#message,
+#loginMessage {
+    margin-top: 12px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* =====================================================
+   TOAST NOTIFICATIONS
+===================================================== */
+
+#toastContainer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    min-width: 280px;
+    max-width: 380px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    animation: slideIn 0.3s ease;
+    opacity: 0.97;
+}
+
+.toast-success {
+    background: #27ae60;
+}
+
+.toast-error {
+    background: #c0392b;
+}
+
+.toast-info {
+    background: #2980b9;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* =====================================================
+   DASHBOARD STATS
+===================================================== */
+
+.stats-grid,
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.stat-card p {
+    font-size: 34px;
+    font-weight: bold;
+    margin: 0;
+}
+
+/* =====================================================
+   ADMIN ROLE BADGES
+===================================================== */
+
+.role-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 10px;
+}
+
+.role-owner {
+    background: #c0392b;
+    color: white;
+}
+
+.role-recruiter {
+    background: #2980b9;
+    color: white;
+}
+
+.role-viewer {
+    background: #7f8c8d;
+    color: white;
+}
+
+.permission-box {
+    background: rgba(255,255,255,0.08);
+    border-left: 4px solid #ff9900;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 30px;
+}
+
+/* =====================================================
+   ANALYTICS CHART
+===================================================== */
+
+.analytics-card {
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 180px;
+}
+
+.chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* =====================================================
+   ACTION AREAS
+===================================================== */
+
+.top-actions,
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.interview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+/* =====================================================
+   SIMPLE ANALYTICS BARS
+===================================================== */
+
+.analytics-bar {
+    width: 100%;
+    background: rgba(255,255,255,0.16);
+    border-radius: 999px;
+    overflow: hidden;
+    height: 16px;
+    margin-bottom: 15px;
+}
+
+.analytics-fill {
+    height: 100%;
+    background: #ff6a00;
+    border-radius: 999px;
+}
+
+/* =====================================================
+   MODALS
+===================================================== */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.86);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 99998;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    width: min(900px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #0d2747;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 18px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.modal-close {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 28px;
+    line-height: 42px;
+}
+
+.modal-subtitle {
+    margin: 8px 0 18px;
+    opacity: 0.86;
+}
+
+.invitation-textarea {
+    min-height: 360px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+/* =====================================================
+   OUR SERVICES PAGE
+===================================================== */
+
+.site-header {
+    background: #071326;
+    border-bottom: 2px solid #ff7a00;
+}
+
+.services-hero {
+    min-height: 360px;
+    background: linear-gradient(180deg, #071326, #101010);
+    color: white;
+    text-align: center;
+    padding: 90px 30px;
+}
+
+.services-hero h1 {
+    font-size: 64px;
+    margin-bottom: 25px;
+}
+
+.services-hero p {
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 20px;
+    line-height: 1.7;
+}
+
+.services-grid {
+    background: #071326;
+    padding: 80px 50px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 60px;
+}
+
+.service-card {
+    color: white;
+}
+
+.image-placeholder,
+.photo-placeholder {
+    height: 220px;
+    background: linear-gradient(135deg, #123456, #1f5f7a);
+    border: 2px dashed #00c8ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00c8ff;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    padding: 20px;
+}
+
+.service-card h2 {
+    color: #ff7a00;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.service-card p {
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.why-choose,
+.why-section {
+    background: #071326;
+    color: white;
+    padding: 120px 50px;
+}
+
+.why-choose h2,
+.why-section h2 {
+    color: #00c8ff;
+    font-size: 42px;
+}
+
+.why-choose p,
+.why-section p {
+    font-size: 20px;
+}
+
+.cta-section {
+    background: white;
+    color: #071326;
+    text-align: center;
+    padding: 80px 30px;
+}
+
+.cta-section h2 {
+    color: #76c8e8;
+    font-size: 42px;
+}
+
+.cta-button,
+.cta-btn {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 16px 34px;
+    background: #ff6600;
+    color: white;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.site-footer,
+footer {
+    background: #071326;
+    color: white;
+    text-align: center;
+    padding: 35px;
+}
+
+/* =====================================================
+   MOBILE RESPONSIVE
+===================================================== */
+
+@media (max-width: 800px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        padding: 50px 25px;
+    }
+
+    .services-hero h1 {
+        font-size: 44px;
+    }
+
+    .navbar {
+        justify-content: center;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 700px) {
+    body {
+        padding: 24px 12px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navbar a {
+        display: block;
+        text-align: center;
+    }
+
+    .card,
+    .login-box,
+    .application-card,
+    .stat-card {
+        padding: 20px;
+    }
+
+    .hero-image,
+    .hero-image-placeholder,
+    .section-image-placeholder,
+    .card-image-placeholder {
+        height: 200px;
+        font-size: 18px;
+    }
+
+    .card-image {
+        height: 180px;
+    }
+
+    .text-placeholder {
+        padding: 18px;
+        font-size: 16px;
+    }
+
+    .analytics-card {
+        max-width: 100%;
+    }
+
+    .chart-wrapper {
+        height: 160px;
+    }
+
+    .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    button {
+        width: auto;
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .button-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
