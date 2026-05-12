@@ -1,499 +1,29 @@
-/* =====================================================
-   THE EXCELLENT MANAGEMENT COMPANY - SHARED SITE CSS
-   Dark navy / orange recruitment theme
-===================================================== */
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    --bg: #061b2f;
-    --nav: #03111f;
-    --panel: #123d66;
-    --panel-dark: #102f50;
-    --panel-soft: #174a77;
-    --orange: #ff6600;
-    --orange-hover: #ff7a1a;
-    --white: #ffffff;
-    --muted: #dcecff;
-    --cyan: #00d9ff;
-    --gold: #ffc400;
-    --purple: #9c27b0;
-    --red: #cf352b;
-    --green: #3fa34d;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: Arial, Helvetica, sans-serif;
-    min-height: 100vh;
-    line-height: 1.5;
-}
-
-a {
-    color: inherit;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* =====================================================
-   NAVIGATION - SAME ON EVERY PAGE
-===================================================== */
-
-.navbar {
-    background: var(--nav);
-    border-bottom: 3px solid var(--orange);
-    padding: 22px 48px;
-    display: flex;
-    align-items: center;
-    gap: 34px;
-    flex-wrap: wrap;
-}
-
-.navbar a {
-    color: var(--white);
-    text-decoration: none;
-    font-size: 1.15rem;
-    font-weight: 800;
-    padding: 13px 20px;
-    border-radius: 12px;
-    transition: 0.2s ease;
-}
-
-.navbar a:hover,
-.navbar a.active {
-    background: var(--orange);
-    color: var(--white);
-}
-
-/* =====================================================
-   PAGE LAYOUT
-===================================================== */
-
-.page-wrap,
-.dashboard {
-    width: min(1320px, calc(100% - 48px));
-    margin: 0 auto;
-    padding: 54px 0;
-}
-
-.page-card,
-.dashboard-header,
-.login-box,
-.admin-panel,
-.application-card,
-.stat-card,
-.analytics-card,
-.filters-card,
-.admin-info-card,
-.service-card {
-    background: var(--panel);
-    border-radius: 26px;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.25);
-}
-
-.page-card {
-    padding: 50px;
-    margin-bottom: 40px;
-}
-
-h1 {
-    font-size: clamp(2.7rem, 6vw, 5.2rem);
-    line-height: 1.05;
-    margin-bottom: 28px;
-    letter-spacing: -1px;
-}
-
-h2 {
-    font-size: clamp(1.8rem, 3vw, 2.6rem);
-    line-height: 1.15;
-    margin-bottom: 22px;
-}
-
-h3 {
-    font-size: 1.35rem;
-    margin-bottom: 12px;
-}
-
-p {
-    font-size: 1.1rem;
-    margin-bottom: 16px;
-}
-
-.lead {
-    font-size: clamp(1.25rem, 2.2vw, 1.85rem);
-    color: var(--muted);
-    max-width: 1000px;
-}
-
-/* =====================================================
-   PHOTOGRAPH PLACEHOLDERS - ALL PAGES
-===================================================== */
-
-.photo-placeholder,
 .hero-image-placeholder,
 .section-image-placeholder,
 .card-image-placeholder {
     width: 100%;
-    min-height: 270px;
-    background: linear-gradient(135deg, #0d5278, #123d66 60%, #102f50);
-    border: 3px dashed rgba(255, 255, 255, 0.28);
-    border-radius: 22px;
+    height: 260px;
+    background: linear-gradient(135deg, #0b4a70, #123456);
+    border: 3px dashed rgba(255,255,255,0.25);
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #8fdcff;
+    font-size: 24px;
+    font-weight: bold;
     text-align: center;
-    color: #9fe8ff;
-    font-size: clamp(1.1rem, 2vw, 1.7rem);
-    font-weight: 800;
-    padding: 28px;
     margin: 30px 0;
 }
 
-.card-image-placeholder {
-    min-height: 180px;
-    margin: 18px 0;
-    font-size: 1.1rem;
-}
-
-.text-placeholder,
-.info-box {
-    background: rgba(255, 255, 255, 0.07);
-    border-left: 5px solid var(--orange);
-    border-radius: 18px;
-    padding: 24px;
-    font-size: 1.15rem;
-    line-height: 1.75;
-    margin: 24px 0;
-}
-
-/* =====================================================
-   FORMS
-===================================================== */
-
-form {
-    margin-top: 18px;
-}
-
-label {
-    display: block;
-    font-weight: 800;
-    margin: 18px 0 8px;
-}
-
-input,
-textarea,
-select {
-    width: 100%;
-    border: none;
-    border-radius: 12px;
-    padding: 16px 18px;
-    font-size: 1rem;
-    background: #ffffff;
-    color: #111827;
-}
-
-textarea {
-    min-height: 145px;
-    resize: vertical;
-}
-
-input[type="file"] {
-    background: transparent;
-    color: var(--white);
-    padding-left: 0;
-}
-
-button,
-.button-link,
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--orange);
-    color: var(--white);
-    border: none;
-    text-decoration: none;
+.text-placeholder {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #ff6600;
+    padding: 25px;
     border-radius: 14px;
-    padding: 12px 22px;
-    min-height: 44px;
-    font-size: 1rem;
-    font-weight: 900;
-    cursor: pointer;
-    transition: 0.18s ease;
-    line-height: 1;
-}
-
-button:hover,
-.button-link:hover,
-.btn:hover {
-    background: var(--orange-hover);
-    transform: translateY(-1px);
-}
-
-button.small-btn,
-.small-btn {
-    padding: 10px 16px;
-    min-height: 38px;
-    font-size: 0.92rem;
-    border-radius: 12px;
-}
-
-button.reject-btn,
-.reject-btn {
-    background: var(--red);
-}
-
-button.reject-btn:hover,
-.reject-btn:hover {
-    background: #e0463c;
-}
-
-button.delete-btn,
-.delete-btn {
-    background: #0b1b2b;
-}
-
-button.delete-btn:hover,
-.delete-btn:hover {
-    background: #122a42;
-}
-
-button.save-btn,
-.save-btn,
-button.invite-btn,
-.invite-btn,
-button.clear-btn,
-.clear-btn {
-    background: var(--orange);
-}
-
-.form-message,
-#message,
-#loginMessage {
-    margin-top: 14px;
-    font-weight: 800;
-    color: var(--gold);
-}
-
-/* =====================================================
-   HOME / SERVICES / CONTACT / CAREERS
-===================================================== */
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 26px;
-    margin-top: 30px;
-}
-
-.service-card {
-    overflow: hidden;
-}
-
-.service-card .section-image-placeholder {
-    border-radius: 0;
-    border-left: 0;
-    border-right: 0;
-    border-top: 0;
-    margin: 0;
-    min-height: 220px;
-}
-
-.service-content {
-    padding: 28px;
-}
-
-.service-content h2 {
-    color: var(--gold);
-    font-size: 1.75rem;
-}
-
-.contact-details p {
-    font-size: 1.35rem;
-}
-
-/* =====================================================
-   ADMIN DASHBOARD
-===================================================== */
-
-.dashboard-header {
-    padding: 42px;
-    margin-bottom: 34px;
-}
-
-.dashboard-header h1 {
-    font-size: clamp(2.4rem, 5vw, 4.8rem);
-    margin-bottom: 16px;
-}
-
-.dashboard-header p {
-    color: var(--muted);
-    font-size: 1.35rem;
-}
-
-.login-box {
-    width: min(620px, 100%);
-    margin: 50px auto;
-    padding: 42px;
-}
-
-.login-box h2 {
-    font-size: 2.7rem;
-}
-
-.admin-panel {
-    padding: 34px;
-    margin-bottom: 30px;
-}
-
-.top-actions,
-.button-row,
-.candidate-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    margin: 16px 0;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 18px;
-    margin: 26px 0;
-}
-
-.stat-card {
-    padding: 24px;
-    border-left: 5px solid var(--cyan);
-}
-
-.stat-card h3 {
-    font-size: 1rem;
-    color: var(--muted);
-    margin-bottom: 12px;
-}
-
-.stat-card p {
-    font-size: 2.2rem;
-    font-weight: 900;
-    margin: 0;
-}
-
-.analytics-card {
-    padding: 30px;
-    margin: 28px 0;
-}
-
-.analytics-card h2 {
-    font-size: 2.2rem;
-    margin-bottom: 16px;
-}
-
-.chart-wrapper {
-    position: relative;
-    width: 100%;
-    height: 320px;
-    max-height: 320px;
-}
-
-#applicationsChart {
-    width: 100% !important;
-    height: 100% !important;
-}
-
-.filters-card {
-    padding: 28px;
-    margin: 28px 0;
-}
-
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 14px;
-    align-items: end;
-}
-
-#filterCount {
-    color: var(--gold);
-    font-size: 1.35rem;
-    font-weight: 900;
-    margin-top: 18px;
-}
-
-.application-card {
-    padding: 28px;
-    margin-bottom: 24px;
-}
-
-.application-card h2 {
-    font-size: 1.9rem;
-}
-
-.application-card p {
-    margin-bottom: 8px;
-}
-
-.application-card label {
-    margin-top: 14px;
-}
-
-.interview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 14px;
-}
-
-.status-badge,
-.role-badge {
-    display: inline-block;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    font-weight: 900;
-    margin-bottom: 14px;
-    color: #ffffff;
-}
-
-.status-new { background: var(--cyan); color: #061b2f; }
-.status-reviewed { background: var(--gold); color: #061b2f; }
-.status-interview { background: var(--purple); }
-.status-rejected { background: var(--red); }
-.status-hired { background: var(--green); }
-.status-default { background: #63738a; }
-.role-owner { background: var(--red); }
-.role-recruiter { background: #2980b9; }
-.role-viewer { background: #7f8c8d; }
-
-.admin-info-card {
-    padding: 34px;
-    margin: 28px 0;
-}
-
-.admin-info-card p {
-    font-size: 1.35rem;
-}
-
-.admin-role-text {
-    color: var(--gold);
-    text-transform: uppercase;
-}
-
-.error-message {
-    color: #ff8179;
-    font-size: 1.2rem;
-    font-weight: 900;
+    margin-top: 25px;
+    line-height: 1.8;
+    font-size: 18px;
 }
 
 #toastContainer {
@@ -507,81 +37,526 @@ button.clear-btn,
 }
 
 .toast {
-    min-width: 270px;
+    min-width: 280px;
     max-width: 380px;
-    padding: 15px 18px;
-    border-radius: 12px;
-    color: var(--white);
-    font-weight: 800;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+    padding: 16px 20px;
+    border-radius: 10px;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    animation: slideIn 0.3s ease;
+    opacity: 0.97;
 }
 
 .toast-success { background: #27ae60; }
-.toast-error { background: var(--red); }
+.toast-error { background: #c0392b; }
 .toast-info { background: #2980b9; }
 
+@keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #071a2f;
+    color: #ffffff;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.container,
+.dashboard {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.card,
+.login-box,
+.application-card {
+    background: #102b4a;
+    padding: 28px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+.sub-card {
+    border-top: 1px solid rgba(255,255,255,0.18);
+    padding-top: 14px;
+    margin-top: 14px;
+}
+
+h1 {
+    margin-bottom: 30px;
+    font-size: clamp(32px, 5vw, 48px);
+}
+
+h2, h3, p, label {
+    margin-bottom: 12px;
+}
+
+form,
+.login-box,
+.candidate-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+button {
+    background: #ff6a00;
+    color: #ffffff;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+button:hover {
+    background: #ff7f24;
+    transform: translateY(-1px);
+}
+
+button.danger,
+.danger {
+    background: #c0392b;
+}
+
+button.danger:hover,
+.danger:hover {
+    background: #e74c3c;
+}
+
+a button {
+    display: inline-block;
+}
+
+.uploadLabel {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.form-message,
+#message,
+#loginMessage {
+    margin-top: 12px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.stats-grid,
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.top-actions,
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.interview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.analytics-bar {
+    width: 100%;
+    background: rgba(255,255,255,0.16);
+    border-radius: 999px;
+    overflow: hidden;
+    height: 16px;
+    margin-bottom: 15px;
+}
+
+.analytics-fill {
+    height: 100%;
+    background: #ff6a00;
+    border-radius: 999px;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.86);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    background: #0d2747;
+    width: 92%;
+    max-width: 1050px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 18px;
+    padding: 28px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 700px) {
+    body { padding: 24px 12px; }
+    .card, .login-box, .application-card { padding: 20px; }
+    .modal-header { flex-direction: column; align-items: flex-start; }
+}
+
+
+/* Invite to Interview modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    z-index: 99998;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-card {
+    width: min(900px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #0d2747;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 28px;
+    color: white;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 28px;
+    line-height: 42px;
+}
+
+.modal-subtitle {
+    margin: 8px 0 18px;
+    opacity: 0.86;
+}
+
+.invitation-textarea {
+    min-height: 360px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+/* ================================
+   OUR SERVICES PAGE
+================================ */
+
+.site-header {
+    background: #071326;
+    border-bottom: 2px solid #ff7a00;
+}
+
+.navbar {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+    padding: 22px 50px;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.navbar a.active,
+.navbar a:hover {
+    color: #ff7a00;
+}
+
+.services-hero {
+    min-height: 360px;
+    background: linear-gradient(180deg, #071326, #101010);
+    color: white;
+    text-align: center;
+    padding: 90px 30px;
+}
+
+.services-hero h1 {
+    font-size: 64px;
+    margin-bottom: 25px;
+}
+
+.services-hero p {
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 20px;
+    line-height: 1.7;
+}
+
+.services-grid {
+    background: #071326;
+    padding: 80px 50px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 60px;
+}
+
+.service-card {
+    color: white;
+}
+
+.image-placeholder {
+    height: 220px;
+    background: linear-gradient(135deg, #123456, #1f5f7a);
+    border: 2px dashed #00c8ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00c8ff;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.service-card h2 {
+    color: #ff7a00;
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.service-card p {
+    font-size: 17px;
+    line-height: 1.7;
+}
+
+.why-choose {
+    background: #071326;
+    color: white;
+    padding: 120px 50px;
+}
+
+.why-choose h2 {
+    color: #00c8ff;
+    font-size: 42px;
+}
+
+.why-choose p {
+    font-size: 20px;
+}
+
+.cta-section {
+    background: white;
+    color: #071326;
+    text-align: center;
+    padding: 80px 30px;
+}
+
+.cta-section h2 {
+    color: #76c8e8;
+    font-size: 42px;
+}
+
+.cta-button {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 16px 34px;
+    background: #ff6600;
+    color: white;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.site-footer {
+    background: #071326;
+    color: white;
+    text-align: center;
+    padding: 35px;
+}
+
+@media (max-width: 800px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        padding: 50px 25px;
+    }
+
+    .services-hero h1 {
+        font-size: 44px;
+    }
+
+    .navbar {
+        justify-content: center;
+        padding: 20px;
+    }
+}
+
 /* =====================================================
-   MOBILE
+   FINAL COMPATIBILITY FIXES - PRESERVE TEMC DESIGN
 ===================================================== */
 
-@media (max-width: 760px) {
-    .navbar {
-        padding: 18px;
-        gap: 12px;
+.navbar {
+    background: #03111f;
+    padding: 18px 30px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 2px solid #ff6600;
+}
+
+.navbar a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 17px;
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.navbar a:hover,
+.navbar a.active {
+    background: #ff6600;
+    color: #ffffff;
+}
+
+.hero-image-placeholder,
+.section-image-placeholder,
+.card-image-placeholder,
+.photo-placeholder,
+.image-placeholder {
+    width: 100%;
+    min-height: 220px;
+    background: linear-gradient(135deg, #0b4a70, #123456);
+    border: 3px dashed rgba(255,255,255,0.28);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8fdcff;
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: bold;
+    text-align: center;
+    margin: 28px 0;
+    padding: 20px;
+}
+
+.card-image-placeholder,
+.photo-placeholder,
+.image-placeholder {
+    min-height: 210px;
+    margin: 20px 0;
+}
+
+.dashboard button,
+.login-box button,
+.application-card button,
+#logoutBtn,
+#exportCsvBtn {
+    width: auto;
+    max-width: max-content;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 16px;
+    line-height: 1.2;
+    margin: 8px 8px 8px 0;
+}
+
+.dashboard .danger,
+.dashboard button.danger {
+    background: #c0392b;
+}
+
+.analytics-card {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    max-height: 300px;
+    overflow: hidden;
+}
+
+#applicationsChart {
+    width: 100% !important;
+    height: 300px !important;
+    max-height: 300px !important;
+    display: block;
+}
+
+.stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.stat-card {
+    background: #123456;
+    padding: 22px;
+    border-radius: 18px;
+}
+
+.stat-card p {
+    font-size: 34px;
+}
+
+@media (max-width: 700px) {
+    .chart-wrapper,
+    #applicationsChart {
+        height: 240px !important;
+        max-height: 240px !important;
     }
 
-    .navbar a {
-        font-size: 1rem;
-        padding: 11px 14px;
-    }
-
-    .page-wrap,
-    .dashboard {
-        width: min(100% - 28px, 1320px);
-        padding: 34px 0;
-    }
-
-    .page-card,
-    .dashboard-header,
-    .login-box,
-    .admin-panel,
-    .application-card,
-    .filters-card,
-    .analytics-card,
-    .admin-info-card {
-        padding: 24px;
-        border-radius: 20px;
-    }
-
-    h1 {
-        font-size: 2.7rem;
-    }
-
-    .dashboard-header h1 {
-        font-size: 2.4rem;
-    }
-
-    .photo-placeholder,
-    .hero-image-placeholder,
-    .section-image-placeholder {
-        min-height: 210px;
-    }
-
-    .chart-wrapper {
-        height: 260px;
-        max-height: 260px;
-    }
-
-    button,
-    .button-link,
-    .btn {
-        width: auto;
-        font-size: 0.95rem;
-        padding: 11px 16px;
-    }
-
-    .top-actions button,
-    .filter-grid button {
+    .dashboard button,
+    .login-box button,
+    .application-card button,
+    #logoutBtn,
+    #exportCsvBtn {
         width: 100%;
+        max-width: none;
     }
 }
