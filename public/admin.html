@@ -4,93 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | The Excellent Management Company</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=40">
 </head>
 <body>
-    <nav class="navbar">
-        <a href="index.html">Home</a>
-        <a href="about.html">About</a>
-        <a href="services.html">Our Services</a>
-        <a href="careers.html">Careers</a>
-        <a href="contact.html">Contact Us</a>
-        <a href="admin.html" class="active">Admin</a>
-    </nav>
+<nav class="navbar">
+    <a href="index.html" class="">Home</a>
+    <a href="home.html" class="">About</a>
+    <a href="our-services.html" class="">Our Services</a>
+    <a href="careers.html" class="">Careers</a>
+    <a href="contact%20us.html" class="">Contact Us</a>
+    <a href="admin.html" class="active">Admin</a>
+</nav>
+<div id="toastContainer"></div>
+<main class="dashboard">
+    <header class="dashboard-header">
+        <h1>TEMC Recruitment Dashboard</h1>
+        <div class="hero-image-placeholder">Admin Dashboard Banner Placeholder</div>
+        <div class="text-placeholder">
+            Add administrator dashboard information here. Describe recruitment management, reporting, candidate tracking and interview coordination.
+        </div>
+    </header>
 
-    <main class="page-wrap">
-        <header class="dashboard-header">
-            <h1>Recruitment Admin Dashboard</h1>
-            <p>Manage applications, candidate status, interviews and recruitment analytics.</p>
-        </header>
+    <section id="loginBox" class="login-box">
+        <h2>Admin Login</h2>
+        <label for="adminEmail">Admin Email</label>
+        <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="username">
+        <label for="adminPassword">Admin Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password">
+        <button id="loginBtn" type="button">Login</button>
+        <p id="loginMessage"></p>
+    </section>
 
-        <section id="loginSection" class="login-section">
-            <form id="loginForm" class="login-card">
-                <h2>Admin Login</h2>
-                <label for="adminEmail">Email Address</label>
-                <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="email" required>
-                <label for="adminPassword">Password</label>
-                <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password" required>
-                <button type="submit" class="orange-btn">Login</button>
-                <p id="loginMessage" class="form-message"></p>
-            </form>
+    <section id="dashboardContent" class="hidden">
+        <div class="top-actions">
+            <button id="logoutBtn" type="button" class="small-btn">Logout</button>
+            <button id="exportCsvBtn" type="button" class="small-btn">Export CSV</button>
+        </div>
+
+        <div id="adminInfo"></div>
+        <div id="stats"></div>
+
+        <section class="analytics-card">
+            <h2>Recruitment Analytics</h2>
+            <div class="chart-wrapper">
+                <canvas id="applicationsChart"></canvas>
+            </div>
         </section>
 
-        <section id="adminArea" class="admin-area hidden">
-            <section class="admin-intro-card">
-                <h2>Admin Dashboard</h2>
-                <div class="hero-placeholder">Recruitment Dashboard Photograph Placeholder</div>
-                <div class="intro-text">
-                    Joe's Excellent Event &amp; Management demonstrates outstanding professionalism through its clear recruitment objectives, efficient candidate tracking systems, and highly organised interview coordination processes that help businesses identify and secure high-quality talent. The company’s structured reporting methods and commitment to smooth communication create a reliable and professional recruitment experience for both employers and candidates alike.
-                </div>
-                <div class="button-row">
-                    <button id="logoutBtn" class="orange-btn">Logout</button>
-                    <button id="exportCsvBtn" class="orange-btn">Export CSV</button>
-                </div>
-            </section>
-
-            <section class="stats-grid">
-                <div class="stat-card"><h3>Total Applications</h3><p id="totalApplications">0</p></div>
-                <div class="stat-card"><h3>New</h3><p id="newApplications">0</p></div>
-                <div class="stat-card"><h3>Reviewed</h3><p id="reviewedApplications">0</p></div>
-                <div class="stat-card"><h3>Interview Stage</h3><p id="interviewApplications">0</p></div>
-                <div class="stat-card"><h3>Rejected</h3><p id="rejectedApplications">0</p></div>
-                <div class="stat-card"><h3>Hired</h3><p id="hiredApplications">0</p></div>
-            </section>
-
-            <section class="analytics-card">
-                <h2>Recruitment Analytics</h2>
-                <div class="chart-box"><canvas id="recruitmentChart"></canvas></div>
-            </section>
-
-            <section class="filters-card">
-                <input type="text" id="searchInput" placeholder="Search candidates...">
-                <select id="statusFilter">
-                    <option value="all">All Statuses</option>
-                    <option value="New">New</option>
-                    <option value="Reviewed">Reviewed</option>
-                    <option value="Interview Stage">Interview Stage</option>
-                    <option value="Rejected">Rejected</option>
-                    <option value="Hired">Hired</option>
-                </select>
-                <button id="clearFiltersBtn" class="orange-btn">Clear Filters</button>
-                <p id="showingCount">Showing 0 of 0 applications</p>
-            </section>
-
-            <section class="applications-card">
-                <h2>Candidate Applications</h2>
-                <div id="applicationsList" class="candidate-list"></div>
-            </section>
-
-            <section class="admin-info-card">
-                <h2>Admin Information</h2>
-                <p><strong>Name:</strong> Joseph Eldridge</p>
-                <p><strong>Email:</strong> joseph.eldridge1964@gmail.com</p>
-                <p><strong>Role:</strong> <span>OWNER</span></p>
-            </section>
-        </section>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="charts.js"></script>
-    <script src="admin.js"></script>
+        <div id="filterBox"></div>
+        <div id="applications"></div>
+    </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="charts.js?v=40"></script>
+<script src="admin.js?v=40"></script>
 </body>
 </html>
