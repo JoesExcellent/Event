@@ -1,48 +1,350 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Services | The Excellent Management Company</title>
-    <link rel="stylesheet" href="style.css?v=40">
+    <title>Our Services | TEMC Recruitment</title>
+
+    <link rel="stylesheet" href="style.css?v=23">
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #061b2f;
+            color: white;
+        }
+
+        .navbar {
+            background: #03111f;
+            padding: 18px 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 17px;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #ff6600;
+            color: white;
+        }
+
+        .hero {
+            padding: 100px 20px;
+            text-align: center;
+            background: linear-gradient(to bottom, #061b2f, #020b15);
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            margin-bottom: 25px;
+        }
+
+        .hero p {
+            max-width: 900px;
+            margin: auto;
+            font-size: 20px;
+            line-height: 1.8;
+        }
+
+        .services-section {
+            max-width: 1300px;
+            margin: auto;
+            padding: 70px 20px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        .service-card {
+            background: #123456;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .photo-placeholder {
+            height: 240px;
+            background: linear-gradient(135deg, #1b5f8a, #0a2a45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7fdcff;
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 3px solid #ff6600;
+        }
+
+        .service-content {
+            padding: 30px;
+        }
+
+        .service-content h2 {
+            color: #ff9900;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 30px;
+        }
+
+        .service-content p {
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        .why-section {
+            background: #071f36;
+            padding: 90px 20px;
+            text-align: center;
+        }
+
+        .why-section h2 {
+            color: #00cfff;
+            font-size: 48px;
+            margin-bottom: 25px;
+        }
+
+        .why-section p {
+            max-width: 900px;
+            margin: auto;
+            font-size: 20px;
+            line-height: 1.8;
+        }
+
+        .cta-section {
+            background: #f4f4f4;
+            color: #123456;
+            text-align: center;
+            padding: 90px 20px;
+        }
+
+        .cta-section h2 {
+            font-size: 52px;
+            color: #6ec6e8;
+            margin-bottom: 25px;
+        }
+
+        .cta-section p {
+            max-width: 900px;
+            margin: auto;
+            font-size: 20px;
+            line-height: 1.8;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            margin-top: 35px;
+            background: #ff6600;
+            color: white;
+            text-decoration: none;
+            padding: 18px 35px;
+            border-radius: 40px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .cta-btn:hover {
+            background: #ff7a1a;
+        }
+
+        footer {
+            background: #03111f;
+            text-align: center;
+            padding: 35px;
+            color: white;
+        }
+
+        @media (max-width: 700px) {
+
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navbar a {
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: 42px;
+            }
+
+            .cta-section h2 {
+                font-size: 38px;
+            }
+
+        }
+
+    </style>
 </head>
+
 <body>
-<nav class="navbar">
-    <a href="index.html" class="">Home</a>
-    <a href="home.html" class="">About</a>
+
+    <nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="home.html">About</a>
     <a href="our-services.html" class="active">Our Services</a>
-    <a href="careers.html" class="">Careers</a>
-    <a href="contact%20us.html" class="">Contact Us</a>
-    <a href="admin.html" class="">Admin</a>
+    <a href="careers.html">Careers</a>
+    <a href="contact us.html">Contact Us</a>
+    <a href="admin.html">Admin</a>
 </nav>
 
-<main class="page-wrap">
-    <section class="page-card">
+    <section class="hero">
+
         <h1>Our Services</h1>
-        <div class="hero-image-placeholder">Our Services Photograph Placeholder</div>
-        <p class="lead">
-            Professional recruitment, staffing, leadership support and business development services for organisations and candidates.
+
+        <div class="hero-image-placeholder">
+            Services Main Photograph Placeholder
+        </div>
+
+        <p>
+            The Excellent Management Company delivers professional recruitment,
+            staffing, leadership support and business development services.
+            Our team focuses on building long-term relationships, delivering
+            operational excellence and helping organisations grow successfully.
         </p>
+
     </section>
-    <section class="services-grid">
-        <article class="service-card">
-            <div class="section-image-placeholder">Recruitment Solutions Photograph Placeholder</div>
-            <div class="service-content"><h2>Recruitment Solutions</h2><p>Add your recruitment service information here. Explain how your company sources, interviews and supports candidates.</p></div>
-        </article>
-        <article class="service-card">
-            <div class="section-image-placeholder">Leadership Development Photograph Placeholder</div>
-            <div class="service-content"><h2>Leadership Development</h2><p>Add leadership and management training information here. Explain how you support future managers and organisational growth.</p></div>
-        </article>
-        <article class="service-card">
-            <div class="section-image-placeholder">Operations Management Photograph Placeholder</div>
-            <div class="service-content"><h2>Operations Management</h2><p>Add operational support service text here. Describe how your company improves workflow, productivity and business performance.</p></div>
-        </article>
-        <article class="service-card">
-            <div class="section-image-placeholder">Customer Support Services Photograph Placeholder</div>
-            <div class="service-content"><h2>Customer Support Services</h2><p>Add customer support and client relationship management information here including communication and service delivery.</p></div>
-        </article>
+
+    <section class="services-section">
+
+        <div class="services-grid">
+
+            <div class="service-card">
+
+                <div class="photo-placeholder">
+                    Photograph Placeholder
+                </div>
+
+                <div class="service-content">
+
+                    <h2>Recruitment Solutions</h2>
+
+                    <p>
+                        Add your recruitment service information here.
+                        Explain how your company sources, interviews
+                        and develops candidates for employers.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="service-card">
+
+                <div class="photo-placeholder">
+                    Photograph Placeholder
+                </div>
+
+                <div class="service-content">
+
+                    <h2>Leadership Development</h2>
+
+                    <p>
+                        Add leadership and management training
+                        information here. Explain how you support
+                        future managers and organisational growth.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="service-card">
+
+                <div class="photo-placeholder">
+                    Photograph Placeholder
+                </div>
+
+                <div class="service-content">
+
+                    <h2>Operations Management</h2>
+
+                    <p>
+                        Add operational support service text here.
+                        Describe how your company improves workflow,
+                        productivity and business performance.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="service-card">
+
+                <div class="photo-placeholder">
+                    Photograph Placeholder
+                </div>
+
+                <div class="service-content">
+
+                    <h2>Customer Support Services</h2>
+
+                    <p>
+                        Add customer support and client relationship
+                        management information here including
+                        communication and service delivery.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </section>
-</main>
+
+    <section class="why-section">
+
+        <h2>Why Choose TEMC</h2>
+
+        <p>
+            Our organisation combines professionalism, leadership,
+            communication and operational excellence to deliver
+            reliable services and successful recruitment outcomes
+            for businesses and candidates alike.
+        </p>
+
+    </section>
+
+    <section class="cta-section">
+
+        <h2>Let’s Build Something Great Together</h2>
+
+        <p>
+            Ready to explore opportunities with The Excellent
+            Management Company? Contact our team today and
+            discover how we can help support your future growth.
+        </p>
+
+        <a href="contact%20us.html" class="cta-btn">
+            Contact Us
+        </a>
+
+    </section>
+
+    <footer>
+        Copyright © 2026 TEMC Recruitment
+    </footer>
 
 </body>
 </html>
