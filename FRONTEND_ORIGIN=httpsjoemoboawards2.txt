@@ -1,0 +1,7 @@
+FRONTEND_ORIGIN=https://joemoboawards2025.co.uk
+FRONTEND_ORIGIN_WWW=https://www.joemoboawards2025.co.uk
+ADMIN_EMAIL=your-admin-email
+ADMIN_PASSWORD=your-secure-password
+JWT_SECRET=your-long-random-secret
+FIREBASE_STORAGE_BUCKET=joemoboawards2025.appspot.com
+FIREBASE_SERVICE_ACCOUNT=your-firebase-service-account-json
