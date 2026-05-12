@@ -145,17 +145,17 @@ button {
     background: #ff6a00;
     color: #ffffff;
     border: none;
-    padding: 13px 20px;
-    border-radius: 999px;
-    font-size: 16px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: 0.2s ease;
+    line-height: 1.2;
 }
 
 button:hover {
     background: #ff7f24;
-    transform: translateY(-1px);
 }
 
 button.danger,
@@ -170,6 +170,28 @@ button.danger:hover,
 
 a button {
     display: inline-block;
+}
+
+/* =====================================================
+   IMAGES
+===================================================== */
+
+.hero-image {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 18px;
+    margin: 30px 0;
+    display: block;
+}
+
+.card-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 14px;
+    margin: 20px 0;
+    display: block;
 }
 
 /* =====================================================
@@ -193,14 +215,7 @@ a button {
     text-align: center;
     margin: 30px 0;
 }
-.hero-image {
-    width: 100%;
-    height: 260px;
-    object-fit: cover;
-    border-radius: 18px;
-    margin: 30px 0;
-    display: block;
-}
+
 .text-placeholder {
     background: rgba(255,255,255,0.06);
     border-left: 4px solid #ff6600;
@@ -621,11 +636,16 @@ footer {
         padding: 20px;
     }
 
+    .hero-image,
     .hero-image-placeholder,
     .section-image-placeholder,
     .card-image-placeholder {
         height: 200px;
         font-size: 18px;
+    }
+
+    .card-image {
+        height: 180px;
     }
 
     .text-placeholder {
@@ -647,7 +667,9 @@ footer {
     }
 
     button {
-        width: 100%;
+        width: auto;
+        font-size: 14px;
+        padding: 10px 16px;
     }
 
     .button-row {
