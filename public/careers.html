@@ -3,30 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Careers | The Excellent Management Company</title>
-    <link rel="stylesheet" href="style.css?v=40">
-</head>
-<body>
-<nav class="navbar">
-    <a href="index.html" class="">Home</a>
-    <a href="home.html" class="">About</a>
-    <a href="our-services.html" class="">Our Services</a>
-    <a href="careers.html" class="active">Careers</a>
-    <a href="contact%20us.html" class="">Contact Us</a>
-    <a href="admin.html" class="">Admin</a>
-</nav>
+    <title>Careers | TEMC Recruitment</title>
 
-<main class="page-wrap">
-    <section class="page-card">
-        <h1>Careers</h1>
-        <div class="hero-image-placeholder">Careers Photograph Placeholder</div>
-        <div class="text-placeholder">
-            Add careers information here. Explain current opportunities, candidate expectations, interview stages and how applicants can apply.
-        </div>
-        <p class="lead">Start your application using the online recruitment form.</p>
-        <a class="button-link" href="index.html">Apply for a Role</a>
-    </section>
-</main>
+    <link rel="stylesheet" href="style.css?v=23">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #061b2f;
+            color: white;
+        }
+
+        .navbar {
+            background: #03111f;
+            padding: 18px 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 17px;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #ff6600;
+            color: white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: #123456;
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 20px;
+            line-height: 1.7;
+        }
+
+        .job-box {
+            background: rgba(255,255,255,0.08);
+            padding: 25px;
+            border-radius: 16px;
+            margin-top: 30px;
+        }
+
+        .job-box h2 {
+            margin-top: 0;
+            color: #ff9900;
+        }
+
+        .apply-btn {
+            display: inline-block;
+            background: #ff6600;
+            color: white;
+            text-decoration: none;
+            padding: 18px 30px;
+            border-radius: 40px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 25px;
+        }
+
+        .apply-btn:hover {
+            background: #ff7a1a;
+        }
+
+        @media (max-width: 700px) {
+
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navbar a {
+                display: block;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 40px;
+            }
+
+            .card {
+                padding: 25px;
+            }
+
+            .apply-btn {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="home.html">About</a>
+    <a href="our-services.html">Our Services</a>
+    <a href="careers.html" class="active">Careers</a>
+    <a href="contact us.html">Contact Us</a>
+    <a href="admin.html">Admin</a>
+</nav>
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Careers at TEMC</h1>
+<div class="hero-image-placeholder">
+    Careers Team Photograph Placeholder
+</div>
+
+<div class="text-placeholder">
+    Add careers introduction text here describing
+    workplace culture, employee development,
+    training opportunities and recruitment goals.
+</div>
+
+            <p>
+                The Excellent Management Company is committed to
+                developing talent, leadership and professional growth.
+                We are always interested in hearing from motivated,
+                ambitious and creative individuals.
+            </p>
+
+            <div class="job-box"><div class="card-image-placeholder">
+    Job Opportunity Photograph Placeholder
+</div>
+
+                <h2>Management Development Programme</h2>
+
+                <p>
+                    Opportunities may include administration,
+                    leadership support, operations, customer service,
+                    digital projects and management development.
+                </p>
+
+                <p>
+                    Successful candidates should demonstrate strong
+                    communication, organisation and teamwork skills.
+                </p>
+
+                <a href="index.html" class="apply-btn">
+                    Apply Now
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
 
 </body>
 </html>
