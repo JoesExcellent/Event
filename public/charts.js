@@ -1,78 +1,124 @@
-/* =====================================================
-   TEMC RECRUITMENT ANALYTICS CHART
-===================================================== */
+function renderRecruitmentChart(applications) {
 
-let recruitmentAnalyticsChart = null;
+    const ctx = document.getElementById("recruitmentChart");
 
-function countApplicationsByStatus(applications) {
-    return {
-        newCount: applications.filter(app => (app.status || "New") === "New").length,
-        reviewedCount: applications.filter(app => app.status === "Reviewed").length,
-        interviewCount: applications.filter(app =>
-            app.status === "To Be Interviewed" ||
-            app.status === "Interview Invited"
-        ).length,
-        rejectedCount: applications.filter(app => app.status === "Rejected").length,
-        hiredCount: applications.filter(app => app.status === "Hired").length
-    };
-}
+    if (!ctx) return;
 
-function renderRecruitmentAnalytics(applications = []) {
-    const canvas = document.getElementById("applicationsChart");
-
-    if (!canvas || typeof Chart === "undefined") {
-        return;
-    }
-
-    const ctx = canvas.getContext("2d");
-    const counts = countApplicationsByStatus(applications);
-
-    const chartData = {
-        labels: ["New", "Reviewed", "Interview Stage", "Rejected", "Hired"],
-        datasets: [{
-            label: "Applications",
-            data: [
-                counts.newCount,
-                counts.reviewedCount,
-                counts.interviewCount,
-                counts.rejectedCount,
-                counts.hiredCount
-            ],
-            borderWidth: 1
-        }]
+    const counts = {
+        new: 0,
+        reviewed: 0,
+        interview: 0,
+        rejected: 0,
+        hired: 0
     };
 
-    if (recruitmentAnalyticsChart) {
-        recruitmentAnalyticsChart.data = chartData;
-        recruitmentAnalyticsChart.update();
-        return;
+    applications.forEach(app => {
+
+        const status = (app.status || "").toLowerCase();
+
+        if (status.includes("new")) counts.new++;
+        else if (status.includes("review")) counts.reviewed++;
+        else if (status.includes("interview")) counts.interview++;
+        else if (status.includes("reject")) counts.rejected++;
+        else if (status.includes("hire")) counts.hired++;
+    });
+
+    if (window.recruitmentChart instanceof Chart) {
+        window.recruitmentChart.destroy();
     }
 
-    recruitmentAnalyticsChart = new Chart(ctx, {
+    window.recruitmentChart = new Chart(ctx, {
         type: "bar",
-        data: chartData,
+
+        data: {
+            labels: [
+                "New",
+                "Reviewed",
+                "Interview Stage",
+                "Rejected",
+                "Hired"
+            ],
+
+            datasets: [{
+                label: "Candidates",
+
+                data: [
+                    counts.new,
+                    counts.reviewed,
+                    counts.interview,
+                    counts.rejected,
+                    counts.hired
+                ],
+
+                backgroundColor: [
+                    "rgba(0, 200, 255, 0.8)",     // Blue
+                    "rgba(255, 193, 7, 0.8)",     // Gold
+                    "rgba(156, 39, 176, 0.8)",    // Purple
+                    "rgba(244, 67, 54, 0.8)",     // Red
+                    "rgba(76, 175, 80, 0.8)"      // Green
+                ],
+
+                borderColor: [
+                    "#00c8ff",
+                    "#ffc107",
+                    "#9c27b0",
+                    "#f44336",
+                    "#4caf50"
+                ],
+
+                borderWidth: 2,
+                borderRadius: 10
+            }]
+        },
+
         options: {
             responsive: true,
             maintainAspectRatio: false,
+
             plugins: {
                 legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: "Recruitment Status Breakdown"
+                    labels: {
+                        color: "#ffffff",
+                        font: {
+                            size: 14,
+                            weight: "bold"
+                        }
+                    }
                 }
             },
+
             scales: {
+
+                x: {
+                    ticks: {
+                        color: "#ffffff",
+                        font: {
+                            size: 16,
+                            weight: "bold"
+                        }
+                    },
+
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                },
+
                 y: {
                     beginAtZero: true,
+
                     ticks: {
-                        precision: 0
+                        color: "#ffffff",
+                        stepSize: 1,
+                        font: {
+                            size: 14
+                        }
+                    },
+
+                    grid: {
+                        color: "rgba(255,255,255,0.08)"
                     }
                 }
             }
         }
     });
 }
-
-window.renderRecruitmentAnalytics = renderRecruitmentAnalytics;
