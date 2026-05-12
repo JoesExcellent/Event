@@ -3,170 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us | TEMC Recruitment</title>
-
-    <link rel="stylesheet" href="style.css?v=23">
-
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #061b2f;
-            color: white;
-        }
-
-        .navbar {
-            background: #03111f;
-            padding: 18px 30px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-            border-bottom: 2px solid #ff6600;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 40px 20px;
-        }
-
-        .card {
-            background: #123456;
-            padding: 40px;
-            border-radius: 20px;
-        }
-
-        h1 {
-            font-size: 56px;
-            margin-bottom: 30px;
-        }
-
-        p {
-            font-size: 20px;
-            line-height: 1.7;
-        }
-
-        .contact-item {
-            margin-bottom: 20px;
-        }
-
-        .button-row {
-            margin-top: 40px;
-        }
-
-        .btn {
-            display: inline-block;
-            background: #ff6600;
-            color: white;
-            text-decoration: none;
-            padding: 18px 30px;
-            border-radius: 40px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .btn:hover {
-            background: #ff7a1a;
-        }
-
-        @media (max-width: 700px) {
-
-            .navbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .navbar a {
-                display: block;
-                text-align: center;
-            }
-
-            h1 {
-                font-size: 40px;
-            }
-
-            .card {
-                padding: 25px;
-            }
-
-            .btn {
-                display: block;
-                text-align: center;
-            }
-        }
-    </style>
+    <title>Contact Us | The Excellent Management Company</title>
+    <link rel="stylesheet" href="style.css?v=40">
 </head>
-
 <body>
-
-    <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="contact%20us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
+<nav class="navbar">
+    <a href="index.html" class="">Home</a>
+    <a href="home.html" class="">About</a>
+    <a href="our-services.html" class="">Our Services</a>
+    <a href="careers.html" class="">Careers</a>
+    <a href="contact%20us.html" class="active">Contact Us</a>
+    <a href="admin.html" class="">Admin</a>
 </nav>
 
-    <main class="container">
-
-        <section class="card">
-
-            <h1>Contact Us</h1><div class="hero-image-placeholder">
-    Contact Team Photograph Placeholder
-</div>
-
-<div class="text-placeholder">
-    Add customer support information, office details,
-    communication channels and client service text here.
-</div>
-
-            <p>
-                If you have questions regarding recruitment,
-                applications, interviews or opportunities with
-                The Excellent Management Company, please contact us.
-            </p>
-
-            <div class="contact-item">
-                <strong>Email:</strong><br>
-                excellentmanagement2026@gmail.com
-            </div>
-
-            <div class="contact-item">
-                <strong>Location:</strong><br>
-                Newcastle upon Tyne
-            </div>
-
-            <div class="contact-item">
-                <strong>Recruitment Support:</strong><br>
-                Monday to Friday
-            </div>
-
-            <div class="button-row">
-                <a href="careers.html" class="btn">
-                    Apply for a Role
-                </a>
-            </div>
-
-        </section>
-
-    </main>
+<main class="page-wrap">
+    <section class="page-card contact-details">
+        <h1>Contact Us</h1>
+        <div class="hero-image-placeholder">Contact Team Photograph Placeholder</div>
+        <div class="text-placeholder">
+            Add customer support information, office details, communication channels and client service text here.
+        </div>
+        <p>If you have questions regarding recruitment, applications, interviews or opportunities with The Excellent Management Company, please contact us.</p>
+        <p><strong>Email:</strong> <a href="mailto:excellentmanagement2026@gmail.com">excellentmanagement2026@gmail.com</a></p>
+        <p><strong>Location:</strong> Newcastle upon Tyne</p>
+        <p><strong>Recruitment Support:</strong> Monday to Friday</p>
+        <a class="button-link" href="index.html">Apply for a Role</a>
+    </section>
+</main>
 
 </body>
 </html>
