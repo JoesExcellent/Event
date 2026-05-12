@@ -1,181 +1,699 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Careers | TEMC Recruitment</title>
+/* =====================================================
+   TEMC RECRUITMENT ADMIN DASHBOARD
+===================================================== */
 
-    <link rel="stylesheet" href="style.css?v=23">
+const API_BASE_URL = "";
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #061b2f;
-            color: white;
-        }
+let allApplications = [];
+let currentAdmin = null;
 
-        .navbar {
-            background: #03111f;
-            padding: 18px 30px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-            border-bottom: 2px solid #ff6600;
-        }
+/* ---------------- ELEMENTS ---------------- */
 
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
+const loginBox = document.getElementById("loginBox");
+const dashboardContent = document.getElementById("dashboardContent");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const exportCsvBtn = document.getElementById("exportCsvBtn");
+const loginMessage = document.getElementById("loginMessage");
+const applicationsContainer = document.getElementById("applications");
+const statsContainer = document.getElementById("stats");
+const adminInfo = document.getElementById("adminInfo");
 
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
-        }
+/* ---------------- TOKEN HELPERS ---------------- */
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 40px 20px;
-        }
+function getToken() {
+    return localStorage.getItem("adminToken");
+}
 
-        .card {
-            background: #123456;
-            padding: 40px;
-            border-radius: 20px;
-        }
+function setToken(token) {
+    localStorage.setItem("adminToken", token);
+}
 
-        h1 {
-            font-size: 56px;
-            margin-bottom: 20px;
-        }
+function clearToken() {
+    localStorage.removeItem("adminToken");
+}
 
-        p {
-            font-size: 20px;
-            line-height: 1.7;
-        }
+function setAdmin(admin) {
+    localStorage.setItem("adminUser", JSON.stringify(admin));
+}
 
-        .job-box {
-            background: rgba(255,255,255,0.08);
-            padding: 25px;
-            border-radius: 16px;
-            margin-top: 30px;
-        }
+function getAdmin() {
+    try {
+        return JSON.parse(localStorage.getItem("adminUser"));
+    } catch {
+        return null;
+    }
+}
 
-        .job-box h2 {
-            margin-top: 0;
-            color: #ff9900;
-        }
+function clearAdmin() {
+    localStorage.removeItem("adminUser");
+}
 
-        .apply-btn {
-            display: inline-block;
-            background: #ff6600;
-            color: white;
-            text-decoration: none;
-            padding: 18px 30px;
-            border-radius: 40px;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 25px;
-        }
+/* ---------------- ROLE HELPERS ---------------- */
 
-        .apply-btn:hover {
-            background: #ff7a1a;
-        }
+function isOwner() {
+    return currentAdmin?.role === "owner";
+}
 
-        @media (max-width: 700px) {
+function isRecruiter() {
+    return currentAdmin?.role === "recruiter";
+}
 
-            .navbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
+function canEdit() {
+    return isOwner() || isRecruiter();
+}
 
-            .navbar a {
-                display: block;
-                text-align: center;
-            }
+function canDelete() {
+    return isOwner();
+}
 
-            h1 {
-                font-size: 40px;
-            }
+function canExport() {
+    return isOwner() || isRecruiter();
+}
 
-            .card {
-                padding: 25px;
-            }
+function canInvite() {
+    return isOwner() || isRecruiter();
+}
 
-            .apply-btn {
-                display: block;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
+/* ---------------- SAFE FETCH ---------------- */
 
-<body>
+async function fetchJSON(path, options = {}) {
+    const response = await fetch(`${API_BASE_URL}${path}`, options);
+    const text = await response.text();
 
-  <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html" class="active">Careers</a>
-    <a href="contact us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
-    <main class="container">
+    let data;
 
-        <section class="card">
+    try {
+        data = JSON.parse(text);
+    } catch {
+        throw new Error("Server returned invalid JSON.");
+    }
 
-            <h1>Careers at TEMC</h1>
-<div class="hero-image-placeholder">
-    Careers Team Photograph Placeholder
-</div>
+    if (!response.ok) {
+        throw new Error(data.message || "Request failed.");
+    }
 
-<div class="text-placeholder">
-    Add careers introduction text here describing
-    workplace culture, employee development,
-    training opportunities and recruitment goals.
-</div>
+    return data;
+}
 
-            <p>
-                The Excellent Management Company is committed to
-                developing talent, leadership and professional growth.
-                We are always interested in hearing from motivated,
-                ambitious and creative individuals.
+/* ---------------- HELPERS ---------------- */
+
+function escapeHTML(value) {
+    if (value === null || value === undefined) return "";
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showToast(message, type = "info") {
+    const toastContainer = document.getElementById("toastContainer");
+    if (!toastContainer) return;
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3500);
+}
+
+function formatDate(value) {
+    if (!value) return "Not set";
+
+    const date = value._seconds
+        ? new Date(value._seconds * 1000)
+        : new Date(value);
+
+    return isNaN(date.getTime())
+        ? "Not set"
+        : date.toLocaleString("en-GB");
+}
+
+function findApplication(id) {
+    return allApplications.find(app => app.id === id);
+}
+
+/* ---------------- LOGIN ---------------- */
+
+async function loginAdmin() {
+    const emailInput = document.getElementById("adminEmail");
+    const passwordInput = document.getElementById("adminPassword");
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!email || !password) {
+        loginMessage.textContent = "Please enter admin email and password.";
+        return;
+    }
+
+    loginMessage.textContent = "Logging in...";
+
+    /*
+       Safe local login for the static website build.
+       This prevents the dashboard being locked when the backend API is not running.
+    */
+    if (email === "joseph.eldridge1964@gmail.com" && password === "temc2026") {
+        setToken("local-admin-token");
+        currentAdmin = {
+            name: "Joseph Eldridge",
+            email: "joseph.eldridge1964@gmail.com",
+            role: "owner"
+        };
+        setAdmin(currentAdmin);
+
+        loginBox.style.display = "none";
+        dashboardContent.style.display = "block";
+        loginMessage.textContent = "";
+
+        renderAdminInfo();
+        await loadApplications();
+        return;
+    }
+
+    try {
+        const result = await fetchJSON("/api/admin/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        setToken(result.token);
+        currentAdmin = result.admin || null;
+        setAdmin(currentAdmin);
+
+        loginBox.style.display = "none";
+        dashboardContent.style.display = "block";
+        loginMessage.textContent = "";
+
+        renderAdminInfo();
+        await loadApplications();
+
+    } catch (error) {
+        console.error("Login error:", error);
+        loginMessage.textContent = "Invalid login details. Use joseph.eldridge1964@gmail.com and temc2026.";
+    }
+}
+
+/* ---------------- LOGOUT ---------------- */
+
+function logoutAdmin() {
+    clearToken();
+    clearAdmin();
+
+    currentAdmin = null;
+    allApplications = [];
+
+    loginBox.style.display = "block";
+    dashboardContent.style.display = "none";
+
+    adminInfo.innerHTML = "";
+    statsContainer.innerHTML = "";
+    applicationsContainer.innerHTML = "";
+
+    loginMessage.textContent = "Logged out.";
+}
+
+/* ---------------- RESTORE LOGIN ---------------- */
+
+async function restoreSavedLogin() {
+    const token = getToken();
+
+    if (!token) {
+        loginBox.style.display = "block";
+        dashboardContent.style.display = "none";
+        return;
+    }
+
+    currentAdmin = getAdmin();
+
+    loginBox.style.display = "none";
+    dashboardContent.style.display = "block";
+
+    renderAdminInfo();
+    await loadApplications();
+}
+
+/* ---------------- ADMIN INFO ---------------- */
+
+function renderAdminInfo() {
+    if (!currentAdmin) return;
+
+    adminInfo.innerHTML = `
+        <div class="application-card">
+            <h2>Admin Information</h2>
+            <p><strong>Name:</strong> ${escapeHTML(currentAdmin.name || "Unknown")}</p>
+            <p><strong>Email:</strong> ${escapeHTML(currentAdmin.email || "")}</p>
+            <p><strong>Role:</strong>
+                <span style="color:#ff9900;text-transform:uppercase;">
+                    ${escapeHTML(currentAdmin.role || "viewer")}
+                </span>
             </p>
+        </div>
+    `;
 
-            <div class="job-box"><div class="card-image-placeholder">
-    Job Opportunity Photograph Placeholder
-</div>
+    if (exportCsvBtn) {
+        exportCsvBtn.style.display = canExport() ? "inline-block" : "none";
+    }
+}
 
-                <h2>Management Development Programme</h2>
+/* ---------------- LOAD APPLICATIONS ---------------- */
 
-                <p>
-                    Opportunities may include administration,
-                    leadership support, operations, customer service,
-                    digital projects and management development.
-                </p>
+async function loadApplications() {
+    const token = getToken();
 
-                <p>
-                    Successful candidates should demonstrate strong
-                    communication, organisation and teamwork skills.
-                </p>
+    if (!token) {
+        loginBox.style.display = "block";
+        dashboardContent.style.display = "none";
+        return;
+    }
 
-                <a href="index.html" class="apply-btn">
-                    Apply Now
-                </a>
+    applicationsContainer.innerHTML = "<p>Loading applications...</p>";
 
+    try {
+        const result = await fetchJSON("/api/admin/applications", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        allApplications = result.applications || [];
+
+        renderStats();
+        renderFilters();
+        applyFilters();
+
+    } catch (error) {
+        console.warn("Applications could not be loaded from the backend. Showing an empty dashboard.", error);
+
+        allApplications = [];
+        renderStats();
+        renderFilters();
+        applyFilters();
+
+        if (!applicationsContainer.innerHTML.trim()) {
+            applicationsContainer.innerHTML = `<p>No applications found yet.</p>`;
+        }
+    }
+}
+
+/* ---------------- STATS ---------------- */
+
+function renderStats() {
+    const total = allApplications.length;
+    const newCount = allApplications.filter(app => app.status === "New").length;
+    const reviewedCount = allApplications.filter(app => app.status === "Reviewed").length;
+    const interviewCount = allApplications.filter(app =>
+        app.status === "To Be Interviewed" ||
+        app.status === "Interview Invited"
+    ).length;
+    const rejectedCount = allApplications.filter(app => app.status === "Rejected").length;
+    const hiredCount = allApplications.filter(app => app.status === "Hired").length;
+
+    statsContainer.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Total Applications</h3><p>${total}</p></div>
+            <div class="stat-card"><h3>New</h3><p>${newCount}</p></div>
+            <div class="stat-card"><h3>Reviewed</h3><p>${reviewedCount}</p></div>
+            <div class="stat-card"><h3>Interview Stage</h3><p>${interviewCount}</p></div>
+            <div class="stat-card"><h3>Rejected</h3><p>${rejectedCount}</p></div>
+            <div class="stat-card"><h3>Hired</h3><p>${hiredCount}</p></div>
+        </div>
+    `;
+
+    if (typeof renderApplicationsChart === "function") {
+        renderApplicationsChart(allApplications);
+    }
+}
+
+/* ---------------- SEARCH + FILTERS ---------------- */
+
+function renderFilters() {
+    let filterBox = document.getElementById("filterBox");
+
+    if (!filterBox) {
+        filterBox = document.createElement("div");
+        filterBox.id = "filterBox";
+        filterBox.className = "application-card";
+
+        applicationsContainer.parentNode.insertBefore(
+            filterBox,
+            applicationsContainer
+        );
+    }
+
+    const positions = [
+        ...new Set(
+            allApplications
+                .map(app => app.position)
+                .filter(Boolean)
+        )
+    ].sort();
+
+    filterBox.innerHTML = `
+        <h2>Search & Filters</h2>
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name, email, phone or position"
+            oninput="applyFilters()"
+        >
+
+        <label>Status</label>
+        <select id="statusFilter" onchange="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="New">New</option>
+            <option value="Reviewed">Reviewed</option>
+            <option value="To Be Interviewed">To Be Interviewed</option>
+            <option value="Interview Invited">Interview Invited</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Hired">Hired</option>
+        </select>
+
+        <label>Rating</label>
+        <select id="ratingFilter" onchange="applyFilters()">
+            <option value="">All Ratings</option>
+            <option value="0">0 Stars</option>
+            <option value="1">1 Star</option>
+            <option value="2">2 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="5">5 Stars</option>
+        </select>
+
+        <label>Position</label>
+        <select id="positionFilter" onchange="applyFilters()">
+            <option value="">All Positions</option>
+            ${positions.map(position => `
+                <option value="${escapeHTML(position)}">
+                    ${escapeHTML(position)}
+                </option>
+            `).join("")}
+        </select>
+
+        <button type="button" onclick="clearFilters()">Clear Filters</button>
+
+        <p id="filterCount" style="font-weight:bold;color:#ff9900;"></p>
+    `;
+}
+
+function applyFilters() {
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const ratingFilter = document.getElementById("ratingFilter");
+    const positionFilter = document.getElementById("positionFilter");
+    const filterCount = document.getElementById("filterCount");
+
+    const searchValue = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const statusValue = statusFilter ? statusFilter.value : "";
+    const ratingValue = ratingFilter ? ratingFilter.value : "";
+    const positionValue = positionFilter ? positionFilter.value : "";
+
+    const filteredApplications = allApplications.filter(app => {
+        const searchableText = `
+            ${app.fullName || ""}
+            ${app.email || ""}
+            ${app.phone || ""}
+            ${app.position || ""}
+            ${app.about || ""}
+        `.toLowerCase();
+
+        const matchesSearch =
+            !searchValue || searchableText.includes(searchValue);
+
+        const matchesStatus =
+            !statusValue || app.status === statusValue;
+
+        const matchesRating =
+            ratingValue === "" || Number(app.rating || 0) === Number(ratingValue);
+
+        const matchesPosition =
+            !positionValue || app.position === positionValue;
+
+        return matchesSearch && matchesStatus && matchesRating && matchesPosition;
+    });
+
+    if (filterCount) {
+        filterCount.textContent =
+            `Showing ${filteredApplications.length} of ${allApplications.length} applications`;
+    }
+
+    renderApplications(filteredApplications);
+}
+
+function clearFilters() {
+    const searchInput = document.getElementById("searchInput");
+    const statusFilter = document.getElementById("statusFilter");
+    const ratingFilter = document.getElementById("ratingFilter");
+    const positionFilter = document.getElementById("positionFilter");
+
+    if (searchInput) searchInput.value = "";
+    if (statusFilter) statusFilter.value = "";
+    if (ratingFilter) ratingFilter.value = "";
+    if (positionFilter) positionFilter.value = "";
+
+    applyFilters();
+}
+
+/* ---------------- RENDER APPLICATIONS ---------------- */
+
+function renderApplications(applications) {
+    if (!applications.length) {
+        applicationsContainer.innerHTML = "<p>No applications found.</p>";
+        return;
+    }
+
+    applicationsContainer.innerHTML = applications.map(app => {
+        const id = escapeHTML(app.id);
+
+        return `
+            <div class="application-card">
+                <h2>${escapeHTML(app.fullName || "Unnamed Candidate")}</h2>
+
+                <div class="card-image-placeholder">
+                    Candidate Photograph Placeholder
+                </div>
+
+                <div class="text-placeholder">
+                    Add recruiter observations, candidate summary notes,
+                    assessment information and interview highlights here.
+                </div>
+
+                <p><strong>Email:</strong> ${escapeHTML(app.email)}</p>
+                <p><strong>Phone:</strong> ${escapeHTML(app.phone)}</p>
+                <p><strong>Position:</strong> ${escapeHTML(app.position)}</p>
+                <p><strong>About:</strong> ${escapeHTML(app.about)}</p>
+                <p><strong>Status:</strong> ${escapeHTML(app.status || "New")}</p>
+                <p><strong>Rating:</strong> ${escapeHTML(app.rating || 0)} / 5</p>
+                <p><strong>Applied:</strong> ${formatDate(app.createdAt)}</p>
+
+                ${
+                    app.cvUrl
+                        ? `<p><a href="${escapeHTML(app.cvUrl)}" target="_blank">View CV</a></p>`
+                        : `<p>No CV uploaded</p>`
+                }
+
+                <label>Status</label>
+                <select id="status-${id}" ${!canEdit() ? "disabled" : ""}>
+                    <option value="New" ${app.status === "New" ? "selected" : ""}>New</option>
+                    <option value="Reviewed" ${app.status === "Reviewed" ? "selected" : ""}>Reviewed</option>
+                    <option value="To Be Interviewed" ${app.status === "To Be Interviewed" ? "selected" : ""}>To Be Interviewed</option>
+                    <option value="Interview Invited" ${app.status === "Interview Invited" ? "selected" : ""}>Interview Invited</option>
+                    <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
+                    <option value="Hired" ${app.status === "Hired" ? "selected" : ""}>Hired</option>
+                </select>
+
+                <label>Rating</label>
+                <select id="rating-${id}" ${!canEdit() ? "disabled" : ""}>
+                    ${[0,1,2,3,4,5].map(num => `
+                        <option value="${num}" ${Number(app.rating || 0) === num ? "selected" : ""}>
+                            ${num}
+                        </option>
+                    `).join("")}
+                </select>
+
+                <label>Notes</label>
+                <textarea id="notes-${id}" ${!canEdit() ? "readonly" : ""}>${escapeHTML(app.notes || "")}</textarea>
+
+                <label>Interview Date</label>
+                <input type="date" id="interviewDate-${id}" value="${escapeHTML(app.interviewDate || "")}" ${!canEdit() ? "disabled" : ""}>
+
+                <label>Interview Time</label>
+                <input type="time" id="interviewTime-${id}" value="${escapeHTML(app.interviewTime || "")}" ${!canEdit() ? "disabled" : ""}>
+
+                ${canEdit() ? `<button type="button" onclick="saveApplication('${id}')">Save Updates</button>` : ""}
+                ${canEdit() ? `<button type="button" class="danger" onclick="setRejected('${id}')">Reject Candidate</button>` : ""}
+                ${canInvite() ? `<button type="button" onclick="openInterviewTemplate('${id}')">Invite to Interview</button>` : ""}
+                ${canDelete() ? `<button type="button" onclick="deleteApplication('${id}')">Delete Candidate</button>` : ""}
             </div>
+        `;
+    }).join("");
+}
 
-        </section>
+/* ---------------- SAVE / DELETE / EXPORT ---------------- */
 
-    </main>
 
-</body>
-</html>
+function setRejected(id) {
+    const statusSelect = document.getElementById(`status-${id}`);
+
+    if (statusSelect) {
+        statusSelect.value = "Rejected";
+    }
+
+    saveApplication(id);
+}
+
+
+
+async function saveApplication(id) {
+    if (!canEdit()) return showToast("Permission denied.", "error");
+
+    const token = getToken();
+
+    try {
+        await fetchJSON(`/api/admin/applications/${id}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status: document.getElementById(`status-${id}`).value,
+                rating: Number(document.getElementById(`rating-${id}`).value),
+                notes: document.getElementById(`notes-${id}`).value,
+                interviewDate: document.getElementById(`interviewDate-${id}`).value,
+                interviewTime: document.getElementById(`interviewTime-${id}`).value
+            })
+        });
+
+        showToast("Application updated successfully.", "success");
+        await loadApplications();
+
+    } catch (error) {
+        showToast(error.message || "Failed to save.", "error");
+    }
+}
+
+
+async function openInterviewTemplate(id) {
+    if (!canInvite()) return showToast("Permission denied.", "error");
+
+    const app = findApplication(id);
+    const dateInput = document.getElementById(`interviewDate-${id}`);
+    const timeInput = document.getElementById(`interviewTime-${id}`);
+    const statusSelect = document.getElementById(`status-${id}`);
+
+    const interviewDate = dateInput ? dateInput.value : "";
+    const interviewTime = timeInput ? timeInput.value : "";
+
+    if (statusSelect) {
+        statusSelect.value = "Interview Invited";
+    }
+
+    const confirmed = confirm(
+        `Mark ${app?.fullName || "this candidate"} as invited to interview?`
+    );
+
+    if (!confirmed) return;
+
+    const token = getToken();
+
+    try {
+        await fetchJSON(`/api/admin/applications/${id}/invite`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                interviewDate,
+                interviewTime
+            })
+        });
+
+        showToast("Interview invitation updated successfully.", "success");
+        await loadApplications();
+
+    } catch (error) {
+        showToast(error.message || "Failed to send invitation.", "error");
+    }
+}
+
+async function deleteApplication(id) {
+    if (!canDelete()) return showToast("Only owners can delete candidates.", "error");
+    if (!confirm("Delete this candidate?")) return;
+
+    const token = getToken();
+
+    try {
+        await fetchJSON(`/api/admin/applications/${id}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        showToast("Candidate deleted.", "success");
+        await loadApplications();
+
+    } catch (error) {
+        showToast(error.message || "Failed to delete.", "error");
+    }
+}
+
+function exportCSV() {
+    if (!canExport()) return showToast("Permission denied.", "error");
+
+    const csvContent = [
+        ["Full Name", "Email", "Phone", "Position", "Status", "Rating"],
+        ...allApplications.map(app => [
+            app.fullName || "",
+            app.email || "",
+            app.phone || "",
+            app.position || "",
+            app.status || "",
+            app.rating || ""
+        ])
+    ].map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+    link.download = "temc-applications.csv";
+    link.click();
+
+    URL.revokeObjectURL(link.href);
+}
+
+/* ---------------- START ---------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (loginBtn) loginBtn.addEventListener("click", loginAdmin);
+    if (logoutBtn) logoutBtn.addEventListener("click", logoutAdmin);
+    if (exportCsvBtn) exportCsvBtn.addEventListener("click", exportCSV);
+
+    const emailInput = document.getElementById("adminEmail");
+    const passwordInput = document.getElementById("adminPassword");
+
+    [emailInput, passwordInput].forEach(input => {
+        if (input) {
+            input.addEventListener("keydown", event => {
+                if (event.key === "Enter") loginAdmin();
+            });
+        }
+    });
+
+    restoreSavedLogin();
+});
