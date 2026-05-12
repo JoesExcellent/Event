@@ -3,60 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | The Excellent Management Company</title>
-    <link rel="stylesheet" href="style.css?v=40">
+    <title>Joe's Excellent Event Management Admin Dashboard</title>
+
+    <link rel="stylesheet" href="style.css?v=23">
+
+    <style>
+        body {
+            background: #061b2f;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+
+        .navbar {
+            background: #03111f;
+            padding: 18px 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 17px;
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #ff6600;
+            color: white;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: auto;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 64px;
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            font-size: 32px;
+        }
+
+        .login-box,
+        .application-card,
+        .stat-card {
+            background: #123456;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 18px;
+            border-radius: 10px;
+            border: none;
+            margin: 10px 0 20px 0;
+            font-size: 18px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        button {
+            background: #ff6600;
+            border: none;
+            color: white;
+            padding: 18px 30px;
+            border-radius: 40px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #ff7a1a;
+        }
+
+        a {
+            color: #ff9900;
+        }
+
+        #loginMessage {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        #adminInfo {
+            font-size: 20px;
+            margin: 20px 0;
+        }
+
+        #stats {
+            margin-top: 30px;
+        }
+
+        #toastContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .toast-success {
+            background: #27ae60;
+        }
+
+        .toast-error {
+            background: #c0392b;
+        }
+
+        .toast-info {
+            background: #2980b9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card p {
+            font-size: 40px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+.role-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 10px;
+}
+
+.role-owner {
+    background: #c0392b;
+    color: white;
+}
+
+.role-recruiter {
+    background: #2980b9;
+    color: white;
+}
+
+.role-viewer {
+    background: #7f8c8d;
+    color: white;
+}
+
+.permission-box {
+    background: rgba(255,255,255,0.08);
+    border-left: 4px solid #ff9900;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 30px;
+}
+
+        @media (max-width: 700px) {
+            .dashboard {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 42px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .navbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navbar a {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<nav class="navbar">
-    <a href="index.html" class="">Home</a>
-    <a href="home.html" class="">About</a>
-    <a href="our-services.html" class="">Our Services</a>
-    <a href="careers.html" class="">Careers</a>
-    <a href="contact%20us.html" class="">Contact Us</a>
+
+
+  <nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="home.html">About</a>
+    <a href="our-services.html">Our Services</a>
+    <a href="careers.html">Careers</a>
+    <a href="contact us.html">Contact Us</a>
     <a href="admin.html" class="active">Admin</a>
 </nav>
-<div id="toastContainer"></div>
-<main class="dashboard">
-    <header class="dashboard-header">
-        <h1>TEMC Recruitment Dashboard</h1>
-        <div class="hero-image-placeholder">Admin Dashboard Banner Placeholder</div>
-        <div class="text-placeholder">
-            Add administrator dashboard information here. Describe recruitment management, reporting, candidate tracking and interview coordination.
+
+    <div id="toastContainer"></div>
+
+    <div class="dashboard">
+
+        <h1>TEMC Recruitment Dashboard</h1><div class="hero-image-placeholder">
+    Admin Dashboard Banner Placeholder
+</div>
+
+<div class="text-placeholder">
+    Add administrator dashboard information here.
+    Describe recruitment management, reporting,
+    candidate tracking and interview coordination.
+</div>
+
+        <div id="loginBox" class="login-box">
+            <h2>Admin Login</h2>
+
+            <input
+                type="email"
+                id="adminEmail"
+                placeholder="Enter admin email"
+                autocomplete="username"
+            >
+
+            <input
+                type="password"
+                id="adminPassword"
+                placeholder="Enter admin password"
+                autocomplete="current-password"
+            >
+
+            <button id="loginBtn" type="button" onclick="loginAdmin()">Login</button>
+            <p id="loginMessage"></p>
         </div>
-    </header>
 
-    <section id="loginBox" class="login-box">
-        <h2>Admin Login</h2>
-        <label for="adminEmail">Admin Email</label>
-        <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="username">
-        <label for="adminPassword">Admin Password</label>
-        <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password">
-        <button id="loginBtn" type="button">Login</button>
-        <p id="loginMessage"></p>
-    </section>
+        <div id="dashboardContent" style="display:none;">
 
-    <section id="dashboardContent" class="hidden">
-        <div class="top-actions">
-            <button id="logoutBtn" type="button" class="small-btn">Logout</button>
-            <button id="exportCsvBtn" type="button" class="small-btn">Export CSV</button>
+            <button id="logoutBtn" type="button">Logout</button>
+            <button id="exportCsvBtn" type="button">Export CSV</button>
+
+            <div id="adminInfo"></div>
+
+<div id="permissionsInfo" class="permission-box"></div>
+
+<div id="stats"></div>
+
+<div class="application-card analytics-card">
+    <h2>Recruitment Analytics</h2>
+    <div class="chart-wrapper">
+        <canvas id="applicationsChart"></canvas>
+    </div>
+</div>
+
+<div id="applications"></div>
+
         </div>
 
-        <div id="adminInfo"></div>
-        <div id="stats"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="charts.js?v=29"></script>
+    <script src="admin.js?v=29"></script>
 
-        <section class="analytics-card">
-            <h2>Recruitment Analytics</h2>
-            <div class="chart-wrapper">
-                <canvas id="applicationsChart"></canvas>
-            </div>
-        </section>
-
-        <div id="filterBox"></div>
-        <div id="applications"></div>
-    </section>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="charts.js?v=40"></script>
-<script src="admin.js?v=40"></script>
 </body>
 </html>
