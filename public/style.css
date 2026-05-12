@@ -383,3 +383,51 @@ button:hover {
         max-height: 260px !important;
     }
 }
+
+
+/* =====================================================
+   STEP 4 FIX: ADMIN BUTTON SIZE ONLY
+   Keeps orange button style but prevents oversized dashboard buttons.
+===================================================== */
+
+.top-buttons button,
+#logoutBtn,
+#exportCsvBtn,
+#clearFiltersBtn {
+    padding: 10px 18px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+.candidate-actions button,
+.save-btn,
+.reject-btn,
+.invite-btn,
+.delete-btn {
+    padding: 9px 14px !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+.filters-card button {
+    padding: 10px 16px !important;
+    font-size: 1rem !important;
+    border-radius: 9px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* Keep the login button readable but not oversized */
+.login-card button {
+    padding: 13px 24px !important;
+    font-size: 1.1rem !important;
+    border-radius: 12px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
