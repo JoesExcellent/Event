@@ -180,8 +180,26 @@ const response = await fetch(`${API_BASE_URL}/api/admin/applications`, {
         const data = await response.json();
 
         console.log("Applications data:", data);
-     
-       document.getElementById("applications").innerHTML = "<p>Applications loaded from backend.</p>";
+     const applicationsContainer = document.getElementById("applications");
+
+applicationsContainer.innerHTML = "";
+
+data.applications.forEach(app => {
+    applicationsContainer.innerHTML += `
+        <div class="application-card">
+            <h3>${app.fullName || "No Name"}</h3>
+
+            <p><strong>Email:</strong> ${app.email || "N/A"}</p>
+
+            <p><strong>Phone:</strong> ${app.phone || "N/A"}</p>
+
+            <p><strong>Position:</strong> ${app.position || "N/A"}</p>
+
+            <p><strong>Status:</strong> ${app.status || "New"}</p>
+        </div>
+    `;
+});
+       
 
     } catch (error) {
         console.error("Failed to load applications:", error);
