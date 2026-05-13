@@ -80,6 +80,13 @@ async function loginAdmin() {
 });
 
 const backendData = await backendResponse.json();
+   if (!backendData.success) {
+
+    message.textContent = "Backend login failed";
+    message.className = "error-message";
+
+    return;
+}
 
     localStorage.setItem("temcAdminLoggedIn", "true");
     localStorage.setItem("temcAdminRole", matchedUser.role);
