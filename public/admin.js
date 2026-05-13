@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("dashboardContent").style.display = "block";
 
             renderAdminRoleInfo();
+loadApplications();
         }
     }
 });
