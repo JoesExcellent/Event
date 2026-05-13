@@ -311,37 +311,11 @@ button:hover {
     color: #ffae00;
 }
 
-@media (max-width: 800px) {
-    .navbar {
-        padding: 22px;
-        gap: 25px;
-    }
-
-    .navbar a {
-        font-size: 1.1rem;
-    }
-
-    .dashboard-header h1 {
-        font-size: 2.4rem;
-    }
-
-    .dashboard-header p {
-        font-size: 1.1rem;
-    }
-
-    .chart-box {
-        height: 260px;
-    }
-
-    .filters-card input,
-    .filters-card select,
-    .filters-card button {
-        width: 100%;
-    }
-}
 /* =====================================================
-   STEP 2 FIX: ADMIN CHART SIZE ONLY
-   This targets the current admin.html chart classes.
+   ADMIN CHART SIZE FIX
+   Full working graph sizing included here.
+   Reduces the Recruitment Analytics graph height and width
+   without changing login, roles, buttons, or placeholders.
 ===================================================== */
 
 .analytics-section {
@@ -351,8 +325,9 @@ button:hover {
 .chart-card {
     background: #123d66;
     border-radius: 28px;
-    padding: 28px 36px 34px;
-    margin-bottom: 40px;
+    padding: 26px 30px 30px;
+    margin: 0 auto 40px;
+    max-width: 760px;
 }
 
 .chart-card h2 {
@@ -363,30 +338,47 @@ button:hover {
 .chart-container {
     position: relative;
     width: 100%;
-    height: 320px !important;
-    max-height: 320px !important;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
     overflow: hidden;
 }
 
 .chart-container canvas,
-#recruitmentChart {
+#recruitmentChart,
+#applicationsChart {
     width: 100% !important;
-    height: 320px !important;
-    max-height: 320px !important;
+    height: 170px !important;
+    max-height: 170px !important;
 }
 
-@media (max-width: 800px) {
-    .chart-container,
-    .chart-container canvas,
-    #recruitmentChart {
-        height: 260px !important;
-        max-height: 260px !important;
-    }
+/* This supports the older admin.html chart classes too */
+.analytics-card {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.chart-wrapper canvas,
+#applicationsChart {
+    width: 100% !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
 
 /* =====================================================
-   STEP 4 FIX: ADMIN BUTTON SIZE ONLY
+   ADMIN BUTTON SIZE FIX
    Keeps orange button style but prevents oversized dashboard buttons.
 ===================================================== */
 
@@ -433,7 +425,7 @@ button:hover {
 }
 
 /* =====================================================
-   STEP 5 FIX: RESTORE ADMIN PHOTOGRAPH PLACEHOLDER ONLY
+   RESTORE ADMIN PHOTOGRAPH PLACEHOLDER
    Restores the large dashed banner placeholder without changing buttons.
 ===================================================== */
 
@@ -465,7 +457,53 @@ button:hover {
     line-height: 1.7;
 }
 
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
 @media (max-width: 800px) {
+    .navbar {
+        padding: 22px;
+        gap: 25px;
+    }
+
+    .navbar a {
+        font-size: 1.1rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.4rem;
+    }
+
+    .dashboard-header p {
+        font-size: 1.1rem;
+    }
+
+    .chart-box {
+        height: 180px;
+    }
+
+    .chart-card,
+    .analytics-card {
+        max-width: 100%;
+    }
+
+    .chart-container,
+    .chart-container canvas,
+    .chart-wrapper,
+    .chart-wrapper canvas,
+    #recruitmentChart,
+    #applicationsChart {
+        height: 160px !important;
+        max-height: 160px !important;
+    }
+
+    .filters-card input,
+    .filters-card select,
+    .filters-card button {
+        width: 100%;
+    }
+
     .hero-image-placeholder {
         min-height: 210px;
         font-size: 1.1rem;
