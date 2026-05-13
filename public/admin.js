@@ -143,3 +143,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 });
+async function loadApplications() {
+    console.log("loadApplications function is running");
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/applications`);
+
+        console.log("Applications response status:", response.status);
+
+        const data = await response.json();
+
+        console.log("Applications data:", data);
+
+    } catch (error) {
+        console.error("Failed to load applications:", error);
+    }
+}
