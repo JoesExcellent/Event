@@ -76,6 +76,7 @@ function loginAdmin() {
     document.getElementById("dashboardContent").style.display = "block";
 
     renderAdminRoleInfo();
+loadApplications();
 
     message.textContent = "";
 }
