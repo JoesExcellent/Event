@@ -43,7 +43,7 @@ const ADMIN_USERS = [
 
 let currentAdmin = null;
 
-function loginAdmin() {
+async function loginAdmin() {
 
     const emailField = document.getElementById("adminEmail");
     const passwordField = document.getElementById("adminPassword");
