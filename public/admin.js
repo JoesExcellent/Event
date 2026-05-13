@@ -180,6 +180,7 @@ const response = await fetch(`${API_BASE_URL}/api/admin/applications`, {
         const data = await response.json();
 
         console.log("Applications data:", data);
+       alert(JSON.stringify(data));
        document.getElementById("applications").innerHTML = "<p>Applications loaded from backend.</p>";
 
     } catch (error) {
