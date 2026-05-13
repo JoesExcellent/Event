@@ -67,6 +67,18 @@ async function loginAdmin() {
     }
 
     currentAdmin = matchedUser;
+   const backendResponse = await fetch(`${API_BASE_URL}/api/admin/login`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        email,
+        password
+    })
+});
+
+const backendData = await backendResponse.json();
 
     localStorage.setItem("temcAdminLoggedIn", "true");
     localStorage.setItem("temcAdminRole", matchedUser.role);
