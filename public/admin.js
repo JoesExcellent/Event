@@ -87,6 +87,7 @@ const backendData = await backendResponse.json();
 
     return;
 }
+   localStorage.setItem("temcAdminToken", backendData.token);
 
     localStorage.setItem("temcAdminLoggedIn", "true");
     localStorage.setItem("temcAdminRole", matchedUser.role);
