@@ -167,7 +167,13 @@ async function loadApplications() {
     console.log("loadApplications function is running");
 
     try {
-        const response = await fetch(`${API_BASE_URL}/api/admin/applications`);
+       const token = localStorage.getItem("temcAdminToken");
+
+const response = await fetch(`${API_BASE_URL}/api/admin/applications`, {
+    headers: {
+        Authorization: `Bearer ${token}`
+    }
+});
 
         console.log("Applications response status:", response.status);
 
