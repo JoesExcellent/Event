@@ -72,6 +72,15 @@ async function loginAdmin() {
     headers: {
         "Content-Type": "application/json"
     },
+
+      const backendData = await backendResponse.json();
+
+if (!backendData.success) {
+
+    message.textContent = "Backend login failed";
+    message.className = "error-message";
+    return;
+}
     body: JSON.stringify({
         email,
         password
