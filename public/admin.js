@@ -73,7 +73,7 @@ async function loginAdmin() {
         "Content-Type": "application/json"
     },
 
-      const backendData = await backendResponse.json();
+     const backendData = await backendResponse.json();
 
 if (!backendData.success) {
 
