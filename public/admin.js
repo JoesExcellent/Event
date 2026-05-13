@@ -95,9 +95,8 @@ const backendData = await backendResponse.json();
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("dashboardContent").style.display = "block";
 
-    renderAdminRoleInfo();
+  renderAdminRoleInfo();
 loadApplications();
-
     message.textContent = "";
 }
 
