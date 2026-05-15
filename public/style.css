@@ -774,3 +774,52 @@ button:hover {
     font-size: 0.7rem !important;
     border-radius: 7px !important;
 }
+/* REDUCE LIVE APPLICATION / CANDIDATE CARD SIZE */
+
+#applications .application-card {
+    max-width: 700px !important;
+    margin: 25px auto !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+}
+
+#applications .application-card h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 10px !important;
+}
+
+#applications .application-card p,
+#applications .application-card strong,
+#applications .application-card a {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+}
+
+#applications .application-card label {
+    font-size: 0.75rem !important;
+    margin: 10px 0 4px !important;
+}
+
+#applications .application-card select,
+#applications .application-card input,
+#applications .application-card textarea {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+#applications .application-card textarea {
+    min-height: 80px !important;
+}
+
+#applications .candidate-actions {
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+#applications .candidate-actions button {
+    padding: 7px 10px !important;
+    font-size: 0.7rem !important;
+    border-radius: 7px !important;
+}
