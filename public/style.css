@@ -700,3 +700,27 @@ button:hover {
 .hero-image-placeholder {
     display: none !important;
 }
+/* =========================================
+   ADMIN DASHBOARD PHOTO PLACEHOLDER
+========================================= */
+
+.hero-image-placeholder {
+    width: 100%;
+    min-height: 420px;
+    margin: 40px 0;
+    border: 6px dashed rgba(120, 190, 230, 0.7);
+    border-radius: 34px;
+    background: #1c5b84;
+    color: #aee7ff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+
+    overflow: hidden;
+}
