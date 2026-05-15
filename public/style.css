@@ -523,3 +523,31 @@ button:hover {
         padding: 20px;
     }
 }
+/* FINAL STATS PANEL REDUCTION */
+.stats-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 18px !important;
+    margin: 20px 0 35px !important;
+}
+
+.stat-card {
+    min-height: 90px !important;
+    padding: 16px 18px !important;
+    border-radius: 14px !important;
+}
+
+.stat-card h3 {
+    font-size: 0.95rem !important;
+    margin-bottom: 8px !important;
+}
+
+.stat-card p {
+    font-size: 1.8rem !important;
+    line-height: 1 !important;
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
