@@ -655,3 +655,41 @@ button:hover {
         font-size: 1.4rem !important;
     }
 }
+/* FINAL WORKING SEARCH FILTER REDUCTION */
+
+#filterBox {
+    max-width: 620px !important;
+    margin: 22px auto !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+}
+
+#filterBox h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 12px !important;
+}
+
+#filterBox label {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+}
+
+#filterBox input,
+#filterBox select {
+    padding: 9px 12px !important;
+    font-size: 0.85rem !important;
+    border-radius: 7px !important;
+    margin-bottom: 8px !important;
+}
+
+#filterBox button {
+    padding: 9px 16px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+}
+
+#filterCount {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+}
