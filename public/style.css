@@ -693,3 +693,10 @@ button:hover {
     font-size: 0.8rem !important;
     margin-top: 8px !important;
 }
+/* REMOVE CANDIDATE PHOTOGRAPH PLACEHOLDER */
+
+.photo-placeholder,
+.candidate-photo-placeholder,
+.hero-image-placeholder {
+    display: none !important;
+}
