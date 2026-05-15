@@ -723,3 +723,54 @@ button:hover {
 #applications .photo-placeholder {
     display: none !important;
 }
+/* =====================================================
+   REDUCE CANDIDATE CARD SIZE BY 50%
+===================================================== */
+
+.candidate-card {
+    padding: 18px !important;
+    border-radius: 16px !important;
+    max-width: 700px !important;
+    margin: 25px auto !important;
+}
+
+.candidate-card h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 10px !important;
+}
+
+.candidate-card p,
+.candidate-card strong,
+.candidate-card a {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+}
+
+.candidate-card label {
+    font-size: 0.75rem !important;
+    margin-bottom: 4px !important;
+}
+
+.candidate-card select,
+.candidate-card textarea,
+.candidate-card input {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+.candidate-card textarea {
+    min-height: 90px !important;
+}
+
+.candidate-actions {
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+.candidate-actions button {
+    padding: 7px 10px !important;
+    font-size: 0.7rem !important;
+    border-radius: 7px !important;
+}
