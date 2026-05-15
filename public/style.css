@@ -1,10 +1,3 @@
-/* =====================================================
-   TEMC ADMIN DASHBOARD STYLE.CSS
-   CLEAN WORKING VERSION
-   Restores the admin dashboard banner
-   Removes candidate photograph and description placeholders only
-===================================================== */
-
 * {
     margin: 0;
     padding: 0;
@@ -21,119 +14,102 @@ body {
     display: none !important;
 }
 
-/* =====================================================
-   NAVBAR
-===================================================== */
-
 .navbar {
     background: #03111f;
     padding: 30px 60px;
     display: flex;
     gap: 55px;
     align-items: center;
-    border-bottom: 2px solid #ff6a00;
+    border-bottom: 4px solid #ff6a00;
     flex-wrap: wrap;
 }
 
 .navbar a {
     color: #ffffff;
     text-decoration: none;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     font-weight: 700;
 }
 
 .navbar a.active {
     background: #ff6a00;
-    padding: 16px 24px;
+    padding: 18px 26px;
     border-radius: 14px;
 }
 
-/* =====================================================
-   MAIN DASHBOARD
-===================================================== */
-
 .dashboard {
-    max-width: 1400px;
+    max-width: 1500px;
     margin: auto;
-    padding: 40px 24px;
+    padding: 55px 30px;
 }
 
-.dashboard-header h1,
-.dashboard h1 {
-    font-size: 4rem;
-    margin-bottom: 30px;
+.dashboard-header,
+.login-card,
+.admin-hero,
+.stat-card,
+.analytics-card,
+.filters-card,
+.applications-card,
+.admin-info {
+    background: #123d66;
+    border-radius: 28px;
 }
 
-/* =====================================================
-   ADMIN DASHBOARD BANNER PLACEHOLDER
-   This restores ONLY the main admin banner.
-===================================================== */
-
-.dashboard > .hero-image-placeholder {
-    width: 100%;
-    min-height: 320px;
-    margin: 35px 0;
-    border: 5px dashed rgba(120, 190, 230, 0.7);
-    border-radius: 32px;
-    background: #1d5b84;
-    color: #aee7ff;
-
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-
-    font-size: 2.3rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+.dashboard-header {
+    padding: 55px;
+    margin-bottom: 55px;
 }
 
-/* =====================================================
-   ADMIN INTRO / TEXT PLACEHOLDER
-===================================================== */
-
-.text-placeholder,
-.intro-box {
-    background: #102d49;
-    border-left: 6px solid #ff6a00;
-    border-radius: 18px;
-    padding: 24px 28px;
-    margin-bottom: 30px;
-    line-height: 1.8;
-    font-size: 1.1rem;
+.dashboard-header h1 {
+    font-size: 4.2rem;
+    margin-bottom: 18px;
 }
 
-/* =====================================================
-   REMOVE ONLY CANDIDATE PLACEHOLDERS
-   This does NOT remove the main admin dashboard banner.
-===================================================== */
-
-#applications .hero-image-placeholder,
-#applications .text-placeholder,
-#applications .candidate-photo-placeholder,
-#applications .photo-placeholder {
-    display: none !important;
+.dashboard-header p {
+    font-size: 1.7rem;
+    color: #dcecff;
 }
 
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-.top-buttons {
+.login-section {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 620px;
+    padding: 55px;
+}
+
+.login-card h2 {
+    font-size: 3rem;
+    margin-bottom: 35px;
+}
+
+.login-card label {
+    display: block;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 22px;
+    border-radius: 14px;
+    border: none;
+    margin-bottom: 25px;
+    font-size: 1.3rem;
 }
 
 button {
     background: #ff6a00;
     color: #ffffff;
     border: none;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 0.95rem;
-    font-weight: 700;
+    border-radius: 14px;
+    padding: 16px 28px;
+    font-size: 1.2rem;
+    font-weight: 800;
     cursor: pointer;
 }
 
@@ -141,239 +117,145 @@ button:hover {
     opacity: 0.9;
 }
 
-#logoutBtn,
-#exportCsvBtn,
-#clearFiltersBtn {
-    padding: 10px 18px !important;
-    font-size: 0.95rem !important;
-    border-radius: 10px !important;
+.admin-hero {
+    padding: 45px;
+    margin-bottom: 40px;
 }
 
-/* =====================================================
-   ADMIN INFO / PERMISSIONS
-===================================================== */
-
-#adminInfo,
-.admin-info {
-    margin: 20px 0;
-    font-size: 1rem;
+.admin-hero h2 {
+    font-size: 2.4rem;
+    margin-bottom: 30px;
 }
 
-.role-badge {
-    display: inline-block;
-    padding: 7px 14px;
-    border-radius: 999px;
-    margin-left: 10px;
-    font-size: 0.75rem;
-    font-weight: 800;
+.photo-placeholder img {
+    width: 100%;
+    max-height: 360px;
+    object-fit: cover;
+    border-radius: 24px;
+    display: block;
+    margin-bottom: 35px;
 }
 
-.role-owner {
-    background: #c0392b;
-    color: #ffffff;
+.intro-box {
+    background: #102d49;
+    border-left: 6px solid #ff6a00;
+    border-radius: 18px;
+    padding: 32px;
+    font-size: 1.45rem;
+    line-height: 1.8;
+    margin-bottom: 20px;
 }
 
-.role-recruiter {
-    background: #2980b9;
-    color: #ffffff;
+.top-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
 }
-
-.role-viewer {
-    background: #7f8c8d;
-    color: #ffffff;
-}
-
-.permission-box,
-#permissionsInfo {
-    background: #1a3047;
-    border-left: 4px solid #ffae00;
-    border-radius: 14px;
-    padding: 18px 20px;
-    margin-bottom: 28px;
-}
-
-#permissionsInfo h3 {
-    font-size: 1.05rem;
-    margin-bottom: 6px;
-}
-
-#permissionsInfo li {
-    font-size: 0.85rem;
-}
-
-/* =====================================================
-   STATS GRID
-===================================================== */
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 14px;
-    margin: 25px 0;
+    margin-top: 20px;
 }
 
 .stat-card {
     background: #173a63;
     border-left: 4px solid #00d9ff;
-    border-radius: 14px;
-    padding: 14px;
-    min-height: 85px;
+    border-radius: 18px;
+    padding: 18px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .stat-card h3 {
-    font-size: 0.85rem;
-    margin-bottom: 8px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .stat-card p {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
 }
-
-/* =====================================================
-   ANALYTICS
-===================================================== */
-
 .analytics-card {
-    background: #173a63;
-    border-radius: 18px;
-    padding: 20px;
-    max-width: 620px;
-    margin: 25px auto;
+    padding: 40px;
+    margin-bottom: 40px;
 }
 
 .analytics-card h2 {
-    font-size: 1.8rem;
-    margin-bottom: 12px;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
 }
 
-.chart-container,
-.chart-wrapper {
-    max-width: 420px;
-    height: 120px !important;
-    max-height: 120px !important;
-    margin: auto;
-    overflow: hidden;
+.chart-box {
+    height: 300px;
+    max-height: 300px;
 }
 
-.chart-container canvas,
-.chart-wrapper canvas,
-#applicationsChart,
-#recruitmentChart {
-    width: 100% !important;
-    height: 120px !important;
-    max-height: 120px !important;
-}
-
-/* =====================================================
-   FILTERS
-===================================================== */
-
-#filterBox,
 .filters-card {
-    background: #173a63;
-    border-radius: 18px;
-    padding: 20px;
-    max-width: 620px;
-    margin: 25px auto;
-}
-
-.filters-card h2,
-#filterBox h2 {
-    font-size: 1.5rem;
-    margin-bottom: 14px;
-}
-
-.filters-card label,
-#filterBox label {
-    font-size: 0.8rem;
-    margin-bottom: 5px;
-    display: block;
+    padding: 35px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .filters-card input,
-.filters-card select,
-#filterBox input,
-#filterBox select {
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 8px;
+.filters-card select {
+    padding: 16px;
+    border-radius: 10px;
     border: none;
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-}
-
-#showingCount,
-#filterCount {
-    color: #ffae00;
-    font-size: 0.85rem;
-    margin-top: 10px;
-    font-weight: bold;
-}
-
-/* =====================================================
-   APPLICATION / CANDIDATE CARDS
-===================================================== */
-
-.application-card,
-.candidate-card {
-    background: #173a63;
-    border-radius: 20px;
-    padding: 26px;
-    margin-bottom: 28px;
-}
-
-#applications .application-card h2,
-#applications .candidate-card h2,
-#applications .application-card h3,
-#applications .candidate-card h3 {
-    font-size: 2rem;
-    margin-bottom: 18px;
-}
-
-#applications p {
-    font-size: 0.9rem;
-    margin-bottom: 4px;
-}
-
-#applications a {
-    color: #ffae00;
-    font-weight: bold;
-}
-
-#applications label {
-    display: block;
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin: 18px 0 7px;
-}
-
-#applications input,
-#applications textarea,
-#applications select {
-    width: 100%;
-    padding: 14px;
-    border-radius: 9px;
-    border: none;
-    margin-bottom: 12px;
+    min-width: 240px;
     font-size: 1rem;
 }
 
-#applications textarea {
-    min-height: 120px;
-    resize: vertical;
+#showingCount {
+    color: #ffae00;
+    font-size: 1.5rem;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 20px;
 }
 
-/* =====================================================
-   STATUS BADGES
-===================================================== */
+.applications-card {
+    padding: 40px;
+    margin-bottom: 40px;
+}
+
+.applications-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.candidate-card {
+    background: #164a77;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 25px;
+}
+
+.candidate-card h3 {
+    font-size: 1.7rem;
+    margin: 12px 0;
+}
+
+.candidate-card p {
+    margin-bottom: 8px;
+}
 
 .status-badge {
     display: inline-block;
-    padding: 8px 14px;
+    padding: 10px 16px;
     border-radius: 999px;
     font-weight: bold;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .status-new {
@@ -398,15 +280,127 @@ button:hover {
     background: #3fa34d;
 }
 
-/* =====================================================
-   CANDIDATE ACTION BUTTONS
-===================================================== */
-
 .candidate-actions {
     display: flex;
-    gap: 12px;
+    gap: 14px;
     flex-wrap: wrap;
-    margin-top: 18px;
+    margin-top: 22px;
+}
+
+.candidate-actions button {
+    padding: 13px 20px;
+    font-size: 1rem;
+}
+
+.save-btn,
+.invite-btn,
+.delete-btn {
+    background: #ff6a00;
+}
+
+.reject-btn {
+    background: #cf352b;
+}
+
+.admin-info {
+    padding: 45px;
+}
+
+.admin-info h2 {
+    font-size: 2.6rem;
+    margin-bottom: 35px;
+}
+
+.admin-info p {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.admin-info span {
+    color: #ffae00;
+}
+
+/* =====================================================
+   ADMIN CHART SIZE FIX
+   Full working graph sizing included here.
+   Reduces the Recruitment Analytics graph height and width
+   without changing login, roles, buttons, or placeholders.
+===================================================== */
+
+.analytics-section {
+    margin-bottom: 40px;
+}
+
+.chart-card {
+    background: #123d66;
+    border-radius: 28px;
+    padding: 26px 30px 30px;
+    margin: 0 auto 40px;
+    max-width: 760px;
+}
+
+.chart-card h2 {
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.chart-container canvas,
+#recruitmentChart,
+#applicationsChart {
+    width: 100% !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
+
+/* This supports the older admin.html chart classes too */
+.analytics-card {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.chart-wrapper canvas,
+#applicationsChart {
+    width: 100% !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
+
+/* =====================================================
+   ADMIN BUTTON SIZE FIX
+   Keeps orange button style but prevents oversized dashboard buttons.
+===================================================== */
+
+.top-buttons button,
+#logoutBtn,
+#exportCsvBtn,
+#clearFiltersBtn {
+    padding: 10px 18px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
 }
 
 .candidate-actions button,
@@ -415,65 +409,318 @@ button:hover {
 .invite-btn,
 .delete-btn {
     padding: 9px 14px !important;
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
     border-radius: 8px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
 }
 
-.reject-btn {
-    background: #cf352b !important;
+.filters-card button {
+    padding: 10px 16px !important;
+    font-size: 1rem !important;
+    border-radius: 9px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* Keep the login button readable but not oversized */
+.login-card button {
+    padding: 13px 24px !important;
+    font-size: 1.1rem !important;
+    border-radius: 12px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* =====================================================
+   RESTORE ADMIN PHOTOGRAPH PLACEHOLDER
+   Restores the large dashed banner placeholder without changing buttons.
+===================================================== */
+
+.hero-image-placeholder {
+    width: 100%;
+    min-height: 300px;
+    margin: 35px 0 30px;
+    border: 4px dashed rgba(120, 190, 230, 0.65);
+    border-radius: 24px;
+    background: linear-gradient(135deg, #155b7e, #123d66);
+    color: #a7e8ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.text-placeholder {
+    background: #102d49;
+    border-left: 6px solid #ff6a00;
+    border-radius: 18px;
+    padding: 26px 32px;
+    margin: 0 0 28px;
+    color: #ffffff;
+    font-size: 1.25rem;
+    line-height: 1.7;
 }
 
 /* =====================================================
    RESPONSIVE
 ===================================================== */
 
-@media (max-width: 900px) {
-
+@media (max-width: 800px) {
     .navbar {
         padding: 22px;
         gap: 25px;
     }
 
     .navbar a {
-        font-size: 1rem;
+        font-size: 1.1rem;
     }
 
-    .dashboard {
-        padding: 30px 22px;
+    .dashboard-header h1 {
+        font-size: 2.4rem;
     }
 
-    .dashboard-header h1,
-    .dashboard h1 {
-        font-size: 2.5rem;
+    .dashboard-header p {
+        font-size: 1.1rem;
     }
 
-    .dashboard > .hero-image-placeholder {
-        min-height: 180px;
-        font-size: 1.2rem;
-        border-radius: 22px;
+    .chart-box {
+        height: 180px;
     }
 
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .analytics-card,
-    .filters-card,
-    #filterBox {
+    .chart-card,
+    .analytics-card {
         max-width: 100%;
+    }
+
+    .chart-container,
+    .chart-container canvas,
+    .chart-wrapper,
+    .chart-wrapper canvas,
+    #recruitmentChart,
+    #applicationsChart {
+        height: 160px !important;
+        max-height: 160px !important;
+    }
+
+    .filters-card input,
+    .filters-card select,
+    .filters-card button {
+        width: 100%;
+    }
+
+    .hero-image-placeholder {
+        min-height: 210px;
+        font-size: 1.1rem;
+    }
+
+    .text-placeholder {
+        font-size: 1rem;
+        padding: 20px;
+    }
+}
+/* FINAL STATS PANEL REDUCTION */
+.stats-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 18px !important;
+    margin: 20px 0 35px !important;
+}
+
+.stat-card {
+    min-height: 90px !important;
+    padding: 16px 18px !important;
+    border-radius: 14px !important;
+}
+
+.stat-card h3 {
+    font-size: 0.95rem !important;
+    margin-bottom: 8px !important;
+}
+
+.stat-card p {
+    font-size: 1.8rem !important;
+    line-height: 1 !important;
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+/* FINAL RECRUITMENT ANALYTICS SIZE REDUCTION */
+
+.analytics-card {
+    max-width: 620px !important;
+    padding: 20px !important;
+    margin: 25px auto !important;
+    border-radius: 20px !important;
+}
+
+.analytics-card h2 {
+    font-size: 1.8rem !important;
+    margin-bottom: 12px !important;
+}
+
+.chart-container,
+.chart-wrapper {
+    max-width: 420px !important;
+    height: 120px !important;
+    max-height: 120px !important;
+    margin: 0 auto !important;
+}
+
+.chart-container canvas,
+.chart-wrapper canvas,
+#recruitmentChart,
+#applicationsChart {
+    height: 120px !important;
+    max-height: 120px !important;
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+
+    .analytics-card {
+        max-width: 95% !important;
+        padding: 18px !important;
+    }
+
+    .analytics-card h2 {
+        font-size: 1.4rem !important;
     }
 
     .chart-container,
     .chart-wrapper,
     .chart-container canvas,
     .chart-wrapper canvas,
-    #applicationsChart,
-    #recruitmentChart {
+    #recruitmentChart,
+    #applicationsChart {
         height: 100px !important;
         max-height: 100px !important;
     }
+}
+/* FINAL SEARCH FILTERS SIZE REDUCTION */
 
-    .candidate-actions button {
-        width: auto !important;
+.filters-card {
+    max-width: 700px !important;
+    margin: 25px auto !important;
+    padding: 22px !important;
+    border-radius: 18px !important;
+}
+
+.filters-card h2 {
+    font-size: 1.7rem !important;
+    margin-bottom: 14px !important;
+}
+
+.filters-card label {
+    font-size: 0.9rem !important;
+    margin-bottom: 6px !important;
+}
+
+.filters-card input,
+.filters-card select {
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    min-width: auto !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+#clearFiltersBtn,
+.filters-card button {
+    padding: 10px 18px !important;
+    font-size: 0.95rem !important;
+    border-radius: 10px !important;
+}
+
+#showingCount {
+    font-size: 0.9rem !important;
+    margin-top: 10px !important;
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+
+    .filters-card {
+        max-width: 95% !important;
+        padding: 18px !important;
     }
+
+    .filters-card h2 {
+        font-size: 1.4rem !important;
+    }
+}
+/* FINAL WORKING SEARCH FILTER REDUCTION */
+
+#filterBox {
+    max-width: 620px !important;
+    margin: 22px auto !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+}
+
+#filterBox h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 12px !important;
+}
+
+#filterBox label {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+}
+
+#filterBox input,
+#filterBox select {
+    padding: 9px 12px !important;
+    font-size: 0.85rem !important;
+    border-radius: 7px !important;
+    margin-bottom: 8px !important;
+}
+
+#filterBox button {
+    padding: 9px 16px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+}
+
+#filterCount {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+}
+/* REMOVE CANDIDATE PHOTOGRAPH PLACEHOLDER */
+
+.photo-placeholder,
+.candidate-photo-placeholder,
+.hero-image-placeholder {
+    display: none !important;
+}
+/* =========================================
+   ADMIN DASHBOARD PHOTO PLACEHOLDER
+========================================= */
+
+.hero-image-placeholder {
+    width: 100%;
+    min-height: 420px;
+    margin: 40px 0;
+    border: 6px dashed rgba(120, 190, 230, 0.7);
+    border-radius: 34px;
+    background: #1c5b84;
+    color: #aee7ff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+
+    overflow: hidden;
 }
