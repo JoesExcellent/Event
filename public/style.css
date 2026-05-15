@@ -693,34 +693,33 @@ button:hover {
     font-size: 0.8rem !important;
     margin-top: 8px !important;
 }
-/* REMOVE CANDIDATE PHOTOGRAPH PLACEHOLDER */
 
-.photo-placeholder,
-.candidate-photo-placeholder,
-.hero-image-placeholder {
-    display: none !important;
+/* =====================================================
+   FINAL SAFE PLACEHOLDER FIX
+   Restores the admin dashboard banner only.
+   Removes candidate photograph and description placeholders only.
+===================================================== */
+
+.dashboard > .hero-image-placeholder {
+    width: 100% !important;
+    min-height: 300px !important;
+    margin: 35px 0 30px !important;
+    border: 4px dashed rgba(120, 190, 230, 0.65) !important;
+    border-radius: 24px !important;
+    background: linear-gradient(135deg, #155b7e, #123d66) !important;
+    color: #a7e8ff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
 }
-/* =========================================
-   ADMIN DASHBOARD PHOTO PLACEHOLDER
-========================================= */
 
-.hero-image-placeholder {
-    width: 100%;
-    min-height: 420px;
-    margin: 40px 0;
-    border: 6px dashed rgba(120, 190, 230, 0.7);
-    border-radius: 34px;
-    background: #1c5b84;
-    color: #aee7ff;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-
-    font-size: 2.4rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-
-    overflow: hidden;
+#applications .hero-image-placeholder,
+#applications .text-placeholder,
+#applications .candidate-photo-placeholder,
+#applications .photo-placeholder {
+    display: none !important;
 }
