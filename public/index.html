@@ -193,6 +193,51 @@
         .btn:hover {
             opacity: 0.9;
         }
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* =========================================
+   HERO CTA PHOTO PLACEHOLDER
+========================================= */
+
+.hero-cta-section {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.hero-photo-placeholder {
+
+    width: 100%;
+    max-width: 520px;
+
+    height: 280px;
+
+    background: linear-gradient(
+        135deg,
+        #1f4367,
+        #102b45
+    );
+
+    border: 2px dashed rgba(255,255,255,0.25);
+
+    border-radius: 18px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+
+    color: #d8e6f5;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+
+    padding: 20px;
+}
 
         /* =========================================
            HERO CARD
@@ -545,13 +590,17 @@
 
         </h3>
 
-        <a href="#contact" class="btn">
+        <div class="hero-cta-section">
 
-            Call To Action
+    <a href="#contact" class="btn">
+        Call To Action
+    </a>
 
-        </a>
-
+    <div class="hero-photo-placeholder">
+        Hero Side Photograph Placeholder
     </div>
+
+</div>
 
     <div class="hero-card">
 
