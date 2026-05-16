@@ -29,32 +29,38 @@
            NAVIGATION
         ========================================= */
 
-        .navbar {
-            background: #03111f;
-            padding: 22px 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            border-bottom: 2px solid #ff6a00;
-        }
+      .navbar {
+    background: #03111f;
+    padding: 24px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+    border-bottom: 2px solid #ff6a00;
+}
 
-        .navbar a {
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 700;
-            padding: 16px 24px;
-            border-radius: 14px;
-            transition: 0.3s ease;
-            min-width: 120px;
-            text-align: center;
-        }
+.navbar a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 700;
+    width: 145px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    transition: 0.3s ease;
+}
 
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6a00;
-        }
+.navbar a:hover,
+.navbar a.active {
+    background: #ff6a00;
+    color: #ffffff;
+}
 
         /* =========================================
            HERO IMAGE
