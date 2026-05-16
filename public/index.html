@@ -6,6 +6,9 @@
     <title>Joe's Excellent Events & Management</title>
 
     <style>
+        /* =========================================
+           GLOBAL RESET
+        ========================================= */
 
         * {
             margin: 0;
@@ -25,29 +28,24 @@
             color: inherit;
         }
 
-        //* =========================================
-   NAVIGATION
-========================================= */
-
-.navbar {
+        /*.navbar {
     background: #03111f;
-    padding: 24px 40px;
+    padding: 24px 30px;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
-    gap: 18px;
+    gap: 16px;
 
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 
     border-bottom: 2px solid #ff6a00;
 }
 
 .navbar a {
-
-    width: 145px;
-    height: 64px;
+    width: 120px;
+    height: 58px;
 
     display: flex;
     justify-content: center;
@@ -60,54 +58,31 @@
     color: #ffffff;
     text-decoration: none;
 
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
+
+    white-space: nowrap;
 
     transition: 0.3s ease;
 }
 
 .navbar a:hover,
 .navbar a.active {
-
     background: #ff6a00;
     color: #ffffff;
 }
-
-/* =========================================
-   MOBILE NAVIGATION
-========================================= */
-
-@media (max-width: 1000px) {
-
-    .navbar {
-
-        padding: 20px;
-        gap: 12px;
-
-        justify-content: center;
-    }
-
-    .navbar a {
-
-        width: 135px;
-        height: 58px;
-
-        font-size: 0.95rem;
-    }
-
-}
         /* =========================================
-           HERO IMAGE
+           TOP BANNER IMAGE
         ========================================= */
 
-        .hero-photo-placeholder {
+        .top-banner {
             width: 100%;
-            overflow: hidden;
-            border-bottom: 3px solid #ff6a00;
             background: #03111f;
+            border-bottom: 3px solid #ff6a00;
+            overflow: hidden;
         }
 
-        .hero-photo-placeholder img {
+        .top-banner img {
             width: 100%;
             height: auto;
             display: block;
@@ -123,13 +98,26 @@
             display: grid;
             grid-template-columns: 1.2fr 1fr;
             gap: 50px;
-            align-items: center;
+            align-items: start;
         }
 
-        .hero p {
+        .hero-left {
+            width: 100%;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 18px;
+            margin-bottom: 30px;
+            display: block;
+        }
+
+        .hero-left p {
             font-size: 1.2rem;
             color: #d8e6f5;
-            max-width: 650px;
+            max-width: 720px;
             margin-bottom: 30px;
         }
 
@@ -145,43 +133,18 @@
             color: #ff6a00;
         }
 
-.hero-left {
-    width: 100%;
-}
-
-.hero-image-placeholder {
-    width: 100%;
-
-    height: 280px;
-
-    background: linear-gradient(
-        135deg,
-        #1e466b,
-        #0d2238
-    );
-
-    border: 2px dashed rgba(255,255,255,0.25);
-
-    border-radius: 18px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-
-    padding: 20px;
-
-    color: #d8e6f5;
-
-    font-size: 1.2rem;
-    font-weight: 700;
-
-    margin-bottom: 30px;
-}
+        .hero-cta-section {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-top: 30px;
+        }
 
         .btn {
-            display: inline-block;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: fit-content;
             background: #ff6a00;
             color: #ffffff;
             padding: 14px 28px;
@@ -193,51 +156,23 @@
         .btn:hover {
             opacity: 0.9;
         }
-.btn:hover {
-    opacity: 0.9;
-}
 
-/* =========================================
-   HERO CTA PHOTO PLACEHOLDER
-========================================= */
-
-.hero-cta-section {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    margin-top: 30px;
-}
-
-.hero-photo-placeholder {
-
-    width: 100%;
-    max-width: 520px;
-
-    height: 280px;
-
-    background: linear-gradient(
-        135deg,
-        #1f4367,
-        #102b45
-    );
-
-    border: 2px dashed rgba(255,255,255,0.25);
-
-    border-radius: 18px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-
-    color: #d8e6f5;
-
-    font-size: 1.2rem;
-    font-weight: 700;
-
-    padding: 20px;
-}
+        .hero-side-placeholder {
+            width: 100%;
+            max-width: 520px;
+            height: 260px;
+            background: linear-gradient(135deg, #1f4367, #102b45);
+            border: 2px dashed rgba(255,255,255,0.25);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            color: #d8e6f5;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
 
         /* =========================================
            HERO CARD
@@ -345,66 +280,25 @@
         .card p {
             color: #d8e6f5;
         }
-.card-image-placeholder {
-    width: 100%;
-    height: 170px;
 
-    background: linear-gradient(
-        135deg,
-        #1d3f63,
-        #0d2238
-    );
+        .card-image-placeholder,
+        .industry-image-placeholder {
+            width: 100%;
+            height: 175px;
+            background: linear-gradient(135deg, #1d3f63, #0d2238);
+            border: 2px dashed rgba(255,255,255,0.25);
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            color: #d8e6f5;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
 
-    border: 2px dashed rgba(255,255,255,0.25);
-
-    border-radius: 14px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-
-    padding: 20px;
-
-    color: #d8e6f5;
-
-    font-size: 1rem;
-    font-weight: 700;
-
-    margin-bottom: 20px;
-}
-
-.industry-image-placeholder {
-    width: 100%;
-
-    height: 180px;
-
-    background: linear-gradient(
-        135deg,
-        #20476d,
-        #102b45
-    );
-
-    border: 2px dashed rgba(255,255,255,0.25);
-
-    border-radius: 14px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-
-    padding: 20px;
-
-    color: #d8e6f5;
-
-    font-size: 1rem;
-    font-weight: 700;
-
-    margin-bottom: 20px;
-}
         /* =========================================
            PROGRESS SECTION
         ========================================= */
@@ -484,6 +378,17 @@
         ========================================= */
 
         @media (max-width: 1000px) {
+            .navbar {
+                padding: 20px;
+                gap: 12px;
+                justify-content: center;
+            }
+
+            .navbar a {
+                width: 135px;
+                height: 58px;
+                font-size: 0.95rem;
+            }
 
             .hero {
                 grid-template-columns: 1fr;
@@ -494,19 +399,17 @@
                 font-size: 2.1rem;
             }
 
+            .hero-image {
+                height: 220px;
+            }
+
+            .hero-side-placeholder {
+                max-width: 100%;
+                height: 220px;
+            }
+
             section {
                 padding: 60px 25px;
-            }
-
-            .navbar {
-                gap: 12px;
-                padding: 20px;
-            }
-
-            .navbar a {
-                min-width: 100px;
-                padding: 14px 18px;
-                font-size: 0.95rem;
             }
 
             .section-title h2 {
@@ -517,343 +420,186 @@
                 font-size: 2.2rem;
             }
         }
-.hero-image {
-    width: 100%;
-    height: 280px;
-    object-fit: cover;
-    border-radius: 18px;
-    margin-bottom: 30px;
-}
-
     </style>
-
 </head>
 
 <body>
 
-    <!-- =========================================
-         NAVIGATION
-    ========================================== -->
-
     <nav class="navbar">
-
         <a href="index.html" class="active">Home</a>
-
         <a href="home.html">About</a>
-
         <a href="our-services.html">Our Services</a>
-
         <a href="careers.html">Careers</a>
-
         <a href="apply.html">Apply</a>
-
         <a href="contact us.html">Contact Us</a>
-
         <a href="admin.html">Admin</a>
-
     </nav>
 
-    <!-- =========================================
-         HERO IMAGE
-    ========================================== -->
-
-    <div class="hero-photo-placeholder">
-
-        <img src="images/index.png"
-             alt="Joe's Excellent Events & Management Banner">
-
+    <div class="top-banner">
+        <img src="images/index.png" alt="Joe's Excellent Events & Management Banner">
     </div>
-
-    <!-- =========================================
-         HERO SECTION
-    ========================================== -->
 
     <section class="hero">
 
-    <div class="hero-left">
+        <div class="hero-left">
 
-        <img src="images/recruitment.png"class="hero-image"
-             alt="Joe's Excellent Events & Management">
+            <img
+                src="images/recruitment.png"
+                class="hero-image"
+                alt="Joe's Excellent Events & Management"
+            >
 
-    </div>
+            <p>
+                Joe’s Excellent Events & Management demonstrates outstanding professionalism,
+                innovation and ambition through its commitment to helping brands grow globally
+                while developing confident future leaders. The company’s dedication to strategic
+                event management, leadership development and operational excellence creates lasting
+                success for both clients and individuals striving to achieve world-class results.
+            </p>
 
+            <h3 class="hero-title">
+                Where Hard Work<br>
+                <span>Meets Smart Strategy</span>
+            </h3>
 
-        <p>
-            Joe’s Excellent Events & Management demonstrates outstanding professionalism, innovation, and ambition through its commitment to helping brands grow globally while developing confident future leaders. The company’s dedication to strategic event management, leadership development, and operational excellence creates lasting success for both clients and individuals striving to achieve world-class results.
-        </p>
+            <div class="hero-cta-section">
 
-        <h3 class="hero-title">
+                <a href="#contact" class="btn">
+                    Call To Action
+                </a>
 
-            Where Hard Work<br>
+                <div class="hero-side-placeholder">
+                    Hero Side Photograph Placeholder
+                </div>
 
-            <span>Meets Smart Strategy</span>
+            </div>
 
-        </h3>
+        </div>
 
-        <div class="hero-cta-section">
+        <div class="hero-card">
 
-    <a href="#contact" class="btn">
-        Call To Action
-    </a>
+            <h3>What We Do</h3>
 
-    <div class="hero-photo-placeholder">
-        Hero Side Photograph Placeholder
-    </div>
+            <ul>
+                <li>Event Management</li>
+                <li>Sales & Customer Acquisition</li>
+                <li>Brand Representation</li>
+                <li>Campaign Strategy & Execution</li>
+                <li>Promotional Events & Activations</li>
+                <li>Market Research & Customer Insights</li>
+                <li>Team Training & Leadership Development</li>
+                <li>Client Relationship Management</li>
+            </ul>
 
-</div>
+        </div>
 
-    <div class="hero-card">
-
-        <h3>What We Do</h3>
-
- 
-
-        <ul>
-
-            <li>Event Management</li>
-
-            <li>Sales & Customer Acquisition</li>
-
-            <li>Brand Representation</li>
-
-            <li>Campaign Strategy & Execution</li>
-
-            <li>Promotional Events & Activations</li>
-
-            <li>Market Research & Customer Insights</li>
-
-            <li>Team Training & Leadership Development</li>
-
-            <li>Client Relationship Management</li>
-
-        </ul>
-
-    </div>
-
-</section>
-
-    <!-- =========================================
-         ABOUT SECTION
-    ========================================== -->
+    </section>
 
     <section id="who-we-are" class="about">
 
         <div class="section-title">
-
             <h2>Who We Are</h2>
-
             <p>More Than a Sales Company</p>
-
         </div>
 
         <div class="about-box">
 
-            <h3>
-                Built on Ambition, Resilience and Opportunity
-            </h3>
+            <h3>Built on Ambition, Resilience and Opportunity</h3>
 
             <p>
-                Joe's Excellent Events & Management is a startup
-                built on ambition, resilience and opportunity.
-                We specialise in event management and customer
-                acquisition, but at our core we’re about people —
-                developing talent, creating leaders and helping
-                brands grow through smart strategic execution.
+                Joe's Excellent Events & Management is a startup built on ambition,
+                resilience and opportunity. We specialise in event management and customer
+                acquisition, but at our core we’re about people — developing talent, creating
+                leaders and helping brands grow through smart strategic execution.
             </p>
 
             <br>
 
-            <a href="#" class="btn">
-
-                Learn Our Story
-
-            </a>
+            <a href="#" class="btn">Learn Our Story</a>
 
         </div>
 
     </section>
-
-    <!-- =========================================
-         VALUES SECTION
-    ========================================== -->
 
     <section id="services">
 
         <div class="section-title">
-
             <h2>Why Brands & People Choose Us</h2>
-
-            <p>
-                We combine smart strategy with people-focused
-                development.
-            </p>
-
+            <p>We combine smart strategy with people-focused development.</p>
         </div>
 
-      <div class="values-grid">
+        <div class="values-grid">
 
-    <div class="card">
+            <div class="card">
+                <div class="card-image-placeholder">Innovation Photograph Placeholder</div>
+                <h3>Innovation</h3>
+                <p>We engineer success through smart strategy.</p>
+            </div>
 
-        <div class="card-image-placeholder">
-            Innovation Photograph Placeholder
+            <div class="card">
+                <div class="card-image-placeholder">Empowerment Photograph Placeholder</div>
+                <h3>Empowerment</h3>
+                <p>Training, mentorship and real opportunities.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-image-placeholder">Integrity Photograph Placeholder</div>
+                <h3>Integrity</h3>
+                <p>Long-term success built on honesty.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-image-placeholder">Resilience Photograph Placeholder</div>
+                <h3>Resilience</h3>
+                <p>Every “no” brings us closer to a “yes”.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-image-placeholder">Ambition Photograph Placeholder</div>
+                <h3>Ambition</h3>
+                <p>Borderless vision. No settling for average.</p>
+            </div>
+
         </div>
-
-        <h3>Innovation</h3>
-
-        <p>
-            We engineer success through smart strategy.
-        </p>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-image-placeholder">
-            Empowerment Photograph Placeholder
-        </div>
-
-        <h3>Empowerment</h3>
-
-        <p>
-            Training, mentorship and real opportunities.
-        </p>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-image-placeholder">
-            Integrity Photograph Placeholder
-        </div>
-
-        <h3>Integrity</h3>
-
-        <p>
-            Long-term success built on honesty.
-        </p>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-image-placeholder">
-            Resilience Photograph Placeholder
-        </div>
-
-        <h3>Resilience</h3>
-
-        <p>
-            Every “no” brings us closer to a “yes”.
-        </p>
-
-    </div>
-
-    <div class="card">
-
-        <div class="card-image-placeholder">
-            Ambition Photograph Placeholder
-        </div>
-
-        <h3>Ambition</h3>
-
-        <p>
-            Borderless vision. No settling for average.
-        </p>
-
-    </div>
-
-</div>
 
     </section>
 
-    <!-- =========================================
-     INDUSTRIES SECTION
-========================================== -->
+    <section id="industries" class="about">
 
-<section id="industries" class="about">
+        <div class="section-title">
+            <h2>Industries We Work With</h2>
+            <p>Our adaptable approach allows us to deliver results across multiple sectors.</p>
+        </div>
 
-    <div class="section-title">
+        <div class="industries-grid">
 
-        <h2>Industries We Work With</h2>
-
-        <p>
-            Our adaptable approach allows us to deliver
-            results across multiple sectors.
-        </p>
-
-    </div>
-
-    <div class="industries-grid">
-
-        <div class="card">
-
-            <div class="industry-image-placeholder">
-                Telecommunications Photograph Placeholder
+            <div class="card">
+                <div class="industry-image-placeholder">Telecommunications Photograph Placeholder</div>
+                <h3>Telecommunications</h3>
+                <p>Driving customer acquisition and brand awareness through high-engagement campaigns.</p>
             </div>
 
-            <h3>Telecommunications</h3>
+            <div class="card">
+                <div class="industry-image-placeholder">Retail Photograph Placeholder</div>
+                <h3>Retail</h3>
+                <p>Connecting brands directly with customers to boost awareness, foot traffic and conversions.</p>
+            </div>
 
-            <p>
-                Driving customer acquisition and brand
-                awareness through high-engagement campaigns.
-            </p>
+            <div class="card">
+                <div class="industry-image-placeholder">Service Providers Photograph Placeholder</div>
+                <h3>Service Providers</h3>
+                <p>Building trust-led conversations that communicate value and create long-term customers.</p>
+            </div>
+
+            <div class="card">
+                <div class="industry-image-placeholder">Growing Brands Photograph Placeholder</div>
+                <h3>Growing & Established Brands</h3>
+                <p>Supporting businesses with scalable strategies designed for sustainable growth.</p>
+            </div>
 
         </div>
 
-        <div class="card">
-
-            <div class="industry-image-placeholder">
-                Retail Photograph Placeholder
-            </div>
-
-            <h3>Retail</h3>
-
-            <p>
-                Connecting brands directly with customers
-                to boost awareness, foot traffic and
-                conversions.
-            </p>
-
-        </div>
-
-        <div class="card">
-
-            <div class="industry-image-placeholder">
-                Service Providers Photograph Placeholder
-            </div>
-
-            <h3>Service Providers</h3>
-
-            <p>
-                Building trust-led conversations that
-                communicate value and create long-term
-                customers.
-            </p>
-
-        </div>
-
-        <div class="card">
-
-            <div class="industry-image-placeholder">
-                Growing Brands Photograph Placeholder
-            </div>
-
-            <h3>Growing & Established Brands</h3>
-
-            <p>
-                Supporting businesses with scalable
-                strategies designed for sustainable growth.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
-
-    <!-- =========================================
-         PROGRESS SECTION
-    ========================================== -->
+    </section>
 
     <section id="progress" class="progress">
 
@@ -864,69 +610,43 @@
             <h2>Fast-Growing Startup</h2>
 
             <ul>
-
                 <li>Rapid Growth Since Launch</li>
-
                 <li>Continuous team development & promotions</li>
-
                 <li>Expanding client reach across industries</li>
-
                 <li>Proven Campaign Performance Across Industries</li>
-
             </ul>
 
         </div>
 
     </section>
 
-    <!-- =========================================
-         CTA SECTION
-    ========================================== -->
-
     <section id="contact" class="cta">
 
         <h2>
-
             Let’s Build Something<br>
-
             <span>That Lasts</span>
-
         </h2>
 
         <p>
-            Whether you’re a brand looking to grow or someone
-            ready to take the next step in your career,
-            Joe's Excellent Events & Management is ready
-            to work with you.
+            Whether you’re a brand looking to grow or someone ready to take the next step
+            in your career, Joe's Excellent Events & Management is ready to work with you.
         </p>
 
         <br>
 
-        <a href="mailto:excellentmanagement2026@gmail.com"
-           class="btn">
-
+        <a href="mailto:excellentmanagement2026@gmail.com" class="btn">
             Call To Action
-
         </a>
 
     </section>
 
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
     <footer class="footer">
 
-        <p>
-            Copyright © 2026 Joe's Excellent Events & Management
-        </p>
+        <p>Copyright © 2026 Joe's Excellent Events & Management</p>
 
         <div class="footer-links">
-
             <a href="#">Privacy Policy</a>
-
             <a href="#">Terms of Use</a>
-
         </div>
 
     </footer>
