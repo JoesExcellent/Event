@@ -1,365 +1,840 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Services Joe's Excellent Events & Management</title>
-
-    <link rel="stylesheet" href="style.css?v=23">
-
-    <style>
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #061b2f;
-            color: white;
-        }
-
-        .navbar {
-            background: #03111f;
-            padding: 18px 30px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            align-items: center;
-            border-bottom: 2px solid #ff6600;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
-
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
-        }
-
-        .hero {
-            padding: 100px 20px;
-            text-align: center;
-            background: linear-gradient(to bottom, #061b2f, #020b15);
-        }
-
-        .hero h1 {
-            font-size: 64px;
-            margin-bottom: 25px;
-        }
-
-        .hero p {
-            max-width: 900px;
-            margin: auto;
-            font-size: 20px;
-            line-height: 1.8;
-        }
-
-        .services-section {
-            max-width: 1300px;
-            margin: auto;
-            padding: 70px 20px;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 35px;
-        }
-
-        .service-card {
-            background: #123456;
-            border-radius: 20px;
-            overflow: hidden;
-            transition: 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .photo-placeholder {
-            height: 240px;
-            background: linear-gradient(135deg, #1b5f8a, #0a2a45);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #7fdcff;
-            font-size: 24px;
-            font-weight: bold;
-            border-bottom: 3px solid #ff6600;
-        }
-
-        .service-content {
-            padding: 30px;
-        }
-
-        .service-content h2 {
-            color: #ff9900;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 30px;
-        }
-
-        .service-content p {
-            font-size: 18px;
-            line-height: 1.7;
-        }
-
-        .why-section {
-            background: #071f36;
-            padding: 90px 20px;
-            text-align: center;
-        }
-
-        .why-section h2 {
-            color: #00cfff;
-            font-size: 48px;
-            margin-bottom: 25px;
-        }
-
-        .why-section p {
-            max-width: 900px;
-            margin: auto;
-            font-size: 20px;
-            line-height: 1.8;
-        }
-
-        .cta-section {
-            background: #f4f4f4;
-            color: #123456;
-            text-align: center;
-            padding: 90px 20px;
-        }
-
-        .cta-section h2 {
-            font-size: 52px;
-            color: #6ec6e8;
-            margin-bottom: 25px;
-        }
-
-        .cta-section p {
-            max-width: 900px;
-            margin: auto;
-            font-size: 20px;
-            line-height: 1.8;
-        }
-
-        .cta-btn {
-            display: inline-block;
-            margin-top: 35px;
-            background: #ff6600;
-            color: white;
-            text-decoration: none;
-            padding: 18px 35px;
-            border-radius: 40px;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .cta-btn:hover {
-            background: #ff7a1a;
-        }
-
-        footer {
-            background: #03111f;
-            text-align: center;
-            padding: 35px;
-            color: white;
-        }
-
-        @media (max-width: 700px) {
-
-            .navbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .navbar a {
-                text-align: center;
-            }
-
-            .hero h1 {
-                font-size: 42px;
-            }
-
-            .cta-section h2 {
-                font-size: 38px;
-            }
-
-        }
-
-    </style>
-</head>
-
-<body>
-
-  <nav class="navbar">
-
-        <a href="index.html" class="active">Home</a>
-
-        <a href="home.html">About</a>
-
-        <a href="our-services.html">Our Services</a>
-
-        <a href="careers.html">Careers</a>
-
-        <a href="apply.html">Apply</a>
-
-        <a href="contact us.html">Contact Us</a>
-
-        <a href="admin.html">Admin</a>
-
-    </nav>
-
-
-    <section class="hero">
-
-        <h3>Our Services</h3>
-
-        <div class="hero-photo-placeholder">
-
-    <img src="images/excellent.png" alt="Joe's Excellent Events & Management">
-
-</div>
-
-        <p>
-            Joe's Excellent Events & Management Company delivers professional recruitment,
-            staffing, leadership support and business development services.
-            Our team focuses on building long-term relationships, delivering
-            operational excellence and helping organisations grow successfully.
-        </p>
-
-    </section>
-
-    <section class="services-section">
-
-        <div class="services-grid">
-
-            <div class="service-card">
-
-                <div class="hero-photo-placeholder">
-
-    <img src="images/excellent.png" alt="Joe's Excellent Events & Management">
-
-
-                <div class="service-content">
-
-                    <h3>Recruitment Solutions</h3>
-
-                    <p>
-                        Add your recruitment service information here.
-                        Explain how your company sources, interviews
-                        and develops candidates for employers.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="service-card">
-
-               <div class="hero-photo-placeholder">
-
-    <img src="images/excellent.png" alt="Joe's Excellent Events & Management">
-
-
-                <div class="service-content">
-
-                    <h3>Leadership Development</h3>
-
-                    <p>
-                        Add leadership and management training
-                        information here. Explain how you support
-                        future managers and organisational growth.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="service-card">
-
-                <div class="hero-photo-placeholder">
-
-    <img src="images/excellent.png" alt="Joe's Excellent Events & Management">
-
-
-                <div class="service-content">
-
-                    <h3>Operations Management</h3>
-
-                    <p>
-                        Add operational support service text here.
-                        Describe how your company improves workflow,
-                        productivity and business performance.
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="service-card">
-
-               <div class="hero-photo-placeholder">
-
-    <img src="images/excellent.png" alt="Joe's Excellent Events & Management">
-
-
-                <div class="service-content">
-
-                    <h3>Customer Support Services</h3>
-
-                    <p>
-                        Add customer support and client relationship
-                        management information here including
-                        communication and service delivery.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="why-section">
-
-        <h3>Why Choose Joe's Excellent Events & Management</h3>
-
-        <p>
-            Our organisation combines professionalism, leadership,
-            communication and operational excellence to deliver
-            reliable services and successful recruitment outcomes
-            for businesses and candidates alike.
-        </p>
-
-    </section>
-
-    <section class="cta-section">
-
-        <h3>Let’s Build Something Great Together</h3>
-
-        <p>
-            Ready to explore opportunities with Joe's Excellent Event's & Managament Company? Contact our team today and
-            discover how we can help support your future growth.
-        </p>
-
-        <a href="contact%20us.html" class="cta-btn">
-            Contact Us
-        </a>
-
-    </section>
-
-    <footer>
-        Copyright © 2026 Joe's Excellent Event's & Managament Company 
-    </footer>
-
-</body>
-</html>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #061a2d;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.navbar {
+    background: #03111f;
+    padding: 30px 60px;
+    display: flex;
+    gap: 55px;
+    align-items: center;
+    border-bottom: 4px solid #ff6a00;
+    flex-wrap: wrap;
+}
+
+.navbar a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.navbar a.active {
+    background: #ff6a00;
+    padding: 18px 26px;
+    border-radius: 14px;
+}
+.dashboard-photo-placeholder {
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(135deg, #123456, #1e4d7a);
+    border-bottom: 3px solid #ff6600;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+
+    letter-spacing: 1px;
+}
+.dashboard {
+    max-width: 1500px;
+    margin: auto;
+    padding: 55px 30px;
+}
+
+.dashboard-header,
+.login-card,
+.admin-hero,
+.stat-card,
+.analytics-card,
+.filters-card,
+.applications-card,
+.admin-info {
+    background: #123d66;
+    border-radius: 28px;
+}
+
+.dashboard-header {
+    padding: 55px;
+    margin-bottom: 55px;
+}
+
+.dashboard-header h1 {
+    font-size: 4.2rem;
+    margin-bottom: 18px;
+}
+
+.dashboard-header p {
+    font-size: 1.7rem;
+    color: #dcecff;
+}
+
+.login-section {
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 620px;
+    padding: 55px;
+}
+
+.login-card h2 {
+    font-size: 3rem;
+    margin-bottom: 35px;
+}
+
+.login-card label {
+    display: block;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 22px;
+    border-radius: 14px;
+    border: none;
+    margin-bottom: 25px;
+    font-size: 1.3rem;
+}
+
+button {
+    background: #ff6a00;
+    color: #ffffff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px 28px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.admin-hero {
+    padding: 45px;
+    margin-bottom: 40px;
+}
+
+.admin-hero h2 {
+    font-size: 2.4rem;
+    margin-bottom: 30px;
+}
+
+.photo-placeholder img {
+    width: 100%;
+    max-height: 360px;
+    object-fit: cover;
+    border-radius: 24px;
+    display: block;
+    margin-bottom: 35px;
+}
+
+.intro-box {
+    background: #102d49;
+    border-left: 6px solid #ff6a00;
+    border-radius: 18px;
+    padding: 32px;
+    font-size: 1.45rem;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.top-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: #173a63;
+    border-left: 4px solid #00d9ff;
+    border-radius: 18px;
+    padding: 18px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-card h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.stat-card p {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+}
+.analytics-card {
+    padding: 40px;
+    margin-bottom: 40px;
+}
+
+.analytics-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.chart-box {
+    height: 300px;
+    max-height: 300px;
+}
+
+.filters-card {
+    padding: 35px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filters-card input,
+.filters-card select {
+    padding: 16px;
+    border-radius: 10px;
+    border: none;
+    min-width: 240px;
+    font-size: 1rem;
+}
+
+#showingCount {
+    color: #ffae00;
+    font-size: 1.5rem;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.applications-card {
+    padding: 40px;
+    margin-bottom: 40px;
+}
+
+.applications-card h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.candidate-card {
+    background: #164a77;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 25px;
+}
+
+.candidate-card h3 {
+    font-size: 1.7rem;
+    margin: 12px 0;
+}
+
+.candidate-card p {
+    margin-bottom: 8px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.status-new {
+    background: #00d9ff;
+    color: #03111f;
+}
+
+.status-reviewed {
+    background: #ffc400;
+    color: #03111f;
+}
+
+.status-interview {
+    background: #9c27b0;
+}
+
+.status-rejected {
+    background: #cf352b;
+}
+
+.status-hired {
+    background: #3fa34d;
+}
+
+.candidate-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+}
+
+.candidate-actions button {
+    padding: 13px 20px;
+    font-size: 1rem;
+}
+
+.save-btn,
+.invite-btn,
+.delete-btn {
+    background: #ff6a00;
+}
+
+.reject-btn {
+    background: #cf352b;
+}
+
+.admin-info {
+    padding: 45px;
+}
+
+.admin-info h2 {
+    font-size: 2.6rem;
+    margin-bottom: 35px;
+}
+
+.admin-info p {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.admin-info span {
+    color: #ffae00;
+}
+
+/* =====================================================
+   ADMIN CHART SIZE FIX
+   Full working graph sizing included here.
+   Reduces the Recruitment Analytics graph height and width
+   without changing login, roles, buttons, or placeholders.
+===================================================== */
+
+.analytics-section {
+    margin-bottom: 40px;
+}
+
+.chart-card {
+    background: #123d66;
+    border-radius: 28px;
+    padding: 26px 30px 30px;
+    margin: 0 auto 40px;
+    max-width: 760px;
+}
+
+.chart-card h2 {
+    font-size: 2.2rem;
+    margin-bottom: 14px;
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.chart-container canvas,
+#recruitmentChart,
+#applicationsChart {
+    width: 100% !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
+
+/* This supports the older admin.html chart classes too */
+.analytics-card {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 170px !important;
+    max-height: 170px !important;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.chart-wrapper canvas,
+#applicationsChart {
+    width: 100% !important;
+    height: 170px !important;
+    max-height: 170px !important;
+}
+
+/* =====================================================
+   ADMIN BUTTON SIZE FIX
+   Keeps orange button style but prevents oversized dashboard buttons.
+===================================================== */
+
+.top-buttons button,
+#logoutBtn,
+#exportCsvBtn,
+#clearFiltersBtn {
+    padding: 10px 18px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+.candidate-actions button,
+.save-btn,
+.reject-btn,
+.invite-btn,
+.delete-btn {
+    padding: 9px 14px !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    line-height: 1.1 !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+.filters-card button {
+    padding: 10px 16px !important;
+    font-size: 1rem !important;
+    border-radius: 9px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* Keep the login button readable but not oversized */
+.login-card button {
+    padding: 13px 24px !important;
+    font-size: 1.1rem !important;
+    border-radius: 12px !important;
+    min-width: auto !important;
+    width: auto !important;
+}
+
+/* =====================================================
+   RESTORE ADMIN PHOTOGRAPH PLACEHOLDER
+   Restores the large dashed banner placeholder without changing buttons.
+===================================================== */
+
+.hero-photo-placeholder {
+    width: 100%;
+    height: 320px;
+
+    overflow: hidden;
+
+    border-bottom: 3px solid #ff6a00;
+}
+
+.hero-photo-placeholder img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+}.text-placeholder {
+    background: #102d49;
+    border-left: 6px solid #ff6a00;
+    border-radius: 18px;
+    padding: 26px 32px;
+    margin: 0 0 28px;
+    color: #ffffff;
+    font-size: 1.25rem;
+    line-height: 1.7;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 800px) {
+    .navbar {
+        padding: 22px;
+        gap: 25px;
+    }
+
+    .navbar a {
+        font-size: 1.1rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.4rem;
+    }
+
+    .dashboard-header p {
+        font-size: 1.1rem;
+    }
+
+    .chart-box {
+        height: 180px;
+    }
+
+    .chart-card,
+    .analytics-card {
+        max-width: 100%;
+    }
+
+    .chart-container,
+    .chart-container canvas,
+    .chart-wrapper,
+    .chart-wrapper canvas,
+    #recruitmentChart,
+    #applicationsChart {
+        height: 160px !important;
+        max-height: 160px !important;
+    }
+
+    .filters-card input,
+    .filters-card select,
+    .filters-card button {
+        width: 100%;
+    }
+
+    .hero-image-placeholder {
+        min-height: 210px;
+        font-size: 1.1rem;
+    }
+
+    .text-placeholder {
+        font-size: 1rem;
+        padding: 20px;
+    }
+}
+/* FINAL STATS PANEL REDUCTION */
+.stats-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 18px !important;
+    margin: 20px 0 35px !important;
+}
+
+.stat-card {
+    min-height: 90px !important;
+    padding: 16px 18px !important;
+    border-radius: 14px !important;
+}
+
+.stat-card h3 {
+    font-size: 0.95rem !important;
+    margin-bottom: 8px !important;
+}
+
+.stat-card p {
+    font-size: 1.8rem !important;
+    line-height: 1 !important;
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+/* FINAL RECRUITMENT ANALYTICS SIZE REDUCTION */
+
+.analytics-card {
+    max-width: 620px !important;
+    padding: 20px !important;
+    margin: 25px auto !important;
+    border-radius: 20px !important;
+}
+
+.analytics-card h2 {
+    font-size: 1.8rem !important;
+    margin-bottom: 12px !important;
+}
+
+.chart-container,
+.chart-wrapper {
+    max-width: 420px !important;
+    height: 120px !important;
+    max-height: 120px !important;
+    margin: 0 auto !important;
+}
+
+.chart-container canvas,
+.chart-wrapper canvas,
+#recruitmentChart,
+#applicationsChart {
+    height: 120px !important;
+    max-height: 120px !important;
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+
+    .analytics-card {
+        max-width: 95% !important;
+        padding: 18px !important;
+    }
+
+    .analytics-card h2 {
+        font-size: 1.4rem !important;
+    }
+
+    .chart-container,
+    .chart-wrapper,
+    .chart-container canvas,
+    .chart-wrapper canvas,
+    #recruitmentChart,
+    #applicationsChart {
+        height: 100px !important;
+        max-height: 100px !important;
+    }
+}
+/* FINAL SEARCH FILTERS SIZE REDUCTION */
+
+.filters-card {
+    max-width: 700px !important;
+    margin: 25px auto !important;
+    padding: 22px !important;
+    border-radius: 18px !important;
+}
+
+.filters-card h2 {
+    font-size: 1.7rem !important;
+    margin-bottom: 14px !important;
+}
+
+.filters-card label {
+    font-size: 0.9rem !important;
+    margin-bottom: 6px !important;
+}
+
+.filters-card input,
+.filters-card select {
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+    min-width: auto !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+#clearFiltersBtn,
+.filters-card button {
+    padding: 10px 18px !important;
+    font-size: 0.95rem !important;
+    border-radius: 10px !important;
+}
+
+#showingCount {
+    font-size: 0.9rem !important;
+    margin-top: 10px !important;
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+
+    .filters-card {
+        max-width: 95% !important;
+        padding: 18px !important;
+    }
+
+    .filters-card h2 {
+        font-size: 1.4rem !important;
+    }
+}
+/* FINAL WORKING SEARCH FILTER REDUCTION */
+
+#filterBox {
+    max-width: 620px !important;
+    margin: 22px auto !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+}
+
+#filterBox h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 12px !important;
+}
+
+#filterBox label {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+}
+
+#filterBox input,
+#filterBox select {
+    padding: 9px 12px !important;
+    font-size: 0.85rem !important;
+    border-radius: 7px !important;
+    margin-bottom: 8px !important;
+}
+
+#filterBox button {
+    padding: 9px 16px !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+}
+
+#filterCount {
+    font-size: 0.8rem !important;
+    margin-top: 8px !important;
+}
+
+/* =====================================================
+   FINAL SAFE PLACEHOLDER FIX
+   Restores the admin dashboard banner only.
+   Removes candidate photograph and description placeholders only.
+===================================================== */
+
+.dashboard > .hero-image-placeholder {
+    width: 100% !important;
+    min-height: 300px !important;
+    margin: 35px 0 30px !important;
+    border: 4px dashed rgba(120, 190, 230, 0.65) !important;
+    border-radius: 24px !important;
+    background: linear-gradient(135deg, #155b7e, #123d66) !important;
+    color: #a7e8ff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.3px !important;
+}
+
+#applications .hero-image-placeholder,
+#applications .text-placeholder,
+#applications .candidate-photo-placeholder,
+#applications .photo-placeholder {
+    display: none !important;
+}
+/* =====================================================
+   REDUCE CANDIDATE CARD SIZE BY 50%
+===================================================== */
+
+.candidate-card {
+    padding: 18px !important;
+    border-radius: 16px !important;
+    max-width: 700px !important;
+    margin: 25px auto !important;
+}
+
+.candidate-card h3 {
+    font-size: 1.1rem !important;
+    margin-bottom: 10px !important;
+}
+
+.candidate-card p,
+.candidate-card strong,
+.candidate-card a {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+}
+
+.candidate-card label {
+    font-size: 0.75rem !important;
+    margin-bottom: 4px !important;
+}
+
+.candidate-card select,
+.candidate-card textarea,
+.candidate-card input {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+.candidate-card textarea {
+    min-height: 90px !important;
+}
+
+.candidate-actions {
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+.candidate-actions button {
+    padding: 7px 10px !important;
+    font-size: 0.7rem !important;
+    border-radius: 7px !important;
+}
+/* REDUCE LIVE APPLICATION / CANDIDATE CARD SIZE */
+
+#applications .application-card {
+    max-width: 700px !important;
+    margin: 25px auto !important;
+    padding: 18px !important;
+    border-radius: 16px !important;
+}
+
+#applications .application-card h2 {
+    font-size: 1.4rem !important;
+    margin-bottom: 10px !important;
+}
+
+#applications .application-card p,
+#applications .application-card strong,
+#applications .application-card a {
+    font-size: 0.75rem !important;
+    line-height: 1.35 !important;
+}
+
+#applications .application-card label {
+    font-size: 0.75rem !important;
+    margin: 10px 0 4px !important;
+}
+
+#applications .application-card select,
+#applications .application-card input,
+#applications .application-card textarea {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+#applications .application-card textarea {
+    min-height: 80px !important;
+}
+
+#applications .candidate-actions {
+    gap: 8px !important;
+    margin-top: 12px !important;
+}
+
+#applications .candidate-actions button {
+    padding: 7px 10px !important;
+    font-size: 0.7rem !important;
+    border-radius: 7px !important;
+}
