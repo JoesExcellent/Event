@@ -3,125 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TEMC Recruitment System</title>
-
-    <link rel="stylesheet" href="style.css?v=23">
+    <title>Newcastle Events | Event Marketing & Brand Growth</title>
 
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #061b2f;
-            color: white;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #071a2f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
         }
 
         .navbar {
             background: #03111f;
-            padding: 18px 30px;
+            padding: 24px 60px;
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            justify-content: space-between;
             align-items: center;
-            border-bottom: 2px solid #ff6600;
+            border-bottom: 2px solid #ff6a00;
         }
 
-        .navbar a {
-            color: white;
-            text-decoration: none;
+        .logo {
+            font-size: 1.6rem;
             font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
+            color: #ff6a00;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .hero {
+            min-height: 85vh;
+            padding: 90px 60px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 50px;
+            align-items: center;
+            background: linear-gradient(135deg, #071a2f, #102f4f);
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #ff6a00;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 650px;
+            margin-bottom: 30px;
+            color: #d8e6f5;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 14px 28px;
             border-radius: 8px;
+            font-weight: bold;
         }
 
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 40px 20px;
-        }
-
-        .card {
-            background: #123456;
-            padding: 40px;
+        .hero-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 35px;
             border-radius: 20px;
         }
 
-        h1 {
-            font-size: 56px;
-            margin-bottom: 30px;
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 18px;
-            border-radius: 10px;
-            border: none;
+        .hero-card h3 {
+            color: #ff6a00;
             margin-bottom: 20px;
-            font-size: 18px;
-            box-sizing: border-box;
+            font-size: 1.5rem;
         }
 
-        textarea {
-            min-height: 140px;
-            resize: vertical;
+        .hero-card ul {
+            list-style: none;
         }
 
-        .uploadLabel {
-            display: block;
-            margin-bottom: 10px;
+        .hero-card li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        section {
+            padding: 80px 60px;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 2.8rem;
+            color: #ff6a00;
+            margin-bottom: 15px;
+        }
+
+        .section-title p {
+            color: #d8e6f5;
+            max-width: 750px;
+            margin: auto;
+        }
+
+        .about {
+            background: #061525;
+        }
+
+        .about-box {
+            max-width: 950px;
+            margin: auto;
+            background: rgba(255,255,255,0.06);
+            padding: 40px;
+            border-radius: 18px;
+            text-align: center;
+        }
+
+        .about-box h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .values-grid,
+        .services-grid,
+        .industries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 30px;
+            border-radius: 18px;
+            transition: 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            border-color: #ff6a00;
+        }
+
+        .card h3 {
+            color: #ff6a00;
+            margin-bottom: 12px;
+            font-size: 1.4rem;
+        }
+
+        .image-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-top: 45px;
+        }
+
+        .image-placeholder {
+            height: 240px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #1b4770, #ff6a00);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 25px;
             font-weight: bold;
+            color: #ffffff;
         }
 
-        button {
-            background: #ff6600;
-            color: white;
-            border: none;
-            padding: 18px 30px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
+        .progress {
+            background: #061525;
         }
 
-        button:hover {
-            background: #ff7a1a;
+        .stats-box {
+            max-width: 900px;
+            margin: auto;
+            text-align: center;
         }
 
-        .form-message {
-            margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
+        .stats-box h2 {
+            color: #ff6a00;
+            font-size: 2.6rem;
+            margin-bottom: 25px;
         }
 
-        @media (max-width: 700px) {
+        .stats-box ul {
+            list-style: none;
+            margin-top: 25px;
+        }
 
+        .stats-box li {
+            padding: 12px;
+            font-size: 1.1rem;
+        }
+
+        .cta {
+            text-align: center;
+            background: linear-gradient(135deg, #102f4f, #071a2f);
+        }
+
+        .cta h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .cta h2 span {
+            color: #ff6a00;
+        }
+
+        .footer {
+            background: #03111f;
+            padding: 30px 60px;
+            text-align: center;
+            border-top: 2px solid #ff6a00;
+        }
+
+        .footer-links {
+            margin-top: 12px;
+        }
+
+        .footer-links a {
+            margin: 0 12px;
+            color: #d8e6f5;
+        }
+
+        @media (max-width: 900px) {
             .navbar {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 20px;
+                padding: 24px;
             }
 
-            .navbar a {
-                display: block;
-                text-align: center;
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
-            h1 {
-                font-size: 40px;
+            .hero {
+                grid-template-columns: 1fr;
+                padding: 70px 25px;
             }
 
-            .card {
-                padding: 25px;
+            .hero h1 {
+                font-size: 2.8rem;
             }
 
-            button {
-                width: 100%;
+            section {
+                padding: 60px 25px;
             }
         }
     </style>
@@ -129,91 +280,178 @@
 
 <body>
 
-    <nav class="navbar">
-    <a href="index.html" class="active">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="contact us.html">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
+    <header class="navbar">
+        <div class="logo">Newcastle Events</div>
 
-    <main class="container">
+        <ul class="nav-links">
+            <li><a href="#who-we-are">Who We Are</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#industries">Industries</a></li>
+            <li><a href="#progress">Growth</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </header>
 
-        <section class="card">
+    <section class="hero">
+        <div>
+            <p>We’re an event marketing company that helps brands grow — and people become leaders.</p>
+            <h1>Where Hard Work<br><span>Meets Smart Strategy</span></h1>
+            <a href="#contact" class="btn">Call To Action</a>
+        </div>
 
-            <h1>Apply Now</h1>
-<div class="hero-image-placeholder">
-    Homepage Hero Photograph Placeholder
-</div>
+        <div class="hero-card">
+            <h3>What We Do</h3>
+            <ul>
+                <li>Event Marketing</li>
+                <li>Sales & Customer Acquisition</li>
+                <li>Brand Representation</li>
+                <li>Campaign Strategy & Execution</li>
+                <li>Promotional Events & Activations</li>
+                <li>Market Research & Customer Insights</li>
+                <li>Team Training & Leadership Development</li>
+                <li>Client Relationship Management</li>
+            </ul>
+        </div>
+    </section>
 
-<div class="text-placeholder">
-    Add homepage introduction text here.
-    Introduce The Excellent Management Company,
-    your recruitment services, leadership programmes,
-    company values and candidate opportunities.
-</div>
+    <section id="who-we-are" class="about">
+        <div class="section-title">
+            <h2>Who We Are</h2>
+            <p>More Than a Sales Company</p>
+        </div>
 
-            <form id="applicationForm" enctype="multipart/form-data">
+        <div class="about-box">
+            <h3>Built on Ambition, Resilience and Opportunity</h3>
+            <p>
+                Newcastle Events is a startup built on ambition, resilience, and opportunity.
+                We specialise in event marketing and customer acquisition, but at our core,
+                we’re about people — developing talent, creating leaders, and helping brands
+                grow through smart, strategic execution.
+            </p>
+            <br>
+            <a href="#" class="btn">Learn Our Story</a>
+        </div>
+    </section>
 
-                <input
-                    type="text"
-                    name="fullName"
-                    placeholder="Full Name"
-                    required
-                >
+    <section id="services">
+        <div class="section-title">
+            <h2>Why Brands & People Choose Us</h2>
+            <p>We combine smart strategy with people-focused development.</p>
+        </div>
 
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Email Address"
-                    required
-                >
+        <div class="values-grid">
+            <div class="card">
+                <h3>Innovation</h3>
+                <p>We engineer success through smart strategy.</p>
+            </div>
 
-                <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Phone Number"
-                    required
-                >
+            <div class="card">
+                <h3>Empowerment</h3>
+                <p>Training, mentorship, and real opportunities.</p>
+            </div>
 
-                <input
-                    type="text"
-                    name="position"
-                    placeholder="Position Applying For"
-                    required
-                >
+            <div class="card">
+                <h3>Integrity</h3>
+                <p>Long-term success built on honesty.</p>
+            </div>
 
-                <textarea
-                    name="about"
-                    placeholder="Tell us about yourself"
-                ></textarea>
+            <div class="card">
+                <h3>Resilience</h3>
+                <p>Every “no” brings us closer to a “yes”.</p>
+            </div>
 
-                <label class="uploadLabel" for="cvUpload">
-                    Upload CV
-                </label>
+            <div class="card">
+                <h3>Ambition</h3>
+                <p>Borderless vision. No settling for average.</p>
+            </div>
+        </div>
+    </section>
 
-                <input
-                    id="cvUpload"
-                    type="file"
-                    name="cv"
-                    accept=".pdf,.doc,.docx"
-                    required
-                >
+    <section id="industries" class="about">
+        <div class="section-title">
+            <h2>Industries We Work With</h2>
+            <p>Our adaptable approach allows us to deliver results across multiple sectors.</p>
+        </div>
 
-                <button type="submit">
-                    Submit Application
-                </button>
+        <div class="industries-grid">
+            <div class="card">
+                <h3>Telecommunications</h3>
+                <p>
+                    Driving customer acquisition and brand awareness through high-engagement,
+                    face-to-face campaigns in competitive markets.
+                </p>
+            </div>
 
-            </form>
+            <div class="card">
+                <h3>Retail</h3>
+                <p>
+                    Connecting brands directly with customers to boost foot traffic,
+                    product awareness, and in-store conversions.
+                </p>
+            </div>
 
-            <div id="message" class="form-message"></div>
+            <div class="card">
+                <h3>Service Providers</h3>
+                <p>
+                    Building trust-led conversations that clearly communicate value and
+                    turn interest into long-term customers.
+                </p>
+            </div>
 
-        </section>
+            <div class="card">
+                <h3>Growing & Established Brands</h3>
+                <p>
+                    Supporting both emerging and established businesses with scalable
+                    strategies designed for sustainable growth.
+                </p>
+            </div>
+        </div>
 
-    </main>
+        <div class="image-row">
+            <div class="image-placeholder">
+                Telecommunication tower with blue sky and white clouds background
+            </div>
 
-    <script src="script.js?v=23"></script>
+            <div class="image-placeholder">
+                Clothes in shopping mall
+            </div>
+        </div>
+    </section>
+
+    <section id="progress" class="progress">
+        <div class="stats-box">
+            <p>Driven by Progress</p>
+            <h2>Fast-Growing Startup</h2>
+
+            <ul>
+                <li>Rapid Growth Since Launch</li>
+                <li>Continuous team development & promotions</li>
+                <li>Expanding client reach across industries</li>
+                <li>Proven Campaign Performance Across Industries</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="contact" class="cta">
+        <h2>Let’s Build Something<br><span>That Lasts</span></h2>
+
+        <p>
+            Whether you’re a brand looking to grow or someone ready to take the next step
+            in your career, Newcastle Events is ready to work with you.
+        </p>
+
+        <br>
+        <a href="mailto:info@newcastleevents.co.uk" class="btn">Call To Action</a>
+    </section>
+
+    <footer class="footer">
+        <p>Copyright © 2026 Newcastle Events</p>
+
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Use</a>
+        </div>
+    </footer>
 
 </body>
 </html>
