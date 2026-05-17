@@ -407,7 +407,36 @@
 
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
+.cta-photo-placeholder {
+    width: 55%;
+    height: 240px;
 
+    margin: 30px auto;
+
+    border-radius: 22px;
+
+    background: linear-gradient(135deg, #1f4367, #102b45);
+
+    border: 3px dashed rgba(132,214,255,0.25);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    color: #d8e6f5;
+    font-size: 1.1rem;
+    font-weight: 700;
+
+    overflow: hidden;
+
+    background-image: url("images/recruit.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
         /* =====================================================
            FOOTER
         ===================================================== */
@@ -470,6 +499,7 @@
 
 <body>
 images/excellent.png
+images/recruit.png
     <!-- =====================================================
          NAVIGATION
     ====================================================== -->
@@ -659,7 +689,9 @@ images/excellent.png
             <span>That Lasts</span>
         </h2>
 
-        <p>
+<div class="cta-photo-placeholder">
+    Contact Section Photograph Placeholder
+</div>        <p>
             Whether you’re a brand looking to grow or someone ready to
             take the next step in your career, we are ready to work with you.
         </p>
