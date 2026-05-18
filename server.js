@@ -3,12 +3,24 @@ const cors = require("cors");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const jwt = require("jsonwebtoken");
 const admin = require("firebase-admin");
 require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+/* =========================
+   BASIC SETUP
+========================= */
+
+app.use(cors({
+    origin: process.env.FRONTEND_ORIGIN || "*",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
@@ -17,65 +29,50 @@ if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-/* ---------------- MIDDLEWARE ---------------- */
-
-app.use(cors({
-    origin: true,
-    credentials: true
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-app.use("/uploads", express.static(UPLOADS_DIR));
 app.use(express.static(PUBLIC_DIR));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* ---------------- FIREBASE SETUP ---------------- */
+/* =========================
+   FIREBASE ADMIN SETUP
+========================= */
 
 let db = null;
+let bucket = null;
 
 try {
-    if (!admin.apps.length) {
-        let serviceAccount = null;
-
-        if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
-            serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-        } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-            serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-        } else if (fs.existsSync(path.join(__dirname, "serviceAccountKey.json"))) {
-            serviceAccount = require("./serviceAccountKey.json");
-        }
-
-        if (!serviceAccount) {
-            throw new Error("Firebase service account is missing.");
-        }
-
-        if (serviceAccount.private_key) {
-            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-        }
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+        console.warn("FIREBASE_SERVICE_ACCOUNT is missing. Firebase is not connected.");
+    } else {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || undefined
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET
         });
+
+        db = admin.firestore();
+
+        if (process.env.FIREBASE_STORAGE_BUCKET) {
+            bucket = admin.storage().bucket();
+        }
+
+        console.log("Firebase Admin connected successfully.");
     }
-
-    db = admin.firestore();
-    console.log("Firebase connected successfully.");
-
 } catch (error) {
-    console.error("Firebase setup error:", error.message);
+    console.error("Firebase Admin setup failed:", error.message);
 }
 
-/* ---------------- FILE UPLOAD SETUP ---------------- */
+/* =========================
+   FILE UPLOAD SETUP
+========================= */
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: function (req, file, cb) {
         cb(null, UPLOADS_DIR);
     },
-    filename: (req, file, cb) => {
+    filename: function (req, file, cb) {
         const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        cb(null, `${Date.now()}_${safeName}`);
+        cb(null, Date.now() + "-" + safeName);
     }
 });
 
@@ -86,224 +83,95 @@ const upload = multer({
     }
 });
 
-/* ---------------- HELPERS ---------------- */
-
-function requireDb(res) {
-    if (!db) {
-        res.status(500).json({
-            success: false,
-            message: "Firestore is not connected."
-        });
-        return false;
-    }
-
-    return true;
-}
-
-function getAdminUsers() {
-    return [
-        {
-            email: process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com",
-            password: process.env.ADMIN_PASSWORD || "password123",
-            name: "Joseph Eldridge",
-            role: "owner"
-        },
-        {
-            email: process.env.RECRUITER_EMAIL || "",
-            password: process.env.RECRUITER_PASSWORD || "",
-            name: "Recruiter",
-            role: "recruiter"
-        },
-        {
-            email: process.env.VIEWER_EMAIL || "",
-            password: process.env.VIEWER_PASSWORD || "",
-            name: "Viewer",
-            role: "viewer"
-        }
-    ].filter(user => user.email && user.password);
-}
-
-function createToken(user) {
-    return jwt.sign(
-        {
-            email: user.email,
-            name: user.name,
-            role: user.role
-        },
-        process.env.JWT_SECRET || "local-dev-secret",
-        { expiresIn: "12h" }
-    );
-}
-
-function verifyAdmin(req, res, next) {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "No admin token provided."
-        });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    try {
-        req.admin = jwt.verify(
-            token,
-            process.env.JWT_SECRET || "local-dev-secret"
-        );
-
-        next();
-
-    } catch (error) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid admin token."
-        });
-    }
-}
-
-function requireRole(allowedRoles) {
-    return (req, res, next) => {
-        if (!req.admin || !allowedRoles.includes(req.admin.role)) {
-            return res.status(403).json({
-                success: false,
-                message: "You do not have permission to perform this action."
-            });
-        }
-
-        next();
-    };
-}
-
-/* ---------------- PAGE ROUTES ---------------- */
-
-app.get("/", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
-
-app.get("/home", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "home.html"));
-});
-
-app.get("/careers", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "careers.html"));
-});
-
-app.get("/admin", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
-
-app.get("/contact", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "contact us.html"));
-});
-
-app.get("/our-services", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "our-services.html"));
-});
-
-/* ---------------- HEALTH CHECK ---------------- */
+/* =========================
+   HEALTH CHECK
+========================= */
 
 app.get("/health", (req, res) => {
     res.json({
         success: true,
-        message: "TEMC recruitment backend is running",
-        firebase: Boolean(db)
+        message: "Server is running",
+        firebaseConnected: !!db,
+        storageConnected: !!bucket
     });
 });
 
-/* ---------------- ADMIN LOGIN ---------------- */
+/* =========================
+   APPLICATION FORM ROUTE
+========================= */
 
-app.post("/api/admin/login", (req, res) => {
-    const { email, password } = req.body;
+app.post(
+    "/api/apply",
+    upload.fields([
+        { name: "cv", maxCount: 1 },
+        { name: "extraFiles", maxCount: 5 }
+    ]),
+    async (req, res) => {
+        try {
+            const {
+                fullName,
+                email,
+                phone,
+                position,
+                message
+            } = req.body;
 
-    const user = getAdminUsers().find(adminUser =>
-        adminUser.email === email && adminUser.password === password
-    );
-
-    if (!user) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid login details"
-        });
-    }
-
-    res.json({
-        success: true,
-        token: createToken(user),
-        admin: {
-            name: user.name,
-            email: user.email,
-            role: user.role
-        }
-    });
-});
-
-/* ---------------- SUBMIT APPLICATION ---------------- */
-
-app.post("/api/apply", upload.any(), async (req, res) => {
-    try {
-        if (!requireDb(res)) return;
-
-        const uploadedFiles = req.files || [];
-
-        const cvFile = uploadedFiles.length > 0 ? uploadedFiles[0].filename : "";
-        const extraFiles = uploadedFiles.length > 1
-            ? uploadedFiles.slice(1).map(file => file.filename)
-            : [];
-
-        const cvUrl = cvFile ? `/uploads/${cvFile}` : "";
-
-        const newApplication = {
-            fullName: req.body.fullName || req.body.name || "",
-            firstName: req.body.firstName || "",
-            lastName: req.body.lastName || "",
-            email: req.body.email || "",
-            phone: req.body.phone || "",
-            position: req.body.position || "",
-            about: req.body.about || req.body.message || "",
-            message: req.body.message || req.body.about || "",
-            cvFile,
-            cvUrl,
-            extraFiles,
-            status: "New",
-            rating: 0,
-            notes: "",
-            favourite: false,
-            interviewDate: "",
-            interviewTime: "",
-            interviewLocation: "",
-            invitationSent: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        const docRef = await db.collection("applications").add(newApplication);
-
-        res.json({
-            success: true,
-            message: "Application submitted successfully",
-            application: {
-                id: docRef.id,
-                ...newApplication
+            if (!fullName || !email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Full name and email are required."
+                });
             }
-        });
 
-    } catch (error) {
-        console.error("Application submit error:", error);
+            const cvFile = req.files?.cv?.[0] || null;
+            const extraFiles = req.files?.extraFiles || [];
 
-        res.status(500).json({
-            success: false,
-            message: "Server error submitting application"
-        });
+            const applicationData = {
+                fullName,
+                email,
+                phone: phone || "",
+                position: position || "",
+                message: message || "",
+                status: "New",
+                rating: 0,
+                notes: "",
+                createdAt: new Date().toISOString(),
+                cv: cvFile ? `/uploads/${cvFile.filename}` : "",
+                extraFiles: extraFiles.map(file => `/uploads/${file.filename}`)
+            };
+
+            if (db) {
+                await db.collection("applications").add(applicationData);
+            }
+
+            res.json({
+                success: true,
+                message: "Application submitted successfully."
+            });
+
+        } catch (error) {
+            console.error("Application error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Server error. Application was not submitted."
+            });
+        }
     }
-});
+);
 
-/* ---------------- GET APPLICATIONS ---------------- */
+/* =========================
+   GET APPLICATIONS
+========================= */
 
-async function getApplications(req, res) {
+app.get("/api/applications", async (req, res) => {
     try {
-        if (!requireDb(res)) return;
+        if (!db) {
+            return res.status(500).json({
+                success: false,
+                message: "Firebase is not connected."
+            });
+        }
 
         const snapshot = await db
             .collection("applications")
@@ -317,160 +185,98 @@ async function getApplications(req, res) {
 
         res.json({
             success: true,
-            applications,
-            admin: req.admin || null
+            applications
         });
 
     } catch (error) {
-        console.error("Get applications error:", error);
+        console.error("Fetch applications error:", error);
 
         res.status(500).json({
             success: false,
-            message: "Server error loading applications"
+            message: "Failed to fetch applications."
         });
     }
-}
-
-app.get(
-    "/api/admin/applications",
-    verifyAdmin,
-    requireRole(["owner", "recruiter", "viewer"]),
-    getApplications
-);
-
-/* ---------------- UPDATE APPLICATION ---------------- */
-
-app.patch(
-    "/api/admin/applications/:id",
-    verifyAdmin,
-    requireRole(["owner", "recruiter"]),
-    async (req, res) => {
-        try {
-            if (!requireDb(res)) return;
-
-            const allowedFields = [
-                "status",
-                "rating",
-                "notes",
-                "favourite",
-                "interviewDate",
-                "interviewTime",
-                "interviewLocation",
-                "invitationSent"
-            ];
-
-            const updates = {};
-
-            allowedFields.forEach(field => {
-                if (Object.prototype.hasOwnProperty.call(req.body, field)) {
-                    updates[field] = req.body[field];
-                }
-            });
-
-            updates.updatedAt = new Date().toISOString();
-
-            await db.collection("applications").doc(req.params.id).update(updates);
-
-            res.json({
-                success: true,
-                message: "Application updated successfully"
-            });
-
-        } catch (error) {
-            console.error("Application update error:", error);
-
-            res.status(500).json({
-                success: false,
-                message: "Failed to update application"
-            });
-        }
-    }
-);
-
-/* ---------------- INVITATION ---------------- */
-
-app.post(
-    "/api/admin/applications/:id/invite",
-    verifyAdmin,
-    requireRole(["owner", "recruiter"]),
-    async (req, res) => {
-        try {
-            if (!requireDb(res)) return;
-
-            await db.collection("applications").doc(req.params.id).update({
-                invitationSent: true,
-                status: "Interview Invited",
-                interviewDate: req.body.interviewDate || "",
-                interviewTime: req.body.interviewTime || "",
-                updatedAt: new Date().toISOString()
-            });
-
-            res.json({
-                success: true,
-                message: "Interview invitation marked as sent"
-            });
-
-        } catch (error) {
-            console.error("Invitation error:", error);
-
-            res.status(500).json({
-                success: false,
-                message: "Failed to update invitation"
-            });
-        }
-    }
-);
-
-/* ---------------- DELETE APPLICATION ---------------- */
-
-app.delete(
-    "/api/admin/applications/:id",
-    verifyAdmin,
-    requireRole(["owner"]),
-    async (req, res) => {
-        try {
-            if (!requireDb(res)) return;
-
-            await db.collection("applications").doc(req.params.id).delete();
-
-            res.json({
-                success: true,
-                message: "Candidate deleted successfully"
-            });
-
-        } catch (error) {
-            console.error("Delete error:", error);
-
-            res.status(500).json({
-                success: false,
-                message: "Failed to delete candidate"
-            });
-        }
-    }
-);
-
-/* ---------------- API 404 ---------------- */
-
-app.use("/api", (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: `API route not found: ${req.originalUrl}`
-    });
 });
 
-/* ---------------- ERROR HANDLER ---------------- */
+/* =========================
+   UPDATE APPLICATION
+========================= */
 
-app.use((err, req, res, next) => {
-    console.error("Server error:", err);
+app.patch("/api/applications/:id", async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({
+                success: false,
+                message: "Firebase is not connected."
+            });
+        }
 
-    res.status(500).json({
-        success: false,
-        message: err.message || "Server error"
-    });
+        const { id } = req.params;
+
+        await db.collection("applications").doc(id).update({
+            ...req.body,
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({
+            success: true,
+            message: "Application updated successfully."
+        });
+
+    } catch (error) {
+        console.error("Update error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update application."
+        });
+    }
 });
 
-/* ---------------- START SERVER ---------------- */
+/* =========================
+   DELETE APPLICATION
+========================= */
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`TEMC recruitment backend running on port ${PORT}`);
+app.delete("/api/applications/:id", async (req, res) => {
+    try {
+        if (!db) {
+            return res.status(500).json({
+                success: false,
+                message: "Firebase is not connected."
+            });
+        }
+
+        const { id } = req.params;
+
+        await db.collection("applications").doc(id).delete();
+
+        res.json({
+            success: true,
+            message: "Application deleted successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete application."
+        });
+    }
+});
+
+/* =========================
+   FALLBACK PAGE ROUTE
+========================= */
+
+app.get("/", (req, res) => {
+    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+/* =========================
+   START SERVER
+========================= */
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
