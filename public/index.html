@@ -5,7 +5,9 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>Joe's Excellent Events & Management</title>
 
@@ -19,10 +21,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
         }
 
         body {
@@ -48,6 +46,7 @@
 
         .navbar {
             background: #03111f;
+
             padding: 22px 40px;
 
             display: flex;
@@ -61,6 +60,7 @@
 
         .navbar a {
             color: #ffffff;
+
             font-size: 1rem;
             font-weight: 700;
 
@@ -77,308 +77,22 @@
         }
 
         /* =====================================================
-           TOP BANNER
-        ===================================================== */
-
-        .top-banner {
-            width: 100%;
-            overflow: hidden;
-            border-bottom: 3px solid #ff6600;
-        }
-
-        .top-banner img {
-            width: 100%;
-        }
-
-        /* =====================================================
            HERO SECTION
-        ===================================================== */
-
-        .hero {
-            background: linear-gradient(135deg, #071a2f, #102f4f);
-
-            padding: 80px 60px;
-
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 50px;
-
-            align-items: center;
-        }
-
-        .hero-image-placeholder {
-            width: 100%;
-            max-width: 820px;
-            height: 350px;
-
-            margin: 0 auto 35px auto;
-
-            border-radius: 28px;
-            overflow: hidden;
-
-            border: 3px solid rgba(132, 214, 255, 0.25);
-
-            background-image: url("images/excellent.png");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-        }
-
-        .hero-left p {
-            font-size: 1.2rem;
-            color: #d8e6f5;
-
-            margin-bottom: 35px;
-            max-width: 720px;
-        }
-
-        .hero-title {
-            font-size: 2.2rem;
-            line-height: 1.2;
-
-            margin-bottom: 25px;
-
-            font-weight: 800;
-        }
-
-        .hero-title span {
-            color: #ff6600;
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-
-            background: #ff6600;
-            color: #ffffff;
-
-            padding: 15px 34px;
-
-            border-radius: 12px;
-
-            font-size: 1rem;
-            font-weight: 700;
-
-            transition: 0.3s ease;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-
-        /* =====================================================
-           HERO CARD
-        ===================================================== */
-
-        .hero-card {
-            background: rgba(255, 255, 255, 0.08);
-
-            border: 1px solid rgba(255, 255, 255, 0.12);
-
-            padding: 35px;
-
-            border-radius: 22px;
-
-            width: 100%;
-            max-width: 520px;
-
-            margin: auto;
-        }
-
-        .hero-card h3 {
-            color: #ff6600;
-
-            font-size: 1.7rem;
-
-            margin-bottom: 25px;
-        }
-
-        .hero-card ul {
-            list-style: none;
-        }
-
-        .hero-card li {
-            padding: 12px 0;
-
-            font-size: 1rem;
-
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .hero-card li:last-child {
-            border-bottom: none;
-        }
-
-        /* =====================================================
-           GENERAL SECTIONS
-        ===================================================== */
-
-        section {
-            padding: 80px 60px;
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 55px;
-        }
-
-        .section-title h2 {
-            font-size: 2.8rem;
-            color: #ff6600;
-
-            margin-bottom: 15px;
-        }
-
-        .section-title p {
-            max-width: 700px;
-
-            margin: auto;
-
-            color: #d8e6f5;
-
-            font-size: 1.1rem;
-        }
-
-        /* =====================================================
-           ABOUT SECTION
-        ===================================================== */
-
-        .about {
-            background: #061525;
-        }
-
-        .about-box {
-            max-width: 1000px;
-
-            margin: auto;
-
-            background: rgba(255, 255, 255, 0.06);
-
-            padding: 45px;
-
-            border-radius: 24px;
-
-            text-align: center;
-        }
-
-        .about-box h3 {
-            font-size: 2rem;
-
-            margin-bottom: 25px;
-        }
-
-        .about-box p {
-            color: #d8e6f5;
-
-            font-size: 1.05rem;
-
-            line-height: 1.9;
-        }
-
-        .about-photo-placeholder {
-            width: 70%;
-            max-width: 760px;
-            height: 340px;
-
-            margin: 35px auto;
-
-            border-radius: 28px;
-            overflow: hidden;
-
-            border: 2px solid rgba(255, 255, 255, 0.08);
-
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-
-            background: #102b45;
-        }
-
-        .about-photo-placeholder img {
-            width: 100%;
-            height: 100%;
-
-            object-fit: cover;
-            object-position: center;
-        }
-
-        /* =====================================================
-           VALUES SECTION
-        ===================================================== */
-
-        .values-grid {
-            display: grid;
-
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-
-            gap: 28px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.07);
-
-            border: 1px solid rgba(255, 255, 255, 0.12);
-
-            padding: 30px;
-
-            border-radius: 20px;
-        }
-
-        .card-image-placeholder {
-            width: 100%;
-            height: 180px;
-
-            background: linear-gradient(135deg, #1d3f63, #0d2238);
-
-            border: 2px dashed rgba(255, 255, 255, 0.25);
-
-            border-radius: 16px;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            text-align: center;
-
-            padding: 20px;
-
-            color: #d8e6f5;
-            font-weight: 700;
-
-            margin-bottom: 20px;
-        }
-
-        .card h3 {
-            color: #ff6600;
-
-            margin-bottom: 15px;
-
-            font-size: 1.5rem;
-        }
-
-        .card p {
-            color: #d8e6f5;
-
-            line-height: 1.7;
-        }
-
-        /* =====================================================
-           CTA SECTION
         ===================================================== */
 
         .cta {
             text-align: center;
 
             background: linear-gradient(135deg, #102f4f, #071a2f);
+
+            padding: 70px 20px;
         }
 
         .cta h2 {
-            font-size: 2.2rem;
-            line-height: 1.15;
+            font-size: 2.3rem;
+            line-height: 1.2;
 
-            margin-bottom: 20px;
+            margin-bottom: 30px;
 
             font-weight: 800;
 
@@ -390,10 +104,11 @@
         }
 
         /* =====================================================
-           LASTS IMAGE PLACEHOLDER
+           LASTS PHOTO PLACEHOLDER
         ===================================================== */
 
         .lasts-photo-placeholder {
+
             width: 70%;
             max-width: 760px;
             height: 340px;
@@ -401,6 +116,7 @@
             margin: 35px auto;
 
             border-radius: 28px;
+
             overflow: hidden;
 
             border: 2px solid rgba(255, 255, 255, 0.08);
@@ -408,51 +124,60 @@
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
 
             background: #102b45;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .lasts-photo-placeholder img {
+
             width: 100%;
             height: 100%;
 
-            object-fit: cover;
+            object-fit: contain;
+
             object-position: center;
+
+            border-radius: 20px;
         }
 
         .cta p {
-            max-width: 1000px;
 
-            margin: auto;
+            max-width: 850px;
+
+            margin: 35px auto 0 auto;
 
             color: #ffffff;
 
             font-size: 1rem;
-            line-height: 1.5;
 
-            font-weight: 400;
+            line-height: 1.6;
         }
 
-        /* =====================================================
-           FOOTER
-        ===================================================== */
+        .btn {
 
-        .footer {
-            background: #03111f;
+            display: inline-block;
 
-            padding: 35px;
+            margin-top: 35px;
 
-            text-align: center;
+            background: #ff6600;
 
-            border-top: 2px solid #ff6600;
+            color: #ffffff;
+
+            padding: 15px 34px;
+
+            border-radius: 12px;
+
+            font-size: 1rem;
+
+            font-weight: 700;
+
+            transition: 0.3s ease;
         }
 
-        .footer p {
-            margin-bottom: 12px;
-        }
-
-        .footer-links a {
-            margin: 0 12px;
-
-            color: #d8e6f5;
+        .btn:hover {
+            opacity: 0.9;
         }
 
         /* =====================================================
@@ -461,63 +186,26 @@
 
         @media (max-width: 900px) {
 
-            .hero {
-                grid-template-columns: 1fr;
-
-                padding: 60px 25px;
-            }
-
-            section {
-                padding: 60px 25px;
-            }
-
-            .hero-title {
+            .cta h2 {
                 font-size: 1.9rem;
             }
 
-            .hero-image-placeholder {
-                height: 240px;
-            }
-
-            .section-title h2 {
-                font-size: 2.1rem;
-            }
-
-            .about-photo-placeholder,
             .lasts-photo-placeholder {
+
+                width: 95%;
+                height: auto;
+            }
+
+            .lasts-photo-placeholder img {
+
                 width: 100%;
-                height: 240px;
-            }
+                height: auto;
 
-            .cta h2 {
-                font-size: 1.8rem;
-            }
-
-            .cta p {
-                font-size: 0.9rem;
-            }
-
-            .navbar {
-                padding: 20px;
-
-                gap: 10px;
-            }
-
-            .navbar a {
-                font-size: 0.9rem;
-
-                padding: 12px 16px;
-            }
-        }
-
-        @media (max-width: 600px) {
-
-            .lasts-photo-placeholder {
-                height: 220px;
+                object-fit: contain;
             }
 
             .cta p {
-                font-size: 0.85rem;
+                font-size: 0.95rem;
             }
         }
 
@@ -533,7 +221,8 @@
 
     <nav class="navbar">
 
-        <a href="index.html" class="active">Home</a>
+        <a href="index.html"
+           class="active">Home</a>
 
         <a href="home.html">About</a>
 
@@ -550,194 +239,10 @@
     </nav>
 
     <!-- =====================================================
-         TOP BANNER
-    ===================================================== -->
-
-    <div class="top-banner">
-
-        <img src="images/index.png"
-             alt="Joe's Excellent Events & Management Banner">
-
-    </div>
-
-    <!-- =====================================================
-         HERO SECTION
-    ===================================================== -->
-
-    <section class="hero">
-
-        <div class="hero-left">
-
-            <div class="hero-image-placeholder"></div>
-
-            <p>
-                Joe’s Excellent Events Management is a forward-thinking company dedicated to helping brands grow through professional event management, customer engagement and leadership development.
-            </p>
-
-            <h1 class="hero-title">
-
-                Where Hard Work<br>
-
-                <span>Meets Smart Strategy</span>
-
-            </h1>
-
-            <a href="#contact" class="btn">
-
-                Contact Our Team
-
-            </a>
-
-        </div>
-
-        <div class="hero-card">
-
-            <h3>What We Do</h3>
-
-            <ul>
-
-                <li>Event Management</li>
-
-                <li>Sales & Customer Acquisition</li>
-
-                <li>Brand Representation</li>
-
-                <li>Campaign Strategy & Execution</li>
-
-                <li>Promotional Events & Activations</li>
-
-                <li>Market Research & Customer Insights</li>
-
-                <li>Team Training & Leadership Development</li>
-
-                <li>Client Relationship Management</li>
-
-            </ul>
-
-        </div>
-
-    </section>
-
-    <!-- =====================================================
-         ABOUT SECTION
-    ===================================================== -->
-
-    <section class="about">
-
-        <div class="section-title">
-
-            <h2>Who We Are</h2>
-
-            <p>More Than a Sales Company</p>
-
-        </div>
-
-        <div class="about-box">
-
-            <h3>
-                Built on Ambition, Resilience and Opportunity
-            </h3>
-
-            <div class="about-photo-placeholder">
-
-                <img src="images/about-us.png"
-                     alt="Built on Ambition, Resilience and Opportunity">
-
-            </div>
-
-            <p>
-                Joe's Excellent Events & Management is a startup built on ambition, resilience and opportunity.
-            </p>
-
-            <br>
-
-            <a href="#" class="btn">
-
-                Learn Our Story
-
-            </a>
-
-        </div>
-
-    </section>
-
-    <!-- =====================================================
-         VALUES SECTION
-    ===================================================== -->
-
-    <section>
-
-        <div class="section-title">
-
-            <h2>
-                Why Brands & People Choose Us
-            </h2>
-
-            <p>
-                We combine smart strategy with people-focused development.
-            </p>
-
-        </div>
-
-        <div class="values-grid">
-
-            <div class="card">
-
-                <div class="card-image-placeholder">
-
-                    Innovation Photograph Placeholder
-
-                </div>
-
-                <h3>Innovation</h3>
-
-                <p>
-                    We engineer success through creative thinking and leadership.
-                </p>
-
-            </div>
-
-            <div class="card">
-
-                <div class="card-image-placeholder">
-
-                    Empowerment Photograph Placeholder
-
-                </div>
-
-                <h3>Empowerment</h3>
-
-                <p>
-                    Training and mentorship helping ambitious people grow.
-                </p>
-
-            </div>
-
-            <div class="card">
-
-                <div class="card-image-placeholder">
-
-                    Integrity Photograph Placeholder
-
-                </div>
-
-                <h3>Integrity</h3>
-
-                <p>
-                    Long-term success built on honesty and professionalism.
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- =====================================================
          CTA SECTION
     ===================================================== -->
 
-    <section id="contact" class="cta">
+    <section class="cta">
 
         <h2>
 
@@ -750,15 +255,15 @@
         <div class="lasts-photo-placeholder">
 
             <img src="images/lasts.png"
-                 alt="Let's Build Something That Lasts">
+                 alt="Joe's Excellent Events & Management">
 
         </div>
 
         <p>
-            Whether you’re a brand looking to grow or someone ready to take the next step in your career, we are ready to work with you.
-        </p>
 
-        <br><br>
+            Whether you’re a brand looking to grow or someone ready to take the next step in your career, we are ready to work with you.
+
+        </p>
 
         <a href="mailto:excellentmanagement2026@gmail.com"
            class="btn">
@@ -768,26 +273,6 @@
         </a>
 
     </section>
-
-    <!-- =====================================================
-         FOOTER
-    ===================================================== -->
-
-    <footer class="footer">
-
-        <p>
-            Copyright © 2026 Joe's Excellent Events & Management
-        </p>
-
-        <div class="footer-links">
-
-            <a href="#">Privacy Policy</a>
-
-            <a href="#">Terms of Use</a>
-
-        </div>
-
-    </footer>
 
 </body>
 
