@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,147 +12,104 @@
             box-sizing: border-box;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
         body {
             font-family: Arial, Helvetica, sans-serif;
-            background: #071a2f;
+            background: #03111f;
             color: #ffffff;
             line-height: 1.6;
         }
 
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        img {
-            display: block;
-            max-width: 100%;
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #d6a21e;
+            padding: 24px 60px;
         }
 
         .navbar {
-            background: #03111f;
-            padding: 22px 40px;
+            max-width: 1200px;
+            margin: auto;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 20px;
-            border-bottom: 2px solid #ff6600;
-            overflow-x: auto;
-            white-space: nowrap;
+            gap: 30px;
         }
 
-        .navbar a {
+        .logo {
             color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .logo span {
+            color: #d6a21e;
+        }
+
+        nav {
+            display: flex;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
             font-size: 1rem;
-            font-weight: 700;
-            padding: 14px 22px;
-            border-radius: 12px;
-            transition: 0.3s ease;
+            font-weight: bold;
+            transition: color 0.3s ease;
         }
 
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
+        nav a:hover,
+        nav a.active {
+            color: #d6a21e;
         }
 
-        .top-banner {
-            width: 100%;
+        .hero {
+            padding: 70px 30px 40px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 6vw, 5rem);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            line-height: 1.1;
+        }
+
+        .hero h1 span {
+            color: #d6a21e;
+        }
+
+        .hero p {
+            max-width: 850px;
+            margin: 24px auto 0;
+            font-size: 1.15rem;
+            color: #e8e8e8;
+        }
+
+        .service-image-placeholder {
+            width: 92%;
+            max-width: 1200px;
+            margin: 40px auto;
+            border-radius: 22px;
             overflow: hidden;
-            border-bottom: 3px solid #ff6600;
+            border: 2px solid #d6a21e;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
             background: #03111f;
         }
 
-        .top-banner img {
+        .service-image-placeholder img {
             width: 100%;
             height: auto;
-        }
-
-        .services-hero {
-            background: linear-gradient(135deg, #071a2f, #102f4f);
-            padding: 80px 60px;
-        }
-
-        .services-hero-row {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: minmax(280px, 0.95fr) minmax(280px, 1.05fr);
-            gap: 50px;
-            align-items: center;
-        }
-
-        .services-hero-image {
-            width: 100%;
-            max-width: 620px;
-            aspect-ratio: 16 / 10;
-            height: auto;
-            margin: 0 auto;
-            border-radius: 28px;
-            overflow: hidden;
-            border: 3px solid rgba(132, 214, 255, 0.25);
-            background: #061525;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-        }
-
-        .services-hero-image img {
-            width: 100%;
-            height: 100%;
+            display: block;
             object-fit: cover;
-            object-position: center;
-            border-radius: 24px;
         }
 
-        .services-hero-text {
-            width: 100%;
-            text-align: left;
-        }
-
-        .services-hero-text h1 {
-            font-size: 2.2rem;
-            line-height: 1.15;
-            margin-bottom: 22px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .services-hero-text h1 span {
-            color: #ff6600;
-        }
-
-        .services-hero-text p {
-            font-size: 1.05rem;
-            color: #d8e6f5;
-            line-height: 1.8;
-            margin-bottom: 28px;
-            max-width: 700px;
-        }
-
-        .btn {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            background: #ff6600;
-            color: #ffffff;
-            padding: 12px 26px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            transition: 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        section {
-            padding: 80px 60px;
+        .services-section {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 30px;
         }
 
         .section-title {
@@ -162,326 +118,120 @@
         }
 
         .section-title h2 {
-            font-size: 2.8rem;
-            color: #ff6600;
-            margin-bottom: 15px;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section-title span {
+            color: #d6a21e;
         }
 
         .section-title p {
-            max-width: 780px;
-            margin: 0 auto;
-            color: #d8e6f5;
+            max-width: 760px;
+            margin: 18px auto 0;
+            color: #dddddd;
             font-size: 1.05rem;
-            line-height: 1.8;
-        }
-
-        .services-section {
-            background: #061525;
         }
 
         .services-grid {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 28px;
+            gap: 26px;
         }
 
         .service-card {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 22px;
-            padding: 28px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.22);
-        }
-
-        .service-image-placeholder {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.12);
-            background: #102b45;
-            margin-bottom: 22px;
-        }
-
-        .service-image-placeholder img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
+            background: linear-gradient(145deg, #061a2d, #020b14);
+            border: 1px solid rgba(214, 162, 30, 0.55);
             border-radius: 18px;
+            padding: 32px 26px;
+            min-height: 260px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
         }
 
         .service-card h3 {
-            color: #ff6600;
-            font-size: 1.45rem;
+            color: #d6a21e;
+            font-size: 1.3rem;
+            text-transform: uppercase;
             margin-bottom: 14px;
-            line-height: 1.2;
+            letter-spacing: 1px;
         }
 
         .service-card p {
-            color: #d8e6f5;
+            color: #eeeeee;
             font-size: 1rem;
-            line-height: 1.75;
         }
 
-        .benefits-section {
-            background: linear-gradient(135deg, #102f4f, #071a2f);
+        .statement-section {
+            max-width: 1100px;
+            margin: 70px auto;
+            padding: 45px 30px;
+            text-align: center;
+            border-top: 1px solid rgba(214, 162, 30, 0.6);
+            border-bottom: 1px solid rgba(214, 162, 30, 0.6);
         }
 
-        .benefits-row {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: minmax(280px, 0.95fr) minmax(280px, 1.05fr);
-            gap: 42px;
-            align-items: center;
-        }
-
-        .benefits-image {
-            width: 100%;
-            max-width: 560px;
-            margin: 0 auto;
-            border-radius: 28px;
-            overflow: hidden;
-            border: 3px solid rgba(132, 214, 255, 0.25);
-            background: #061525;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-        }
-
-        .benefits-image img {
-            width: 100%;
-            height: auto;
-            border-radius: 24px;
-        }
-
-        .benefits-text {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 22px;
-            padding: 34px;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
-        }
-
-        .benefits-text h2 {
-            font-size: 2rem;
-            color: #ffffff;
-            line-height: 1.2;
+        .statement-section h2 {
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            text-transform: uppercase;
+            letter-spacing: 2px;
             margin-bottom: 18px;
         }
 
-        .benefits-text h2 span {
-            color: #ff6600;
+        .statement-section span {
+            color: #d6a21e;
         }
 
-        .benefits-text p {
-            color: #d8e6f5;
-            font-size: 1rem;
-            line-height: 1.8;
-            margin-bottom: 18px;
+        .statement-section p {
+            color: #e8e8e8;
+            font-size: 1.1rem;
+            max-width: 850px;
+            margin: auto;
         }
 
-        .benefits-list {
-            list-style: none;
-            display: grid;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .benefits-list li {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            border-radius: 12px;
-            padding: 14px 16px;
-        }
-
-        .process-section {
-            background: #061525;
-        }
-
-        .process-grid {
-            width: 100%;
-            max-width: 1180px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
-        }
-
-        .process-card {
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 20px;
-            padding: 26px;
+        footer {
+            background: #020b14;
+            border-top: 2px solid #d6a21e;
             text-align: center;
+            padding: 28px 20px;
+            color: #dddddd;
         }
 
-        .process-number {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #ff6600;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            margin: 0 auto 16px auto;
-        }
-
-        .process-card h3 {
-            color: #ffffff;
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-        }
-
-        .process-card p {
-            color: #d8e6f5;
-            font-size: 0.98rem;
-            line-height: 1.7;
-        }
-
-        .cta {
-            background: linear-gradient(135deg, #071a2f, #102f4f);
-            text-align: center;
-        }
-
-        .cta-box {
-            max-width: 900px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 24px;
-            padding: 42px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
-        }
-
-        .cta-box h2 {
-            font-size: 2rem;
-            color: #ffffff;
-            margin-bottom: 18px;
-            line-height: 1.2;
-        }
-
-        .cta-box h2 span {
-            color: #ff6600;
-        }
-
-        .cta-box p {
-            color: #d8e6f5;
-            max-width: 760px;
-            margin: 0 auto 26px auto;
-            font-size: 1.05rem;
-            line-height: 1.8;
-        }
-
-        .footer {
-            background: #03111f;
-            padding: 30px;
-            text-align: center;
-            border-top: 2px solid #ff6600;
-        }
-
-        .footer-links {
-            margin-top: 12px;
-        }
-
-        .footer-links a {
-            margin: 0 12px;
-            color: #d8e6f5;
-        }
-
-        @media (max-width: 1100px) {
-            .services-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .process-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        footer span {
+            color: #d6a21e;
+            font-weight: bold;
         }
 
         @media (max-width: 900px) {
+            header {
+                padding: 22px 25px;
+            }
+
             .navbar {
-                padding: 20px;
-                gap: 10px;
-                justify-content: flex-start;
-            }
-
-            .navbar a {
-                font-size: 0.9rem;
-                padding: 12px 16px;
-            }
-
-            .services-hero {
-                padding: 60px 25px;
-            }
-
-            .services-hero-row,
-            .benefits-row {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .services-hero-text,
-            .benefits-text {
+                flex-direction: column;
                 text-align: center;
             }
 
-            .services-hero-text h1 {
-                font-size: 2rem;
+            nav {
+                justify-content: center;
             }
 
-            .services-hero-image {
-                max-width: 100%;
-            }
-
-            section {
-                padding: 60px 25px;
-            }
-
-            .section-title h2 {
-                font-size: 2.2rem;
-            }
-
-            .benefits-text h2,
-            .cta-box h2 {
-                font-size: 1.75rem;
+            .services-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
 
-        @media (max-width: 650px) {
-            .services-hero {
-                padding: 45px 18px;
+        @media (max-width: 600px) {
+            .hero {
+                padding-top: 50px;
             }
 
-            section {
-                padding: 50px 18px;
-            }
-
-            .services-grid,
-            .process-grid {
+            .services-grid {
                 grid-template-columns: 1fr;
             }
 
-            .service-card,
-            .benefits-text,
-            .cta-box {
-                padding: 26px 22px;
-            }
-
-            .services-hero-text h1,
-            .section-title h2 {
-                font-size: 1.9rem;
-            }
-
-            .footer-links a {
-                display: inline-block;
-                margin: 8px 10px;
+            .service-card {
+                min-height: auto;
             }
         }
     </style>
@@ -489,232 +239,113 @@
 
 <body>
 
-    <nav class="navbar">
-        <a href="index.html">Home</a>
-        <a href="home.html">About</a>
-        <a href="our-services.html" class="active">Our Services</a>
-        <a href="careers.html">Careers</a>
-        <a href="apply.html">Apply</a>
-        <a href="contact us.html">Contact Us</a>
-        <a href="admin.html">Admin</a>
-    </nav>
-
-    <div class="top-banner">
-        <img src="images/services.png" alt="Joe's Excellent Events & Management Services Banner">
-    </div>
-
-    <section class="services-hero">
-
-        <div class="services-hero-row">
-
-            <div class="services-hero-image">
-                <img src="images/services-team.png" alt="Professional services team">
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                Joe's Excellent <span>Events & Management</span>
             </div>
 
-            <div class="services-hero-text">
-
-                <h1>
-                    Professional Services<br>
-                    <span>Built Around People, Brands and Growth</span>
-                </h1>
-
-                <p>
-                    Joe’s Excellent Events & Management provides practical, people-focused services that help brands grow, improve customer engagement, and create stronger opportunities for long-term success.
-                </p>
-
-                <p>
-                    From event management and customer acquisition to leadership development and client relationship support, JEEM delivers services designed to increase visibility, build trust, and turn ambition into measurable progress.
-                </p>
-
-                <a href="#services" class="btn">Explore Our Services</a>
-
-            </div>
-
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="our-services.html" class="active">Our Services</a>
+                <a href="careers.html">Careers</a>
+                <a href="admin.html">Admin</a>
+                <a href="contact.html">Contact</a>
+            </nav>
         </div>
+    </header>
 
-    </section>
+    <main>
 
-    <section id="services" class="services-section">
-
-        <div class="section-title">
-            <h2>Our Core Services</h2>
-
+        <section class="hero">
+            <h1>Our <span>Services</span></h1>
             <p>
-                JEEM supports businesses and individuals with professional services designed to create growth, confidence, opportunity, and long-term success.
+                Joe's Excellent Events & Management provides professional, people-focused services designed to support brands,
+                strengthen partnerships and create outstanding opportunities for growth.
             </p>
+        </section>
+
+        <div class="service-image-placeholder">
+            <img src="images/professional.png" alt="Professional services built around people brands and growth">
         </div>
 
-        <div class="services-grid">
+        <section class="services-section">
+            <div class="section-title">
+                <h2>Professional Services <span>Built Around People</span></h2>
+                <p>
+                    We support businesses, candidates and partners with reliable services that combine recruitment,
+                    staffing, leadership support, business development, brand promotion and long-term partnership building.
+                </p>
+            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/event-management.png" alt="Event Management">
+            <div class="services-grid">
+
+                <div class="service-card">
+                    <h3>Recruitment</h3>
+                    <p>
+                        We help organisations find the right talent by supporting the recruitment process with care,
+                        professionalism and attention to detail.
+                    </p>
                 </div>
-                <h3>Event Management</h3>
-                <p>
-                    We plan, coordinate, and support professional events that help brands connect with people, create memorable experiences, and strengthen their visibility in competitive markets.
-                </p>
-            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/customer-acquisition.png" alt="Customer Acquisition">
+                <div class="service-card">
+                    <h3>Staffing</h3>
+                    <p>
+                        We provide flexible staffing support to help businesses meet operational needs, manage busy periods
+                        and maintain excellent service delivery.
+                    </p>
                 </div>
-                <h3>Customer Acquisition</h3>
-                <p>
-                    We help businesses attract new customers, increase engagement, and build meaningful relationships that support growth, sales, and long-term brand loyalty.
-                </p>
-            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/brand-representation.png" alt="Brand Representation">
+                <div class="service-card">
+                    <h3>Leadership Support</h3>
+                    <p>
+                        We support leaders and teams by encouraging strong communication, responsibility, confidence and
+                        professional development.
+                    </p>
                 </div>
-                <h3>Brand Representation</h3>
-                <p>
-                    We represent brands professionally through clear communication, positive customer interaction, and high-quality presentation that helps businesses stand out.
-                </p>
-            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/campaign-strategy.png" alt="Campaign Strategy">
+                <div class="service-card">
+                    <h3>Business Development</h3>
+                    <p>
+                        We help brands grow through practical ideas, professional planning and strategic support focused on
+                        long-term success.
+                    </p>
                 </div>
-                <h3>Campaign Strategy</h3>
-                <p>
-                    We support promotional campaigns and activations that raise awareness, encourage customer response, and help brands communicate their message with confidence.
-                </p>
-            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/leadership-development.png" alt="Leadership Development">
+                <div class="service-card">
+                    <h3>Brand Promotion</h3>
+                    <p>
+                        We promote brands through events, campaigns, customer engagement and professional presentation that
+                        helps businesses stand out.
+                    </p>
                 </div>
-                <h3>Leadership Development</h3>
-                <p>
-                    We help ambitious individuals develop confidence, communication skills, teamwork, and leadership qualities through real opportunities and practical experience.
-                </p>
-            </div>
 
-            <div class="service-card">
-                <div class="service-image-placeholder">
-                    <img src="images/client-relationships.png" alt="Client Relationship Management">
+                <div class="service-card">
+                    <h3>Partnership</h3>
+                    <p>
+                        We build trusted partnerships based on integrity, shared goals, positive relationships and outstanding
+                        results.
+                    </p>
                 </div>
-                <h3>Client Relationship Management</h3>
-                <p>
-                    We support strong client relationships by improving communication, building trust, and helping businesses maintain professional and reliable customer-focused service.
-                </p>
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="benefits-section">
-
-        <div class="benefits-row">
-
-            <div class="benefits-image">
-                <img src="images/services-benefits.png" alt="Business growth and leadership development">
-            </div>
-
-            <div class="benefits-text">
-
-                <h2>
-                    Why Choose<br>
-                    <span>JEEM Services?</span>
-                </h2>
-
-                <p>
-                    JEEM combines professional service delivery with a strong people-focused approach. This means clients benefit from clear communication, organised support, and a team that understands the importance of growth, trust, and opportunity.
-                </p>
-
-                <ul class="benefits-list">
-                    <li>Stronger brand visibility and customer engagement</li>
-                    <li>Professional event and campaign support</li>
-                    <li>Improved customer relationships and communication</li>
-                    <li>Opportunities for leadership, confidence, and personal growth</li>
-                    <li>A service approach built on ambition, resilience, and results</li>
-                </ul>
 
             </div>
+        </section>
 
-        </div>
-
-    </section>
-
-    <section class="process-section">
-
-        <div class="section-title">
-            <h2>How We Work</h2>
-
+        <section class="statement-section">
+            <h2>Great People. <span>Strong Partnerships.</span> Outstanding Results.</h2>
             <p>
-                Our approach is clear, professional, and focused on helping clients and individuals move from ideas to results.
+                Together, we create opportunities, support professional growth and deliver excellent service with ambition,
+                resilience and care.
             </p>
-        </div>
+        </section>
 
-        <div class="process-grid">
+    </main>
 
-            <div class="process-card">
-                <div class="process-number">1</div>
-                <h3>Understand</h3>
-                <p>We listen carefully to understand the client’s goals, audience, challenges, and opportunities.</p>
-            </div>
-
-            <div class="process-card">
-                <div class="process-number">2</div>
-                <h3>Plan</h3>
-                <p>We create a practical service plan focused on engagement, visibility, organisation, and results.</p>
-            </div>
-
-            <div class="process-card">
-                <div class="process-number">3</div>
-                <h3>Deliver</h3>
-                <p>We provide professional support through events, campaigns, customer engagement, and brand representation.</p>
-            </div>
-
-            <div class="process-card">
-                <div class="process-number">4</div>
-                <h3>Grow</h3>
-                <p>We help brands and individuals build confidence, strengthen relationships, and move toward long-term success.</p>
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="cta">
-
-        <div class="cta-box">
-
-            <h2>
-                Ready to Build<br>
-                <span>Something Excellent?</span>
-            </h2>
-
-            <p>
-                Whether you need professional event support, stronger customer engagement, brand growth, or leadership development, Joe’s Excellent Events & Management is ready to help you move forward with confidence.
-            </p>
-
-            <a href="contact us.html" class="btn">Contact JEEM</a>
-
-        </div>
-
-    </section>
-
-    <footer class="footer">
-
+    <footer>
         <p>
-            Copyright © 2026 Joe's Excellent Events & Management
+            &copy; 2026 <span>Joe's Excellent Events & Management</span>. All rights reserved.
         </p>
-
-        <div class="footer-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Use</a>
-        </div>
-
     </footer>
 
 </body>
-
 </html>
