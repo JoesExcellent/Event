@@ -19,57 +19,53 @@
             line-height: 1.6;
         }
 
-        .site-header {
+        header {
             background: #020b14;
-            border-bottom: 2px solid #f5a400;
+            border-bottom: 2px solid #ff6a00;
             padding: 18px 7%;
         }
 
-        .header-inner {
+        nav {
             max-width: 1200px;
             margin: auto;
             display: flex;
             justify-content: center;
             align-items: center;
-        }
-
-        .navbar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 28px;
+            gap: 42px;
             flex-wrap: wrap;
         }
 
-        .navbar a {
+        nav a {
             color: #ffffff;
             text-decoration: none;
-            font-weight: 700;
             font-size: 0.95rem;
+            font-weight: 700;
         }
 
-        .navbar a:hover,
-        .navbar a.active {
-            color: #f5a400;
+        nav a:hover,
+        nav a.active {
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
         }
 
-        .hero-banner {
+        .hero {
             background: #020b14;
-            padding: 35px 7% 25px;
-            border-bottom: 2px solid #f5a400;
+            padding: 35px 7%;
+            border-bottom: 2px solid #ff6a00;
         }
 
-        .hero-banner img {
+        .hero img {
             width: 100%;
             max-width: 1200px;
             margin: auto;
             display: block;
-            border-radius: 16px;
         }
 
-        .services-intro {
+        .intro-section {
             background: #0b2a44;
-            padding: 70px 7%;
+            padding: 75px 7%;
         }
 
         .intro-grid {
@@ -83,32 +79,32 @@
 
         .service-image-placeholder {
             width: 100%;
-            height: 100%;
-            min-height: 320px;
+            min-height: 260px;
+            border: 1px solid #ffb000;
             border-radius: 18px;
-            border: 2px solid rgba(245, 164, 0, 0.75);
             background: #123756;
             overflow: hidden;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .service-image-placeholder img {
             width: 100%;
             height: 100%;
-            min-height: 320px;
-            object-fit: cover;
+            min-height: 260px;
+            object-fit: contain;
             display: block;
-            border-radius: 16px;
+            border-radius: 18px;
+            background: #020b14;
         }
 
-        .services-heading {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: clamp(2.2rem, 5vw, 4.4rem);
+        .intro-text h1 {
+            font-size: clamp(2.2rem, 5vw, 4rem);
             font-weight: 800;
-            line-height: 1.12;
+            line-height: 1.1;
             text-transform: uppercase;
-            margin-bottom: 25px;
-            letter-spacing: 1px;
+            margin-bottom: 22px;
         }
 
         .heading-white {
@@ -124,34 +120,28 @@
         .intro-text p {
             margin-bottom: 18px;
             color: #f2f2f2;
-            font-size: 1rem;
         }
 
         .btn {
             display: inline-block;
-            margin-top: 10px;
-            padding: 12px 24px;
-            border-radius: 8px;
             background: #ff6a00;
             color: #ffffff;
             text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 8px;
             font-weight: 700;
+            margin-top: 10px;
         }
 
-        .btn:hover {
-            background: #f5a400;
-            color: #020b14;
-        }
-
-        .core-services {
-            padding: 75px 7%;
+        .services-section {
             background: #061726;
+            padding: 80px 7%;
         }
 
         .section-heading {
             text-align: center;
-            max-width: 850px;
-            margin: 0 auto 45px;
+            max-width: 900px;
+            margin: 0 auto 50px;
         }
 
         .section-heading h2 {
@@ -160,34 +150,29 @@
             margin-bottom: 15px;
         }
 
-        .section-heading p {
-            color: #f2f2f2;
-        }
-
         .services-grid {
             max-width: 1100px;
             margin: auto;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 28px;
+            gap: 30px;
         }
 
         .service-card {
             background: #13283b;
+            padding: 28px;
             border-radius: 14px;
-            padding: 24px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
-            border: 1px solid rgba(245, 164, 0, 0.25);
         }
 
-        .card-photo {
+        .card-image {
             width: 100%;
             min-height: 220px;
-            border-radius: 10px;
-            border: 1px solid rgba(245, 164, 0, 0.55);
             background: #123756;
-            overflow: hidden;
-            margin-bottom: 18px;
+            border: 1px solid rgba(255, 176, 0, 0.55);
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
 
         .service-card h3 {
@@ -203,7 +188,7 @@
 
         .why-section {
             background: #0b2a44;
-            padding: 75px 7%;
+            padding: 80px 7%;
         }
 
         .why-grid {
@@ -215,19 +200,17 @@
             align-items: center;
         }
 
-        .why-photo-placeholder {
+        .why-placeholder {
             width: 100%;
-            min-height: 320px;
-            border-radius: 18px;
-            border: 2px solid rgba(245, 164, 0, 0.75);
+            min-height: 260px;
             background: #123756;
-            overflow: hidden;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            border: 1px solid #ffb000;
+            border-radius: 18px;
         }
 
         .why-text {
             background: rgba(255, 255, 255, 0.06);
-            padding: 30px;
+            padding: 34px;
             border-radius: 14px;
         }
 
@@ -237,7 +220,7 @@
             margin-bottom: 18px;
         }
 
-        .why-text h2 span {
+        .why-text span {
             color: #ff6a00;
         }
 
@@ -251,27 +234,21 @@
 
         .why-text li {
             background: rgba(255, 255, 255, 0.08);
-            margin-bottom: 10px;
             padding: 12px 14px;
             border-radius: 8px;
+            margin-bottom: 10px;
         }
 
-        .how-section {
-            padding: 75px 7%;
+        .work-section {
             background: #061726;
+            padding: 80px 7%;
             text-align: center;
         }
 
-        .how-section h2 {
+        .work-section h2 {
             color: #ff6a00;
-            font-size: 2.5rem;
+            font-size: 2.6rem;
             margin-bottom: 15px;
-        }
-
-        .how-section p {
-            max-width: 850px;
-            margin: auto;
-            color: #f2f2f2;
         }
 
         .work-grid {
@@ -284,60 +261,51 @@
 
         .work-card {
             background: #13283b;
-            padding: 28px 22px;
+            padding: 30px 22px;
             border-radius: 14px;
-            border: 1px solid rgba(245, 164, 0, 0.25);
+            border: 1px solid rgba(255, 176, 0, 0.25);
         }
 
         .work-card span {
-            display: inline-flex;
             width: 36px;
             height: 36px;
-            border-radius: 50%;
             background: #ff6a00;
+            border-radius: 50%;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
             margin-bottom: 12px;
         }
 
-        .work-card h3 {
-            margin-bottom: 10px;
-        }
-
-        .cta {
+        .cta-section {
             background: #0b2a44;
-            padding: 70px 7%;
+            padding: 75px 7%;
+            border-bottom: 2px solid #ff6a00;
             text-align: center;
-            border-bottom: 2px solid #f5a400;
         }
 
         .cta-box {
-            max-width: 900px;
+            max-width: 950px;
             margin: auto;
             background: rgba(255, 255, 255, 0.08);
-            padding: 45px;
+            padding: 50px;
             border-radius: 16px;
         }
 
-        .cta h2 {
+        .cta-box h2 {
             font-size: clamp(2rem, 4vw, 3rem);
             margin-bottom: 18px;
         }
 
-        .cta h2 span {
+        .cta-box span {
             color: #ff6a00;
         }
 
-        .cta p {
-            color: #f2f2f2;
-            margin-bottom: 18px;
-        }
-
-        .site-footer {
+        footer {
             background: #020b14;
             text-align: center;
-            padding: 28px 20px;
+            padding: 30px 20px;
             font-size: 0.9rem;
         }
 
@@ -353,8 +321,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .navbar {
-                justify-content: center;
+            nav {
+                gap: 18px;
             }
         }
     </style>
@@ -362,27 +330,25 @@
 
 <body>
 
-    <header class="site-header">
-        <div class="header-inner">
-            <nav class="navbar">
-                <a href="index.html">Home</a>
-                <a href="about.html">About</a>
-                <a href="our-services.html" class="active">Our Services</a>
-                <a href="careers.html">Careers</a>
-                <a href="apply.html">Apply</a>
-                <a href="contact.html">Contact Us</a>
-                <a href="admin.html">Admin</a>
-            </nav>
-        </div>
+    <header>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="our-services.html" class="active">Our Services</a>
+            <a href="careers.html">Careers</a>
+            <a href="apply.html">Apply</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="admin.html">Admin</a>
+        </nav>
     </header>
 
-    <section class="hero-banner">
-        <img src="images/services3.png" alt="Our Services at Joe's Excellent Events and Management">
+    <section class="hero">
+        <img src="images/services3.png" alt="Joe's Excellent Events and Management Our Services">
     </section>
 
     <main>
 
-        <section class="services-intro">
+        <section class="intro-section">
             <div class="intro-grid">
 
                 <div class="service-image-placeholder">
@@ -390,7 +356,7 @@
                 </div>
 
                 <div class="intro-text">
-                    <h1 class="services-heading">
+                    <h1>
                         <span class="heading-white">Professional Services</span>
                         <span class="heading-orange">Built Around People</span>
                     </h1>
@@ -411,7 +377,7 @@
             </div>
         </section>
 
-        <section class="core-services">
+        <section class="services-section">
             <div class="section-heading">
                 <h2>Our Core Services</h2>
                 <p>
@@ -423,57 +389,39 @@
             <div class="services-grid">
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Event Management</h3>
-                    <p>
-                        We plan, coordinate and support professional events designed to promote brands, connect people
-                        and create positive experiences.
-                    </p>
+                    <p>We plan, coordinate and support professional events designed to promote brands, connect people and create positive experiences.</p>
                 </div>
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Customer Acquisition</h3>
-                    <p>
-                        We help businesses attract new customers, improve engagement and build meaningful relationships
-                        through clear communication.
-                    </p>
+                    <p>We help businesses attract new customers, improve engagement and build meaningful relationships through clear communication.</p>
                 </div>
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Brand Representation</h3>
-                    <p>
-                        We represent brands with professionalism, confidence and care, helping organisations present
-                        themselves in the best possible way.
-                    </p>
+                    <p>We represent brands with professionalism, confidence and care, helping organisations present themselves in the best possible way.</p>
                 </div>
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Campaign Strategy</h3>
-                    <p>
-                        We support campaigns through planning, organisation and creative ideas that help businesses
-                        reach their audience effectively.
-                    </p>
+                    <p>We support campaigns through planning, organisation and creative ideas that help businesses reach their audience effectively.</p>
                 </div>
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Leadership Development</h3>
-                    <p>
-                        We help people develop confidence, responsibility and leadership skills through encouragement,
-                        structure and practical experience.
-                    </p>
+                    <p>We help people develop confidence, responsibility and leadership skills through encouragement, structure and practical experience.</p>
                 </div>
 
                 <div class="service-card">
-                    <div class="card-photo"></div>
+                    <div class="card-image"></div>
                     <h3>Client Relationship Management</h3>
-                    <p>
-                        We support strong client relationships by providing organised, reliable and professional service
-                        focused on trust and results.
-                    </p>
+                    <p>We support strong client relationships by providing organised, reliable and professional service focused on trust and results.</p>
                 </div>
 
             </div>
@@ -482,7 +430,7 @@
         <section class="why-section">
             <div class="why-grid">
 
-                <div class="why-photo-placeholder"></div>
+                <div class="why-placeholder"></div>
 
                 <div class="why-text">
                     <h2>Why Choose <span>Our Services?</span></h2>
@@ -504,14 +452,11 @@
             </div>
         </section>
 
-        <section class="how-section">
+        <section class="work-section">
             <h2>How We Work</h2>
-            <p>
-                Our approach is clear, professional and focused on building trust with every person and brand we support.
-            </p>
+            <p>Our approach is clear, professional and focused on building trust with every person and brand we support.</p>
 
             <div class="work-grid">
-
                 <div class="work-card">
                     <span>1</span>
                     <h3>Understand</h3>
@@ -535,11 +480,10 @@
                     <h3>Grow</h3>
                     <p>We help businesses and people move forward with confidence and stronger opportunities.</p>
                 </div>
-
             </div>
         </section>
 
-        <section class="cta">
+        <section class="cta-section">
             <div class="cta-box">
                 <h2>Ready to Build <span>Something Excellent?</span></h2>
 
@@ -554,7 +498,7 @@
 
     </main>
 
-    <footer class="site-footer">
+    <footer>
         <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
         <p>All rights reserved.</p>
     </footer>
