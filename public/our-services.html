@@ -64,6 +64,7 @@
             max-width: 1200px;
             margin: auto;
             display: block;
+            border-radius: 16px;
         }
 
         .services-intro {
@@ -82,38 +83,48 @@
 
         .service-image-placeholder {
             width: 100%;
-            min-height: 260px;
-            border: 1px solid rgba(245, 164, 0, 0.65);
-            border-radius: 16px;
+            height: 100%;
+            min-height: 320px;
+            border-radius: 18px;
+            border: 2px solid rgba(245, 164, 0, 0.75);
             background: #123756;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
         }
 
         .service-image-placeholder img {
             width: 100%;
             height: 100%;
-            min-height: 260px;
+            min-height: 320px;
             object-fit: cover;
             display: block;
             border-radius: 16px;
         }
 
-        .intro-text h1 {
-            font-size: clamp(2rem, 4vw, 3.4rem);
-            line-height: 1.1;
-            margin-bottom: 22px;
+        .services-heading {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: clamp(2.2rem, 5vw, 4.4rem);
+            font-weight: 800;
+            line-height: 1.12;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
         }
 
-        .intro-text h1 span {
-            color: #f5a400;
+        .heading-white {
+            display: block;
+            color: #ffffff;
+        }
+
+        .heading-orange {
+            display: block;
+            color: #ff6a00;
         }
 
         .intro-text p {
             margin-bottom: 18px;
             color: #f2f2f2;
+            font-size: 1rem;
         }
 
         .btn {
@@ -125,6 +136,11 @@
             color: #ffffff;
             text-decoration: none;
             font-weight: 700;
+        }
+
+        .btn:hover {
+            background: #f5a400;
+            color: #020b14;
         }
 
         .core-services {
@@ -144,6 +160,10 @@
             margin-bottom: 15px;
         }
 
+        .section-heading p {
+            color: #f2f2f2;
+        }
+
         .services-grid {
             max-width: 1100px;
             margin: auto;
@@ -157,11 +177,12 @@
             border-radius: 14px;
             padding: 24px;
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(245, 164, 0, 0.25);
         }
 
         .card-photo {
             width: 100%;
-            min-height: 260px;
+            min-height: 220px;
             border-radius: 10px;
             border: 1px solid rgba(245, 164, 0, 0.55);
             background: #123756;
@@ -194,22 +215,14 @@
             align-items: center;
         }
 
-        .professional-photo-placeholder {
+        .why-photo-placeholder {
             width: 100%;
             min-height: 320px;
-            border-radius: 16px;
-            border: 1px solid rgba(245, 164, 0, 0.65);
-            overflow: hidden;
+            border-radius: 18px;
+            border: 2px solid rgba(245, 164, 0, 0.75);
             background: #123756;
-        }
-
-        .professional-photo-placeholder img {
-            width: 100%;
-            height: 100%;
-            min-height: 320px;
-            object-fit: cover;
-            display: block;
-            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
         }
 
         .why-text {
@@ -255,6 +268,12 @@
             margin-bottom: 15px;
         }
 
+        .how-section p {
+            max-width: 850px;
+            margin: auto;
+            color: #f2f2f2;
+        }
+
         .work-grid {
             max-width: 1100px;
             margin: 40px auto 0;
@@ -267,6 +286,7 @@
             background: #13283b;
             padding: 28px 22px;
             border-radius: 14px;
+            border: 1px solid rgba(245, 164, 0, 0.25);
         }
 
         .work-card span {
@@ -279,6 +299,10 @@
             justify-content: center;
             font-weight: 800;
             margin-bottom: 12px;
+        }
+
+        .work-card h3 {
+            margin-bottom: 10px;
         }
 
         .cta {
@@ -296,8 +320,18 @@
             border-radius: 16px;
         }
 
+        .cta h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
         .cta h2 span {
             color: #ff6a00;
+        }
+
+        .cta p {
+            color: #f2f2f2;
+            margin-bottom: 18px;
         }
 
         .site-footer {
@@ -356,7 +390,10 @@
                 </div>
 
                 <div class="intro-text">
-                    <h2>Professional Services <span>Built Around People</span></h2>
+                    <h1 class="services-heading">
+                        <span class="heading-white">Professional Services</span>
+                        <span class="heading-orange">Built Around People</span>
+                    </h1>
 
                     <p>
                         Joe’s Excellent Events & Management provides creative, professional and people-focused services
@@ -445,10 +482,10 @@
         <section class="why-section">
             <div class="why-grid">
 
-                <div class="professional-photo-placeholder"></div>
+                <div class="why-photo-placeholder"></div>
 
                 <div class="why-text">
-                    <h2>Why Choose <span>JEEM Services?</span></h2>
+                    <h2>Why Choose <span>Our Services?</span></h2>
 
                     <p>
                         Joe’s Excellent Events & Management combines ambition, professionalism and people-focused values
