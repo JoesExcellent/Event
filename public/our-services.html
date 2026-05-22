@@ -180,6 +180,18 @@
             padding: 20px;
         }
 
+        .card-image.image-filled {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .card-image.image-filled img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
         .card-image p {
             color: #ffffff;
             font-size: 1rem;
@@ -410,8 +422,8 @@
             <div class="services-grid">
 
                 <div class="service-card">
-                    <div class="card-image">
-                        <p>Event Management Photograph Placeholder</p>
+                    <div class="card-image image-filled">
+                        <img src="images/event-management.png" alt="Event Management">
                     </div>
                     <h3>Event Management</h3>
                     <p>We plan, coordinate and support professional events designed to promote brands, connect people and create positive experiences.</p>
