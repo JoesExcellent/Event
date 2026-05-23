@@ -236,18 +236,21 @@
             background: #123756;
             border: 1px solid #ffb000;
             border-radius: 18px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 25px;
         }
 
-        .why-placeholder p {
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+        .why-placeholder img {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            background: #020b14;
         }
 
         .why-text {
@@ -482,7 +485,7 @@
             <div class="why-grid">
 
                 <div class="why-placeholder">
-                    <p>Why Choose Our Services Photograph Placeholder</p>
+                    <img src="images/choose.png" alt="Why Choose Our Services">
                 </div>
 
                 <div class="why-text">
