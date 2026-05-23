@@ -3,111 +3,385 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us | TEMC Recruitment</title>
-
-    <link rel="stylesheet" href="style.css?v=23">
+    <title>Contact Us | Joe's Excellent Events & Management</title>
 
     <style>
-        body {
+        * {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #061b2f;
-            color: white;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .navbar {
-            background: #03111f;
-            padding: 18px 30px;
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #061726;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #ff6a00;
+            padding: 18px 7%;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: auto;
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
-            border-bottom: 2px solid #ff6600;
+            gap: 42px;
+            flex-wrap: wrap;
         }
 
-        .navbar a {
-            color: white;
+        nav a {
+            color: #ffffff;
             text-decoration: none;
-            font-weight: bold;
-            font-size: 17px;
-            padding: 10px 14px;
-            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 700;
         }
 
-        .navbar a:hover,
-        .navbar a.active {
-            background: #ff6600;
-            color: white;
+        nav a:hover,
+        nav a.active {
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
         }
 
-        .container {
+        .hero {
+            background: #020b14;
+            padding: 35px 7%;
+            border-bottom: 2px solid #ff6a00;
+        }
+
+        .hero-placeholder {
+            max-width: 1200px;
+            min-height: 320px;
+            margin: auto;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            background: #123756;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .hero-placeholder h1 {
+            font-size: clamp(2.3rem, 5vw, 4.5rem);
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+
+        .hero-placeholder span {
+            color: #ff6a00;
+            display: block;
+        }
+
+        .intro-section {
+            background: #0b2a44;
+            padding: 75px 7%;
+        }
+
+        .intro-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            min-height: 260px;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            background: #123756;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .photo-placeholder p {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .text-box h2 {
+            font-size: clamp(2.1rem, 4vw, 3.5rem);
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 22px;
+        }
+
+        .text-box h2 span {
+            color: #ff6a00;
+            display: block;
+        }
+
+        .text-box p {
+            margin-bottom: 18px;
+            color: #f2f2f2;
+        }
+
+        .info-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 50px;
+        }
+
+        .section-heading h2 {
+            color: #ff6a00;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 15px;
+        }
+
+        .info-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+        }
+
+        .info-card {
+            background: #13283b;
+            padding: 30px 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            text-align: center;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .info-card span {
+            width: 36px;
+            height: 36px;
+            background: #ff6a00;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .info-card h3 {
+            color: #ff6a00;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            color: #f2f2f2;
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .form-section {
+            background: #0b2a44;
+            padding: 80px 7%;
+        }
+
+        .contact-form {
             max-width: 900px;
             margin: auto;
-            padding: 40px 20px;
-        }
-
-        .card {
-            background: #123456;
+            background: #13283b;
             padding: 40px;
-            border-radius: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
-        h1 {
-            font-size: 56px;
-            margin-bottom: 30px;
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
         }
 
-        p {
-            font-size: 20px;
-            line-height: 1.7;
+        .form-group {
+            display: flex;
+            flex-direction: column;
         }
 
-        .contact-item {
-            margin-bottom: 20px;
+        .form-group.full {
+            grid-column: 1 / -1;
         }
 
-        .button-row {
-            margin-top: 40px;
+        label {
+            color: #ff6a00;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
-        .btn {
-            display: inline-block;
-            background: #ff6600;
-            color: white;
-            text-decoration: none;
-            padding: 18px 30px;
-            border-radius: 40px;
-            font-size: 20px;
-            font-weight: bold;
+        input,
+        textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+            border-radius: 8px;
+            background: #0b2a44;
+            color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 0.95rem;
         }
 
-        .btn:hover {
-            background: #ff7a1a;
+        textarea {
+            min-height: 150px;
+            resize: vertical;
         }
 
-        @media (max-width: 700px) {
+        .submit-btn {
+            background: #ff6a00;
+            color: #ffffff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 25px;
+            font-size: 1rem;
+        }
 
-            .navbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .form-message {
+            margin-top: 18px;
+            font-weight: 700;
+        }
 
-            .navbar a {
-                display: block;
+        .why-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
+
+        .why-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 22px;
+        }
+
+        .why-card {
+            background: #13283b;
+            padding: 30px 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            text-align: center;
+        }
+
+        .why-card span {
+            width: 36px;
+            height: 36px;
+            background: #ff6a00;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .why-card h3 {
+            color: #ff6a00;
+            margin-bottom: 10px;
+        }
+
+        .why-card p {
+            color: #f2f2f2;
+            font-size: 0.9rem;
+        }
+
+        .map-section {
+            background: #0b2a44;
+            padding: 80px 7%;
+        }
+
+        .map-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
+        }
+
+        .map-box {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 34px;
+            border-radius: 14px;
+        }
+
+        .map-box h2 {
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 18px;
+        }
+
+        .map-box span {
+            color: #ff6a00;
+        }
+
+        .map-box p {
+            margin-bottom: 18px;
+        }
+
+        .cta-section {
+            background: #061726;
+            padding: 75px 7%;
+            border-bottom: 2px solid #ff6a00;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 950px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 50px;
+            border-radius: 16px;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
+        .cta-box span {
+            color: #ff6a00;
+        }
+
+        footer {
+            background: #020b14;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .intro-grid,
+            .form-grid,
+            .info-grid,
+            .why-grid,
+            .map-grid {
+                grid-template-columns: 1fr;
                 text-align: center;
             }
 
-            h1 {
-                font-size: 40px;
+            nav {
+                gap: 18px;
             }
 
-            .card {
-                padding: 25px;
-            }
-
-            .btn {
-                display: block;
-                text-align: center;
+            .contact-form {
+                padding: 28px;
             }
         }
     </style>
@@ -115,59 +389,226 @@
 
 <body>
 
-  <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Our Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="apply.html">Apply</a>
-    <a href="contact us.html" class="active">Contact Us</a>
-    <a href="admin.html">Admin</a>
-</nav>
+    <header>
+        <nav class="navbar">
+            <a href="index.html">Home</a>
+            <a href="home.html">About</a>
+            <a href="our-services.html">Our Services</a>
+            <a href="careers.html">Careers</a>
+            <a href="apply.html">Apply</a>
+            <a href="contact us.html" class="active">Contact Us</a>
+            <a href="admin.html">Admin</a>
+        </nav>
+    </header>
 
-    <main class="container">
+    <section class="hero">
+        <div class="hero-placeholder">
+            <h1>
+                Let’s Start
+                <span>The Conversation</span>
+            </h1>
+        </div>
+    </section>
 
-        <section class="card">
+    <main>
 
-            <h1>Contact Us</h1><div class="hero-image-placeholder">
-    Contact Team Photograph Placeholder
-</div>
+        <section class="intro-section">
+            <div class="intro-grid">
 
-<div class="text-placeholder">
-    Add customer support information, office details,
-    communication channels and client service text here.
-</div>
+                <div class="photo-placeholder">
+                    <p>Contact Us Photograph Placeholder</p>
+                </div>
 
-            <p>
-                If you have questions regarding recruitment,
-                applications, interviews or opportunities with
-                The Excellent Management Company, please contact us.
-            </p>
+                <div class="text-box">
+                    <h2>
+                        We’re Here
+                        <span>To Help</span>
+                    </h2>
 
-            <div class="contact-item">
-                <strong>Email:</strong><br>
-                excellentmanagement2026@gmail.com
+                    <p>
+                        Whether you are making a business enquiry, looking for recruitment support, exploring a partnership or simply want to find out more, Joe’s Excellent Events & Management is ready to respond with professionalism and care.
+                    </p>
+
+                    <p>
+                        We welcome enquiries from clients, candidates, partners and organisations who want reliable support, clear communication and people-focused service.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="info-section">
+            <div class="section-heading">
+                <h2>Contact Information</h2>
+                <p>
+                    Use the details below to contact Joe’s Excellent Events & Management directly.
+                </p>
             </div>
 
-            <div class="contact-item">
-                <strong>Location:</strong><br>
-                Newcastle upon Tyne
+            <div class="info-grid">
+
+                <div class="info-card">
+                    <span>1</span>
+                    <h3>Phone</h3>
+                    <p>07845 546844</p>
+                </div>
+
+                <div class="info-card">
+                    <span>2</span>
+                    <h3>Email</h3>
+                    <p>joseph.eldridge1964@gmail.com</p>
+                </div>
+
+                <div class="info-card">
+                    <span>3</span>
+                    <h3>Office Address</h3>
+                    <p>73 Leazes Court, Barrack Road, Newcastle upon Tyne, NE4 5AY</p>
+                </div>
+
+                <div class="info-card">
+                    <span>4</span>
+                    <h3>Business Hours</h3>
+                    <p>Monday to Friday<br>9:00 AM – 5:00 PM</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="form-section">
+            <div class="section-heading">
+                <h2>Send A Message</h2>
+                <p>
+                    Complete the form below and we will respond to your enquiry as soon as possible.
+                </p>
             </div>
 
-            <div class="contact-item">
-                <strong>Recruitment Support:</strong><br>
-                Monday to Friday
+            <form class="contact-form" id="contactForm">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="fullName">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" required>
+                    </div>
+
+                    <div class="form-group full">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required></textarea>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="submit-btn">Send Message</button>
+
+                <p id="formMessage" class="form-message"></p>
+
+            </form>
+        </section>
+
+        <section class="why-section">
+            <div class="section-heading">
+                <h2>Why Contact Us?</h2>
+                <p>
+                    We are here to support professional enquiries, recruitment conversations, partnerships and general support requests.
+                </p>
             </div>
 
-            <div class="button-row">
-                <a href="careers.html" class="btn">
-                    Apply for a Role
-                </a>
-            </div>
+            <div class="why-grid">
 
+                <div class="why-card">
+                    <span>1</span>
+                    <h3>Business Enquiries</h3>
+                    <p>Speak to us about event support, customer engagement and brand growth.</p>
+                </div>
+
+                <div class="why-card">
+                    <span>2</span>
+                    <h3>Recruitment Support</h3>
+                    <p>Ask about careers, applications and opportunities to grow with us.</p>
+                </div>
+
+                <div class="why-card">
+                    <span>3</span>
+                    <h3>Partnerships</h3>
+                    <p>Explore ways to work together through professional collaboration.</p>
+                </div>
+
+                <div class="why-card">
+                    <span>4</span>
+                    <h3>General Support</h3>
+                    <p>Send a message and we will respond with care and professionalism.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="map-section">
+            <div class="map-grid">
+
+                <div class="map-box">
+                    <h2>Find Us <span>In Newcastle</span></h2>
+
+                    <p>
+                        Joe’s Excellent Events & Management is based in Newcastle upon Tyne and supports clients, candidates and partners through reliable communication and professional service.
+                    </p>
+
+                    <p>
+                        This section can later be replaced with a map image, office photograph or location graphic to strengthen the professional look of the Contact Us page.
+                    </p>
+                </div>
+
+                <div class="photo-placeholder">
+                    <p>Map / Office Photograph Placeholder</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="cta-box">
+                <h2>We’d Love <span>To Hear From You</span></h2>
+
+                <p>
+                    Whether your enquiry is about business support, careers, partnerships or professional services, Joe’s Excellent Events & Management is ready to help.
+                </p>
+            </div>
         </section>
 
     </main>
+
+    <footer>
+        <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+        <p>All rights reserved.</p>
+    </footer>
+
+    <script>
+        const contactForm = document.getElementById("contactForm");
+        const formMessage = document.getElementById("formMessage");
+
+        contactForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            formMessage.textContent = "Thank you. Your message has been received.";
+            formMessage.style.color = "#ff6a00";
+
+            contactForm.reset();
+        });
+    </script>
 
 </body>
 </html>
