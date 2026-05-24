@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,28 +56,17 @@
             border-bottom: 2px solid #ff6a00;
         }
 
-        .hero-placeholder {
+        .hero-image {
             max-width: 1200px;
-            min-height: 320px;
             margin: auto;
             border: 1px solid #ffb000;
             border-radius: 18px;
+            overflow: hidden;
             background: #123756;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px;
         }
 
-        .hero-placeholder h1 {
-            font-size: clamp(2.3rem, 5vw, 4.5rem);
-            line-height: 1.1;
-            text-transform: uppercase;
-        }
-
-        .hero-placeholder span {
-            color: #ff6a00;
+        .hero-image img {
+            width: 100%;
             display: block;
         }
 
@@ -102,17 +90,19 @@
             border: 1px solid #ffb000;
             border-radius: 18px;
             background: #123756;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 30px;
         }
 
-        .photo-placeholder p {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1rem;
+        .photo-placeholder img {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
         }
 
         .text-box h2 {
@@ -319,15 +309,22 @@
             background: #0b2a44;
             padding: 75px 7%;
             border-bottom: 2px solid #ff6a00;
-            text-align: center;
+        }
+
+        .cta-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
         }
 
         .cta-box {
-            max-width: 950px;
-            margin: auto;
             background: rgba(255, 255, 255, 0.08);
             padding: 50px;
             border-radius: 16px;
+            text-align: center;
         }
 
         .cta-box h2 {
@@ -350,7 +347,8 @@
             .intro-grid,
             .promise-grid,
             .form-grid,
-            .process-grid {
+            .process-grid,
+            .cta-grid {
                 grid-template-columns: 1fr;
                 text-align: center;
             }
@@ -381,11 +379,8 @@
     </header>
 
     <section class="hero">
-        <div class="hero-placeholder">
-            <h1>
-                Apply
-                <span>With Confidence</span>
-            </h1>
+        <div class="hero-image">
+            <img src="images/apply-hero.png" alt="Apply with confidence at Joe's Excellent Events and Management">
         </div>
     </section>
 
@@ -395,7 +390,7 @@
             <div class="intro-grid">
 
                 <div class="photo-placeholder">
-                    <p>Application Photograph Placeholder</p>
+                    <img src="images/application-intro.png" alt="Application journey begins here">
                 </div>
 
                 <div class="text-box">
@@ -543,19 +538,27 @@
                 </div>
 
                 <div class="photo-placeholder">
-                    <p>Candidate Promise Photograph Placeholder</p>
+                    <img src="images/candidate-promise.png" alt="Candidate promise and shared support">
                 </div>
 
             </div>
         </section>
 
         <section class="cta-section">
-            <div class="cta-box">
-                <h2>Take The <span>Next Step Today</span></h2>
+            <div class="cta-grid">
 
-                <p>
-                    Your future starts with one confident step. Complete your application and begin your journey with Joe’s Excellent Events & Management.
-                </p>
+                <div class="photo-placeholder">
+                    <img src="images/take-next-step.png" alt="Take the next step towards opportunity">
+                </div>
+
+                <div class="cta-box">
+                    <h2>Take The <span>Next Step Today</span></h2>
+
+                    <p>
+                        Your future starts with one confident step. Complete your application and begin your journey with Joe’s Excellent Events & Management.
+                    </p>
+                </div>
+
             </div>
         </section>
 
