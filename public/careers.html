@@ -56,28 +56,17 @@
             border-bottom: 2px solid #ff6a00;
         }
 
-        .hero-placeholder {
+        .hero-image {
             max-width: 1200px;
-            min-height: 320px;
             margin: auto;
             border: 1px solid #ffb000;
             border-radius: 18px;
+            overflow: hidden;
             background: #123756;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px;
         }
 
-        .hero-placeholder h1 {
-            font-size: clamp(2.3rem, 5vw, 4.5rem);
-            line-height: 1.1;
-            text-transform: uppercase;
-        }
-
-        .hero-placeholder span {
-            color: #ff6a00;
+        .hero-image img {
+            width: 100%;
             display: block;
         }
 
@@ -101,17 +90,19 @@
             border: 1px solid #ffb000;
             border-radius: 18px;
             background: #123756;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 30px;
         }
 
-        .photo-placeholder p {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1rem;
+        .photo-placeholder img {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
         }
 
         .text-box h2 {
@@ -184,46 +175,37 @@
             max-width: 1100px;
             margin: auto;
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 30px;
-        }
-
-        .opportunity-card {
-            background: #13283b;
-            padding: 28px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 176, 0, 0.25);
-        }
-
-        .card-placeholder {
-            width: 100%;
-            min-height: 180px;
-            background: #123756;
-            border: 1px solid rgba(255, 176, 0, 0.55);
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
             align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
         }
 
-        .card-placeholder p {
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 700;
+        .opportunity-list {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 34px;
+            border-radius: 14px;
         }
 
-        .opportunity-card h3 {
+        .opportunity-list h2 {
+            font-size: 2rem;
+            line-height: 1.2;
+            margin-bottom: 18px;
+        }
+
+        .opportunity-list span {
             color: #ff6a00;
-            margin-bottom: 12px;
-            font-size: 1.15rem;
         }
 
-        .opportunity-card p {
-            color: #f2f2f2;
-            font-size: 0.95rem;
+        .opportunity-list ul {
+            list-style: none;
+            margin-top: 18px;
+        }
+
+        .opportunity-list li {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
 
         .qualities-section {
@@ -274,28 +256,36 @@
         .pathway-section {
             background: #0b2a44;
             padding: 80px 7%;
-            text-align: center;
         }
 
-        .pathway-section h2 {
+        .pathway-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
+        }
+
+        .pathway-box h2 {
             color: #ff6a00;
             font-size: 2.6rem;
             margin-bottom: 15px;
         }
 
-        .pathway-grid {
-            max-width: 1100px;
-            margin: 40px auto 0;
+        .pathway-steps {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
+            gap: 18px;
+            margin-top: 30px;
         }
 
         .pathway-card {
             background: #13283b;
-            padding: 30px 22px;
+            padding: 24px 16px;
             border-radius: 14px;
             border: 1px solid rgba(255, 176, 0, 0.25);
+            text-align: center;
         }
 
         .pathway-card span {
@@ -322,9 +312,16 @@
             text-align: center;
         }
 
-        .cta-box {
-            max-width: 950px;
+        .cta-grid {
+            max-width: 1100px;
             margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
+        }
+
+        .cta-box {
             background: rgba(255, 255, 255, 0.08);
             padding: 50px;
             border-radius: 16px;
@@ -359,10 +356,12 @@
 
         @media (max-width: 900px) {
             .intro-grid,
-            .qualities-grid,
             .why-grid,
             .opportunities-grid,
-            .pathway-grid {
+            .qualities-grid,
+            .pathway-grid,
+            .cta-grid,
+            .pathway-steps {
                 grid-template-columns: 1fr;
                 text-align: center;
             }
@@ -389,11 +388,8 @@
     </header>
 
     <section class="hero">
-        <div class="hero-placeholder">
-            <h1>
-                Build Your Future
-                <span>With Confidence</span>
-            </h1>
+        <div class="hero-image">
+            <img src="images/careers-hero.png" alt="Careers at Joe's Excellent Events and Management">
         </div>
     </section>
 
@@ -403,7 +399,7 @@
             <div class="intro-grid">
 
                 <div class="photo-placeholder">
-                    <p>Careers Photograph Placeholder</p>
+                    <img src="images/careers-intro.png" alt="Career growth and leadership development">
                 </div>
 
                 <div class="text-box">
@@ -459,53 +455,25 @@
         </section>
 
         <section class="opportunities-section">
-            <div class="section-heading">
-                <h2>Career Opportunities</h2>
-                <p>
-                    Our opportunities are designed to support people who want to build confidence, gain experience and contribute to professional service delivery.
-                </p>
-            </div>
-
             <div class="opportunities-grid">
 
-                <div class="opportunity-card">
-                    <div class="card-placeholder">
-                        <p>Event Support Photograph Placeholder</p>
-                    </div>
-                    <h3>Event Support</h3>
-                    <p>
-                        Support the planning, organisation and delivery of professional events while developing confidence and teamwork skills.
-                    </p>
+                <div class="photo-placeholder">
+                    <img src="images/career-opportunities.png" alt="Career opportunities at Joe's Excellent Events and Management">
                 </div>
 
-                <div class="opportunity-card">
-                    <div class="card-placeholder">
-                        <p>Customer Engagement Photograph Placeholder</p>
-                    </div>
-                    <h3>Customer Engagement</h3>
-                    <p>
-                        Help businesses connect with people through positive communication, professional service and strong customer support.
-                    </p>
-                </div>
+                <div class="opportunity-list">
+                    <h2>Career <span>Opportunities</span></h2>
 
-                <div class="opportunity-card">
-                    <div class="card-placeholder">
-                        <p>Brand Representation Photograph Placeholder</p>
-                    </div>
-                    <h3>Brand Representation</h3>
                     <p>
-                        Represent brands with confidence, professionalism and care while helping organisations build trust with their audiences.
+                        Our opportunities are designed to support people who want to build confidence, gain experience and contribute to professional service delivery.
                     </p>
-                </div>
 
-                <div class="opportunity-card">
-                    <div class="card-placeholder">
-                        <p>Leadership Development Photograph Placeholder</p>
-                    </div>
-                    <h3>Leadership Development</h3>
-                    <p>
-                        Develop responsibility, confidence and leadership potential through structured guidance and practical experience.
-                    </p>
+                    <ul>
+                        <li>Event Support</li>
+                        <li>Customer Engagement</li>
+                        <li>Brand Representation</li>
+                        <li>Leadership Development</li>
+                    </ul>
                 </div>
 
             </div>
@@ -531,56 +499,74 @@
                 </div>
 
                 <div class="photo-placeholder">
-                    <p>Candidate Qualities Photograph Placeholder</p>
+                    <img src="images/candidate-qualities.png" alt="Candidate qualities and professional development">
                 </div>
 
             </div>
         </section>
 
         <section class="pathway-section">
-            <h2>Career Development Pathway</h2>
-            <p>
-                Our pathway is designed to help people build confidence, gain experience and develop leadership skills step by step.
-            </p>
-
             <div class="pathway-grid">
 
-                <div class="pathway-card">
-                    <span>1</span>
-                    <h3>Learn</h3>
-                    <p>Gain knowledge, confidence and understanding through support and practical experience.</p>
+                <div class="photo-placeholder">
+                    <img src="images/career-development-pathway.png" alt="Career development pathway">
                 </div>
 
-                <div class="pathway-card">
-                    <span>2</span>
-                    <h3>Support</h3>
-                    <p>Contribute to client work, events, campaigns and professional service delivery.</p>
-                </div>
+                <div class="pathway-box">
+                    <h2>Career Development Pathway</h2>
+                    <p>
+                        Our pathway is designed to help people build confidence, gain experience and develop leadership skills step by step.
+                    </p>
 
-                <div class="pathway-card">
-                    <span>3</span>
-                    <h3>Lead</h3>
-                    <p>Build responsibility, communication skills and the confidence to guide others.</p>
-                </div>
+                    <div class="pathway-steps">
 
-                <div class="pathway-card">
-                    <span>4</span>
-                    <h3>Grow</h3>
-                    <p>Move forward with stronger skills, stronger confidence and greater opportunity.</p>
+                        <div class="pathway-card">
+                            <span>1</span>
+                            <h3>Learn</h3>
+                            <p>Gain knowledge, confidence and understanding through support and practical experience.</p>
+                        </div>
+
+                        <div class="pathway-card">
+                            <span>2</span>
+                            <h3>Support</h3>
+                            <p>Contribute to client work, events, campaigns and professional service delivery.</p>
+                        </div>
+
+                        <div class="pathway-card">
+                            <span>3</span>
+                            <h3>Lead</h3>
+                            <p>Build responsibility, communication skills and the confidence to guide others.</p>
+                        </div>
+
+                        <div class="pathway-card">
+                            <span>4</span>
+                            <h3>Grow</h3>
+                            <p>Move forward with stronger skills, stronger confidence and greater opportunity.</p>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
         </section>
 
         <section class="cta-section">
-            <div class="cta-box">
-                <h2>Start Your <span>Journey Today</span></h2>
+            <div class="cta-grid">
 
-                <p>
-                    If you are ready to build confidence, develop professional skills and grow through opportunity, Joe’s Excellent Events & Management would like to hear from you.
-                </p>
+                <div class="cta-box">
+                    <h2>Start Your <span>Journey Today</span></h2>
 
-                <a href="apply.html" class="btn">Apply Now</a>
+                    <p>
+                        If you are ready to build confidence, develop professional skills and grow through opportunity, Joe’s Excellent Events & Management would like to hear from you.
+                    </p>
+
+                    <a href="apply.html" class="btn">Apply Now</a>
+                </div>
+
+                <div class="photo-placeholder">
+                    <img src="images/start-your-journey.png" alt="Start your journey with Joe's Excellent Events and Management">
+                </div>
+
             </div>
         </section>
 
