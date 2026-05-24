@@ -56,19 +56,32 @@
             border-bottom: 2px solid #ff6a00;
         }
 
-        .hero img {
+        .hero img,
+        .wide-image img {
             width: 100%;
             max-width: 1200px;
             margin: auto;
             display: block;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            background: #020b14;
         }
 
-        .intro-section {
+        .intro-section,
+        .why-section,
+        .cta-section {
             background: #0b2a44;
             padding: 75px 7%;
         }
 
-        .intro-grid {
+        .services-section,
+        .work-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
+
+        .intro-grid,
+        .why-grid {
             max-width: 1100px;
             margin: auto;
             display: grid;
@@ -77,7 +90,8 @@
             align-items: center;
         }
 
-        .service-image-placeholder {
+        .service-image-placeholder,
+        .why-placeholder {
             width: 100%;
             min-height: 260px;
             border: 1px solid #ffb000;
@@ -89,13 +103,13 @@
             justify-content: center;
         }
 
-        .service-image-placeholder img {
+        .service-image-placeholder img,
+        .why-placeholder img {
             width: 100%;
             height: 100%;
             min-height: 260px;
             object-fit: contain;
             display: block;
-            border-radius: 18px;
             background: #020b14;
         }
 
@@ -112,13 +126,18 @@
             color: #ffffff;
         }
 
-        .heading-orange {
+        .heading-orange,
+        .why-text span,
+        .cta-box span {
             display: block;
             color: #ff6a00;
         }
 
-        .intro-text p {
-            margin-bottom: 18px;
+        .intro-text p,
+        .service-card p,
+        .why-text p,
+        .cta-box p,
+        .work-section p {
             color: #f2f2f2;
         }
 
@@ -133,18 +152,14 @@
             margin-top: 10px;
         }
 
-        .services-section {
-            background: #061726;
-            padding: 80px 7%;
-        }
-
         .section-heading {
             text-align: center;
             max-width: 900px;
             margin: 0 auto 50px;
         }
 
-        .section-heading h2 {
+        .section-heading h2,
+        .work-section h2 {
             color: #ff6a00;
             font-size: clamp(2rem, 4vw, 3rem);
             margin-bottom: 15px;
@@ -170,87 +185,25 @@
             width: 100%;
             height: 220px;
             min-height: 220px;
-            background: #123756;
+            background: #020b14;
             border: 1px solid rgba(255, 176, 0, 0.55);
             border-radius: 10px;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .card-image.image-filled {
-            height: 220px;
-            min-height: 220px;
-            padding: 0;
             overflow: hidden;
-            background: #020b14;
         }
 
-        .card-image.image-filled img {
+        .card-image img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            object-position: center;
             display: block;
             background: #020b14;
-        }
-
-        .card-image p {
-            color: #ffffff;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
         }
 
         .service-card h3 {
             color: #ff6a00;
             margin-bottom: 12px;
             font-size: 1.15rem;
-        }
-
-        .service-card p {
-            color: #f2f2f2;
-            font-size: 0.95rem;
-        }
-
-        .why-section {
-            background: #0b2a44;
-            padding: 80px 7%;
-        }
-
-        .why-grid {
-            max-width: 1100px;
-            margin: auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 55px;
-            align-items: center;
-        }
-
-        .why-placeholder {
-            width: 100%;
-            min-height: 260px;
-            background: #123756;
-            border: 1px solid #ffb000;
-            border-radius: 18px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .why-placeholder img {
-            width: 100%;
-            height: 100%;
-            min-height: 260px;
-            object-fit: contain;
-            object-position: center;
-            display: block;
-            background: #020b14;
         }
 
         .why-text {
@@ -262,14 +215,6 @@
         .why-text h2 {
             font-size: 2rem;
             line-height: 1.2;
-            margin-bottom: 18px;
-        }
-
-        .why-text span {
-            color: #ff6a00;
-        }
-
-        .why-text p {
             margin-bottom: 18px;
         }
 
@@ -285,15 +230,12 @@
         }
 
         .work-section {
-            background: #061726;
-            padding: 80px 7%;
             text-align: center;
         }
 
-        .work-section h2 {
-            color: #ff6a00;
-            font-size: 2.6rem;
-            margin-bottom: 15px;
+        .wide-image {
+            max-width: 1100px;
+            margin: 0 auto 45px;
         }
 
         .work-grid {
@@ -329,15 +271,13 @@
         }
 
         .cta-section {
-            background: #0b2a44;
-            padding: 75px 7%;
             border-bottom: 2px solid #ff6a00;
             text-align: center;
         }
 
         .cta-box {
             max-width: 950px;
-            margin: auto;
+            margin: 45px auto 0;
             background: rgba(255, 255, 255, 0.08);
             padding: 50px;
             border-radius: 16px;
@@ -346,10 +286,6 @@
         .cta-box h3 {
             font-size: clamp(2rem, 4vw, 3rem);
             margin-bottom: 18px;
-        }
-
-        .cta-box span {
-            color: #ff6a00;
         }
 
         footer {
@@ -361,14 +297,11 @@
 
         @media (max-width: 900px) {
             .intro-grid,
-            .why-grid {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
+            .why-grid,
             .services-grid,
             .work-grid {
                 grid-template-columns: 1fr;
+                text-align: center;
             }
 
             nav {
@@ -393,7 +326,7 @@
     </header>
 
     <section class="hero">
-        <img src="images/services3.png" alt="Joe's Excellent Events and Management Our Services">
+        <img src="images/services-hero.png" alt="Joe's Excellent Events and Management Our Services">
     </section>
 
     <main>
@@ -402,7 +335,7 @@
             <div class="intro-grid">
 
                 <div class="service-image-placeholder">
-                    <img src="images/professional.png" alt="Professional services overview">
+                    <img src="images/professional-services.png" alt="Professional services built around people">
                 </div>
 
                 <div class="intro-text">
@@ -432,7 +365,7 @@
             <div class="services-grid">
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
+                    <div class="card-image">
                         <img src="images/event-management.png" alt="Event Management">
                     </div>
                     <h3>Event Management</h3>
@@ -440,7 +373,7 @@
                 </div>
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
+                    <div class="card-image">
                         <img src="images/customer-acquisition.png" alt="Customer Acquisition">
                     </div>
                     <h3>Customer Acquisition</h3>
@@ -448,7 +381,7 @@
                 </div>
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
+                    <div class="card-image">
                         <img src="images/brand-representation.png" alt="Brand Representation">
                     </div>
                     <h3>Brand Representation</h3>
@@ -456,7 +389,7 @@
                 </div>
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
+                    <div class="card-image">
                         <img src="images/campaign-strategy.png" alt="Campaign Strategy">
                     </div>
                     <h3>Campaign Strategy</h3>
@@ -464,7 +397,7 @@
                 </div>
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
+                    <div class="card-image">
                         <img src="images/leadership-development.png" alt="Leadership Development">
                     </div>
                     <h3>Leadership Development</h3>
@@ -472,8 +405,8 @@
                 </div>
 
                 <div class="service-card">
-                    <div class="card-image image-filled">
-                        <img src="images/client-relationship.png" alt="Client Relationship Management">
+                    <div class="card-image">
+                        <img src="images/client-relationship-management.png" alt="Client Relationship Management">
                     </div>
                     <h3>Client Relationship Management</h3>
                     <p>We strengthen client relationships through professional service, trusted communication and a commitment to delivering exceptional results.</p>
@@ -486,7 +419,7 @@
             <div class="why-grid">
 
                 <div class="why-placeholder">
-                    <img src="images/choose.png" alt="Why Choose Our Services">
+                    <img src="images/why-choose-our-services.png" alt="Why Choose Our Services">
                 </div>
 
                 <div class="why-text">
@@ -509,8 +442,16 @@
         </section>
 
         <section class="work-section">
+
+            <div class="wide-image">
+                <img src="images/how-we-work.png" alt="How We Work">
+            </div>
+
             <h2>How We Work</h2>
-            <p>Our professional approach combines strategic planning, clear communication and reliable delivery to create trusted support for every client and brand we work with. At Joe’s Excellent Events & Management, we focus on building confidence, strengthening relationships and delivering results through a process built on professionalism and excellence.</p>
+
+            <p>
+                Our professional approach combines strategic planning, clear communication and reliable delivery to create trusted support for every client and brand we work with. At Joe’s Excellent Events & Management, we focus on building confidence, strengthening relationships and delivering results through a process built on professionalism and excellence.
+            </p>
 
             <div class="work-grid">
 
@@ -542,6 +483,11 @@
         </section>
 
         <section class="cta-section">
+
+            <div class="wide-image">
+                <img src="images/services-cta.png" alt="Let's achieve more together in Newcastle upon Tyne">
+            </div>
+
             <div class="cta-box">
                 <h3>Your Next Opportunity Starts Here <span>Let’s Build Success Together</span></h3>
 
