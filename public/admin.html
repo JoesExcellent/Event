@@ -139,7 +139,7 @@
         }
 
         textarea {
-            min-height: 130px;
+            min-height: 180px;
             resize: vertical;
         }
 
@@ -264,7 +264,6 @@
         }
 
         #loginMessage,
-        #formMessage,
         #adminInfo {
             font-weight: 700;
             margin-top: 12px;
@@ -276,11 +275,12 @@
             top: 20px;
             right: 20px;
             z-index: 9999;
+            max-width: 520px;
         }
 
         .toast {
-            padding: 15px 20px;
-            margin-bottom: 10px;
+            padding: 18px 24px;
+            margin-bottom: 12px;
             border-radius: 10px;
             color: #ffffff;
             font-weight: 700;
@@ -347,6 +347,12 @@
             .btn {
                 width: 100%;
                 text-align: center;
+            }
+
+            #toastContainer {
+                left: 20px;
+                right: 20px;
+                max-width: none;
             }
         }
     </style>
@@ -453,6 +459,7 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
+
                         <tbody id="applicationsTableBody">
                             <tr>
                                 <td colspan="7">Applications will appear here after login.</td>
@@ -466,7 +473,10 @@
 
             <section class="invite-card">
                 <h2>Interview Invitation</h2>
-                <p>Use this section to prepare an interview invitation for a selected candidate.</p>
+                <p>
+                    Select a candidate using the Interview button, then complete the interview details below.
+                    Press Send Invitation to email the candidate and update their recruitment status.
+                </p>
 
                 <div class="form-grid">
                     <div class="form-group">
@@ -490,8 +500,21 @@
                     </div>
 
                     <div class="form-group full">
-                        <label for="interviewMessage">Message</label>
-                        <textarea id="interviewMessage">Thank you for your application. We would like to invite you to attend an interview with Joe’s Excellent Events & Management.</textarea>
+                        <label for="interviewMessage">Email Invitation Template</label>
+                        <textarea id="interviewMessage">Dear Candidate,
+
+Thank you for your application to Joe's Excellent Events & Management.
+
+We are pleased to invite you to attend an interview.
+
+We would like to discuss your application, experience, skills and interest in joining our team.
+
+Please reply to confirm that you are able to attend.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management</textarea>
                     </div>
                 </div>
 
@@ -584,7 +607,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="charts.js?v=29"></script>
-    <script src="admin.js?v=30"></script>
+    <script src="admin.js?v=31"></script>
 
 </body>
 </html>
