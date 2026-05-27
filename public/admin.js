@@ -8,6 +8,18 @@ let selectedContactMessageId = null;
 let allApplications = [];
 let allContactMessages = [];
 
+const ATS_STATUSES = [
+    "New",
+    "Screening",
+    "Shortlisted",
+    "Interview Invited",
+    "Interview Completed",
+    "Offer Made",
+    "Hired",
+    "Rejected",
+    "Archived"
+];
+
 const loginBox = document.getElementById("loginBox");
 const dashboardContent = document.getElementById("dashboardContent");
 const loginMessage = document.getElementById("loginMessage");
@@ -26,18 +38,6 @@ const applicationsByRole = document.getElementById("applicationsByRole");
 const statusBreakdown = document.getElementById("statusBreakdown");
 const newThisWeek = document.getElementById("newThisWeek");
 const interviewPipeline = document.getElementById("interviewPipeline");
-
-const ATS_STATUSES = [
-    "New",
-    "Screening",
-    "Shortlisted",
-    "Interview Invited",
-    "Interview Completed",
-    "Offer Made",
-    "Hired",
-    "Rejected",
-    "Archived"
-];
 
 function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
@@ -84,7 +84,7 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
-function escapeForAttribute(value) {
+function escapeQuotes(value) {
     return String(value || "")
         .replace(/\\/g, "\\\\")
         .replace(/'/g, "\\'")
@@ -109,24 +109,6 @@ function formatDate(dateString) {
     });
 }
 
-function formatDateTime(dateString) {
-    if (!dateString) return "N/A";
-
-    const date = new Date(dateString);
-
-    if (Number.isNaN(date.getTime())) {
-        return "N/A";
-    }
-
-    return date.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-}
-
 function normaliseStatus(status) {
     return status || "New";
 }
@@ -140,10 +122,21 @@ function buildStatusOptions(currentStatus) {
     }).join("");
 }
 
-function getStatusBadge(status) {
-    const cleanStatus = normaliseStatus(status);
+function showLoggedInInfo() {
+    if (adminInfo) {
+        adminInfo.innerHTML = `
+            <h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>
+        `;
+    }
 
-    return `<strong>${escapeHtml(cleanStatus)}</strong>`;
+    if (permissionsInfo) {
+        permissionsInfo.innerHTML = `
+            <strong>Permissions:</strong>
+            ${adminRole === "viewer"
+                ? "View-only access enabled."
+                : "Full recruitment management access enabled."}
+        `;
+    }
 }
 
 async function loginAdmin() {
@@ -192,23 +185,6 @@ async function loginAdmin() {
         loginMessage.textContent = error.message || "Login failed.";
 
         showToast(error.message || "Login failed.", "error");
-    }
-}
-
-function showLoggedInInfo() {
-    if (adminInfo) {
-        adminInfo.innerHTML = `
-            <h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>
-        `;
-    }
-
-    if (permissionsInfo) {
-        permissionsInfo.innerHTML = `
-            <strong>Permissions:</strong>
-            ${adminRole === "viewer"
-                ? "View-only access enabled."
-                : "Full recruitment management access enabled."}
-        `;
     }
 }
 
@@ -266,15 +242,15 @@ function renderApplications(applications) {
     applications.forEach(application => {
         const tr = document.createElement("tr");
 
-        const safeId = escapeForAttribute(application.id);
-        const safeName = escapeForAttribute(application.fullName);
-        const safeEmail = escapeForAttribute(application.email);
-        const safePosition = escapeForAttribute(application.position);
-        const safePhone = escapeForAttribute(application.phone);
-        const safeAddress = escapeForAttribute(application.address);
-        const safeAvailability = escapeForAttribute(application.availability);
-        const safeMessage = escapeForAttribute(application.message);
-        const safeNotes = escapeForAttribute(application.notes);
+        const id = escapeQuotes(application.id);
+        const fullName = escapeQuotes(application.fullName);
+        const email = escapeQuotes(application.email);
+        const phone = escapeQuotes(application.phone);
+        const address = escapeQuotes(application.address);
+        const position = escapeQuotes(application.position);
+        const availability = escapeQuotes(application.availability);
+        const message = escapeQuotes(application.message);
+        const notes = escapeQuotes(application.notes);
 
         tr.innerHTML = `
             <td>${escapeHtml(application.fullName || "")}</td>
@@ -282,10 +258,9 @@ function renderApplications(applications) {
             <td>${escapeHtml(application.position || "")}</td>
             <td>${formatDate(application.createdAt)}</td>
             <td>
-                <select onchange="updateApplicationStatus('${safeId}', this.value)">
+                <select onchange="updateApplicationStatus('${id}', this.value)">
                     ${buildStatusOptions(application.status)}
                 </select>
-                <div>${getStatusBadge(application.status)}</div>
             </td>
             <td>
                 ${application.cv
@@ -293,31 +268,23 @@ function renderApplications(applications) {
                     : "No CV"}
             </td>
             <td>
-                <button onclick="selectCandidate('${safeId}', '${safeName}')">
-                    Interview
-                </button>
+                <button onclick="selectCandidate('${id}', '${fullName}')">Interview</button>
 
                 <button onclick="viewCandidate(
-                    '${safeId}',
-                    '${safeName}',
-                    '${safeEmail}',
-                    '${safePosition}',
-                    '${safePhone}',
-                    '${safeAddress}',
-                    '${safeAvailability}',
-                    '${safeMessage}',
-                    '${safeNotes}'
-                )">
-                    View
-                </button>
+                    '${id}',
+                    '${fullName}',
+                    '${email}',
+                    '${phone}',
+                    '${address}',
+                    '${position}',
+                    '${availability}',
+                    '${message}',
+                    '${notes}'
+                )">View</button>
 
-                <button onclick="quickRejectApplication('${safeId}')">
-                    Reject
-                </button>
+                <button onclick="quickRejectApplication('${id}')">Reject</button>
 
-                <button onclick="deleteApplication('${safeId}')">
-                    Delete
-                </button>
+                <button onclick="deleteApplication('${id}')">Delete</button>
             </td>
         `;
 
@@ -325,16 +292,16 @@ function renderApplications(applications) {
     });
 }
 
-function viewCandidate(id, name, email, position, phone, address, availability, message, notes) {
+function viewCandidate(id, fullName, email, phone, address, position, availability, message, notes) {
     selectedApplicationId = id;
 
     alert(
         `Candidate Profile\n\n` +
-        `Name: ${name || "N/A"}\n\n` +
+        `Name: ${fullName || "N/A"}\n\n` +
         `Email: ${email || "N/A"}\n\n` +
         `Phone: ${phone || "N/A"}\n\n` +
-        `Position: ${position || "N/A"}\n\n` +
         `Address: ${address || "N/A"}\n\n` +
+        `Position: ${position || "N/A"}\n\n` +
         `Availability: ${availability || "N/A"}\n\n` +
         `Application Message:\n${message || "N/A"}\n\n` +
         `Admin Notes:\n${notes || "No notes yet."}`
@@ -346,21 +313,20 @@ function selectCandidate(id, fullName) {
 
     const candidateNameInput = document.getElementById("candidateName");
     const selectedCandidateInput = document.getElementById("selectedCandidate");
+    const starRating = document.getElementById("starRating");
+    const candidateNotes = document.getElementById("candidateNotes");
 
     if (candidateNameInput) {
-        candidateNameInput.value = fullName;
+        candidateNameInput.value = fullName || "";
     }
 
     if (selectedCandidateInput) {
-        selectedCandidateInput.value = fullName;
+        selectedCandidateInput.value = fullName || "";
     }
 
     const selectedApplication = allApplications.find(app => app.id === id);
 
     if (selectedApplication) {
-        const starRating = document.getElementById("starRating");
-        const candidateNotes = document.getElementById("candidateNotes");
-
         if (starRating) {
             starRating.value = selectedApplication.rating || "";
         }
@@ -418,38 +384,6 @@ async function quickRejectApplication(id) {
     await updateApplicationStatus(id, "Rejected");
 }
 
-async function deleteApplication(id) {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot delete applications.", "error");
-        return;
-    }
-
-    if (!confirm("Delete this application?")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/api/applications/${id}`, {
-            method: "DELETE",
-            headers: getAuthHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Delete failed.");
-        }
-
-        showToast("Application deleted.", "success");
-
-        await loadApplications();
-
-    } catch (error) {
-        console.error(error);
-        showToast(error.message || "Delete failed.", "error");
-    }
-}
-
 async function saveCandidateNotes() {
     if (!selectedApplicationId) {
         showToast("Please select a candidate first.", "error");
@@ -487,6 +421,38 @@ async function saveCandidateNotes() {
     } catch (error) {
         console.error(error);
         showToast(error.message || "Failed to save notes.", "error");
+    }
+}
+
+async function deleteApplication(id) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot delete applications.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this application?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/applications/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Delete failed.");
+        }
+
+        showToast("Application deleted.", "success");
+
+        await loadApplications();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Delete failed.", "error");
     }
 }
 
@@ -594,12 +560,12 @@ function renderContactMessages(messages) {
     messages.forEach(message => {
         const tr = document.createElement("tr");
 
-        const safeId = escapeForAttribute(message.id);
-        const safeName = escapeForAttribute(message.name);
-        const safeEmail = escapeForAttribute(message.email);
-        const safeSubject = escapeForAttribute(message.subject);
-        const safeMessage = escapeForAttribute(message.message);
-        const safePhone = escapeForAttribute(message.phone);
+        const id = escapeQuotes(message.id);
+        const name = escapeQuotes(message.name);
+        const email = escapeQuotes(message.email);
+        const phone = escapeQuotes(message.phone);
+        const subject = escapeQuotes(message.subject);
+        const text = escapeQuotes(message.message);
 
         tr.innerHTML = `
             <td>${escapeHtml(message.name || "")}</td>
@@ -609,24 +575,11 @@ function renderContactMessages(messages) {
             <td>${formatDate(message.createdAt)}</td>
             <td>${message.read ? "Read" : "New"}</td>
             <td>
-                <button onclick="viewContactMessage(
-                    '${safeId}',
-                    '${safeName}',
-                    '${safeEmail}',
-                    '${safePhone}',
-                    '${safeSubject}',
-                    '${safeMessage}'
-                )">
-                    View
-                </button>
+                <button onclick="viewContactMessage('${id}', '${name}', '${email}', '${phone}', '${subject}', '${text}')">View</button>
 
-                <button onclick="markMessageRead('${safeId}')">
-                    Mark Read
-                </button>
+                <button onclick="markMessageRead('${id}')">Mark Read</button>
 
-                <button onclick="deleteContactMessage('${safeId}')">
-                    Delete
-                </button>
+                <button onclick="deleteContactMessage('${id}')">Delete</button>
             </td>
         `;
 
@@ -721,10 +674,6 @@ function updateStats(applications) {
         normaliseStatus(app.status).toLowerCase() === "hired"
     ).length;
 
-    const rejectedCount = applications.filter(app =>
-        normaliseStatus(app.status).toLowerCase() === "rejected"
-    ).length;
-
     const roles = new Set(
         applications
             .map(app => app.position || "")
@@ -740,7 +689,7 @@ function updateStats(applications) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const thisWeekCount = applications.filter(app => {
+    const weekCount = applications.filter(app => {
         if (!app.createdAt) return false;
         const date = new Date(app.createdAt);
         return !Number.isNaN(date.getTime()) && date >= sevenDaysAgo;
@@ -753,7 +702,7 @@ function updateStats(applications) {
 
     if (applicationsByRole) applicationsByRole.textContent = roles.size;
     if (statusBreakdown) statusBreakdown.textContent = statuses.size;
-    if (newThisWeek) newThisWeek.textContent = thisWeekCount;
+    if (newThisWeek) newThisWeek.textContent = weekCount;
     if (interviewPipeline) interviewPipeline.textContent = interviewCount;
 
     const stats = document.getElementById("stats");
@@ -765,8 +714,7 @@ function updateStats(applications) {
                 ${total} total applications,
                 ${newCount} new,
                 ${interviewCount} in interview,
-                ${hiredCount} hired,
-                ${rejectedCount} rejected.
+                ${hiredCount} hired.
             </p>
         `;
     }
@@ -797,8 +745,8 @@ function exportApplicationsCSV() {
     });
 
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
+
     link.href = url;
     link.download = "applications.csv";
 
