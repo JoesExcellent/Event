@@ -70,19 +70,20 @@ body {
 .contact-hero-image {
     width: 100%;
     max-width: 1100px;
-    height: 360px;
+    height: 300px;
     margin: auto;
     border-radius: 24px;
     overflow: hidden;
     border: 1px solid #ff7a00;
+    background: #010b16;
     box-shadow: 0 0 35px rgba(0,0,0,0.45);
 }
 
 .contact-hero-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
+    object-position: center;
     display: block;
 }
 
@@ -341,7 +342,7 @@ body {
 
     .contact-hero-image {
         max-width: 100%;
-        height: 230px;
+        height: 220px;
     }
 
     .intro-text h2,
