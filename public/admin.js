@@ -5,6 +5,9 @@ let adminRole = localStorage.getItem("adminRole") || "";
 let selectedApplicationId = null;
 let selectedContactMessageId = null;
 
+let allApplications = [];
+let allContactMessages = [];
+
 const loginBox = document.getElementById("loginBox");
 const dashboardContent = document.getElementById("dashboardContent");
 const loginMessage = document.getElementById("loginMessage");
@@ -19,12 +22,32 @@ const newApplications = document.getElementById("newApplications");
 const interviewApplications = document.getElementById("interviewApplications");
 const hiredApplications = document.getElementById("hiredApplications");
 
-function showToast(message, type = "info") {
+const applicationsByRole = document.getElementById("applicationsByRole");
+const statusBreakdown = document.getElementById("statusBreakdown");
+const newThisWeek = document.getElementById("newThisWeek");
+const interviewPipeline = document.getElementById("interviewPipeline");
 
+const ATS_STATUSES = [
+    "New",
+    "Screening",
+    "Shortlisted",
+    "Interview Invited",
+    "Interview Completed",
+    "Offer Made",
+    "Hired",
+    "Rejected",
+    "Archived"
+];
+
+function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
 
-    const toast = document.createElement("div");
+    if (!toastContainer) {
+        alert(message);
+        return;
+    }
 
+    const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
 
@@ -36,21 +59,94 @@ function showToast(message, type = "info") {
 }
 
 function setDashboardVisible(show) {
+    if (loginBox) {
+        loginBox.style.display = show ? "none" : "block";
+    }
 
-    loginBox.style.display = show ? "none" : "block";
-    dashboardContent.style.display = show ? "block" : "none";
+    if (dashboardContent) {
+        dashboardContent.style.display = show ? "block" : "none";
+    }
 }
 
 function getAuthHeaders() {
-
     return {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${authToken}`
     };
 }
 
-async function loginAdmin() {
+function escapeHtml(value) {
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
+function escapeForAttribute(value) {
+    return String(value || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/"/g, "&quot;")
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "");
+}
+
+function formatDate(dateString) {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return "N/A";
+    }
+
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return "N/A";
+    }
+
+    return date.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function normaliseStatus(status) {
+    return status || "New";
+}
+
+function buildStatusOptions(currentStatus) {
+    const activeStatus = normaliseStatus(currentStatus);
+
+    return ATS_STATUSES.map(status => {
+        const selected = status === activeStatus ? "selected" : "";
+        return `<option value="${escapeHtml(status)}" ${selected}>${escapeHtml(status)}</option>`;
+    }).join("");
+}
+
+function getStatusBadge(status) {
+    const cleanStatus = normaliseStatus(status);
+
+    return `<strong>${escapeHtml(cleanStatus)}</strong>`;
+}
+
+async function loginAdmin() {
     const email = document.getElementById("adminEmail").value.trim();
     const password = document.getElementById("adminPassword").value.trim();
 
@@ -58,7 +154,6 @@ async function loginAdmin() {
     loginMessage.textContent = "Logging in...";
 
     try {
-
         const response = await fetch(`${API_BASE}/admin/login`, {
             method: "POST",
             headers: {
@@ -85,37 +180,45 @@ async function loginAdmin() {
         loginMessage.style.color = "#4cd964";
         loginMessage.textContent = "Login successful.";
 
-        adminInfo.innerHTML = `
-            <h3>Logged In As: ${adminRole.toUpperCase()}</h3>
-        `;
+        showLoggedInInfo();
+        setDashboardVisible(true);
 
+        await refreshDashboard();
+
+    } catch (error) {
+        console.error(error);
+
+        loginMessage.style.color = "#ff6b6b";
+        loginMessage.textContent = error.message || "Login failed.";
+
+        showToast(error.message || "Login failed.", "error");
+    }
+}
+
+function showLoggedInInfo() {
+    if (adminInfo) {
+        adminInfo.innerHTML = `
+            <h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>
+        `;
+    }
+
+    if (permissionsInfo) {
         permissionsInfo.innerHTML = `
             <strong>Permissions:</strong>
             ${adminRole === "viewer"
                 ? "View-only access enabled."
                 : "Full recruitment management access enabled."}
         `;
-
-        setDashboardVisible(true);
-
-        await loadApplications();
-        await loadContactMessages();
-
-    } catch (error) {
-
-        console.error(error);
-
-        loginMessage.style.color = "#ff6b6b";
-        loginMessage.textContent = error.message || "Login failed.";
-
-        showToast(error.message, "error");
     }
 }
 
+async function refreshDashboard() {
+    await loadApplications();
+    await loadContactMessages();
+}
+
 async function loadApplications() {
-
     try {
-
         const response = await fetch(`${API_BASE}/api/applications`, {
             headers: getAuthHeaders()
         });
@@ -126,59 +229,93 @@ async function loadApplications() {
             throw new Error(result.message || "Failed to load applications.");
         }
 
-        renderApplications(result.applications || []);
-        updateStats(result.applications || []);
+        allApplications = result.applications || [];
+
+        renderApplications(allApplications);
+        updateStats(allApplications);
 
     } catch (error) {
-
         console.error(error);
 
-        applicationsTableBody.innerHTML = `
-            <tr>
-                <td colspan="7">Failed to load applications.</td>
-            </tr>
-        `;
+        if (applicationsTableBody) {
+            applicationsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">Failed to load applications.</td>
+                </tr>
+            `;
+        }
 
-        showToast(error.message, "error");
+        showToast(error.message || "Failed to load applications.", "error");
     }
 }
 
 function renderApplications(applications) {
+    if (!applicationsTableBody) return;
 
     if (!applications.length) {
-
         applicationsTableBody.innerHTML = `
             <tr>
                 <td colspan="7">No applications found.</td>
             </tr>
         `;
-
         return;
     }
 
     applicationsTableBody.innerHTML = "";
 
     applications.forEach(application => {
-
         const tr = document.createElement("tr");
 
+        const safeId = escapeForAttribute(application.id);
+        const safeName = escapeForAttribute(application.fullName);
+        const safeEmail = escapeForAttribute(application.email);
+        const safePosition = escapeForAttribute(application.position);
+        const safePhone = escapeForAttribute(application.phone);
+        const safeAddress = escapeForAttribute(application.address);
+        const safeAvailability = escapeForAttribute(application.availability);
+        const safeMessage = escapeForAttribute(application.message);
+        const safeNotes = escapeForAttribute(application.notes);
+
         tr.innerHTML = `
-            <td>${application.fullName || ""}</td>
-            <td>${application.email || ""}</td>
-            <td>${application.position || ""}</td>
+            <td>${escapeHtml(application.fullName || "")}</td>
+            <td>${escapeHtml(application.email || "")}</td>
+            <td>${escapeHtml(application.position || "")}</td>
             <td>${formatDate(application.createdAt)}</td>
-            <td>${application.status || "New"}</td>
+            <td>
+                <select onchange="updateApplicationStatus('${safeId}', this.value)">
+                    ${buildStatusOptions(application.status)}
+                </select>
+                <div>${getStatusBadge(application.status)}</div>
+            </td>
             <td>
                 ${application.cv
-                    ? `<a href="${application.cv}" target="_blank">Download CV</a>`
+                    ? `<a href="${escapeHtml(application.cv)}" target="_blank">Download CV</a>`
                     : "No CV"}
             </td>
             <td>
-                <button onclick="selectCandidate('${application.id}', '${escapeQuotes(application.fullName)}')">
+                <button onclick="selectCandidate('${safeId}', '${safeName}')">
                     Interview
                 </button>
 
-                <button onclick="deleteApplication('${application.id}')">
+                <button onclick="viewCandidate(
+                    '${safeId}',
+                    '${safeName}',
+                    '${safeEmail}',
+                    '${safePosition}',
+                    '${safePhone}',
+                    '${safeAddress}',
+                    '${safeAvailability}',
+                    '${safeMessage}',
+                    '${safeNotes}'
+                )">
+                    View
+                </button>
+
+                <button onclick="quickRejectApplication('${safeId}')">
+                    Reject
+                </button>
+
+                <button onclick="deleteApplication('${safeId}')">
                     Delete
                 </button>
             </td>
@@ -188,201 +325,100 @@ function renderApplications(applications) {
     });
 }
 
-async function loadContactMessages() {
-
-    try {
-
-        const response = await fetch(`${API_BASE}/api/contact-messages`, {
-            headers: getAuthHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Failed to load contact messages.");
-        }
-
-        renderContactMessages(result.messages || []);
-
-    } catch (error) {
-
-        console.error(error);
-
-        contactMessagesTableBody.innerHTML = `
-            <tr>
-                <td colspan="7">Failed to load contact messages.</td>
-            </tr>
-        `;
-
-        showToast(error.message, "error");
-    }
-}
-
-function renderContactMessages(messages) {
-
-    if (!messages.length) {
-
-        contactMessagesTableBody.innerHTML = `
-            <tr>
-                <td colspan="7">No contact messages found.</td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    contactMessagesTableBody.innerHTML = "";
-
-    messages.forEach(message => {
-
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>${message.name || ""}</td>
-            <td>${message.email || ""}</td>
-            <td>${message.phone || ""}</td>
-            <td>${message.subject || ""}</td>
-            <td>${formatDate(message.createdAt)}</td>
-            <td>${message.read ? "Read" : "New"}</td>
-            <td>
-
-                <button onclick="viewContactMessage(
-                    '${message.id}',
-                    '${escapeQuotes(message.name)}',
-                    '${escapeQuotes(message.email)}',
-                    '${escapeQuotes(message.subject)}',
-                    '${escapeQuotes(message.message)}'
-                )">
-                    View
-                </button>
-
-                <button onclick="markMessageRead('${message.id}')">
-                    Mark Read
-                </button>
-
-                <button onclick="deleteContactMessage('${message.id}')">
-                    Delete
-                </button>
-
-            </td>
-        `;
-
-        contactMessagesTableBody.appendChild(tr);
-    });
-}
-
-function viewContactMessage(id, name, email, subject, message) {
-
-    selectedContactMessageId = id;
+function viewCandidate(id, name, email, position, phone, address, availability, message, notes) {
+    selectedApplicationId = id;
 
     alert(
-        `Name: ${name}\n\n` +
-        `Email: ${email}\n\n` +
-        `Subject: ${subject}\n\n` +
-        `Message:\n${message}`
+        `Candidate Profile\n\n` +
+        `Name: ${name || "N/A"}\n\n` +
+        `Email: ${email || "N/A"}\n\n` +
+        `Phone: ${phone || "N/A"}\n\n` +
+        `Position: ${position || "N/A"}\n\n` +
+        `Address: ${address || "N/A"}\n\n` +
+        `Availability: ${availability || "N/A"}\n\n` +
+        `Application Message:\n${message || "N/A"}\n\n` +
+        `Admin Notes:\n${notes || "No notes yet."}`
     );
 }
 
-async function markMessageRead(id) {
+function selectCandidate(id, fullName) {
+    selectedApplicationId = id;
+
+    const candidateNameInput = document.getElementById("candidateName");
+    const selectedCandidateInput = document.getElementById("selectedCandidate");
+
+    if (candidateNameInput) {
+        candidateNameInput.value = fullName;
+    }
+
+    if (selectedCandidateInput) {
+        selectedCandidateInput.value = fullName;
+    }
+
+    const selectedApplication = allApplications.find(app => app.id === id);
+
+    if (selectedApplication) {
+        const starRating = document.getElementById("starRating");
+        const candidateNotes = document.getElementById("candidateNotes");
+
+        if (starRating) {
+            starRating.value = selectedApplication.rating || "";
+        }
+
+        if (candidateNotes) {
+            candidateNotes.value = selectedApplication.notes || "";
+        }
+    }
+
+    showToast(`Selected ${fullName}`, "info");
+}
+
+async function updateApplicationStatus(id, status) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot update application status.", "error");
+        await loadApplications();
+        return;
+    }
 
     try {
-
-        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
+        const response = await fetch(`${API_BASE}/api/applications/${id}`, {
             method: "PATCH",
             headers: getAuthHeaders(),
             body: JSON.stringify({
-                read: true,
-                status: "Read"
+                status
             })
         });
 
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error(result.message || "Failed to update message.");
+            throw new Error(result.message || "Failed to update status.");
         }
 
-        showToast("Message marked as read.", "success");
+        showToast(`Application moved to ${status}.`, "success");
 
-        await loadContactMessages();
+        await loadApplications();
 
     } catch (error) {
-
         console.error(error);
-
-        showToast(error.message, "error");
+        showToast(error.message || "Failed to update status.", "error");
     }
 }
 
-async function deleteContactMessage(id) {
-
+async function quickRejectApplication(id) {
     if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot delete messages.", "error");
+        showToast("Viewer accounts cannot reject applications.", "error");
         return;
     }
 
-    if (!confirm("Delete this contact message?")) {
+    if (!confirm("Mark this application as Rejected?")) {
         return;
     }
 
-    try {
-
-        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
-            method: "DELETE",
-            headers: getAuthHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Failed to delete message.");
-        }
-
-        showToast("Contact message deleted.", "success");
-
-        await loadContactMessages();
-
-    } catch (error) {
-
-        console.error(error);
-
-        showToast(error.message, "error");
-    }
-}
-
-function updateStats(applications) {
-
-    totalApplications.textContent = applications.length;
-
-    const newCount = applications.filter(app =>
-        (app.status || "").toLowerCase().includes("new")
-    ).length;
-
-    const interviewCount = applications.filter(app =>
-        (app.status || "").toLowerCase().includes("interview")
-    ).length;
-
-    const hiredCount = applications.filter(app =>
-        (app.status || "").toLowerCase().includes("hired")
-    ).length;
-
-    newApplications.textContent = newCount;
-    interviewApplications.textContent = interviewCount;
-    hiredApplications.textContent = hiredCount;
-}
-
-function selectCandidate(id, fullName) {
-
-    selectedApplicationId = id;
-
-    document.getElementById("candidateName").value = fullName;
-    document.getElementById("selectedCandidate").value = fullName;
-
-    showToast(`Selected ${fullName}`, "info");
+    await updateApplicationStatus(id, "Rejected");
 }
 
 async function deleteApplication(id) {
-
     if (adminRole === "viewer") {
         showToast("Viewer accounts cannot delete applications.", "error");
         return;
@@ -393,7 +429,6 @@ async function deleteApplication(id) {
     }
 
     try {
-
         const response = await fetch(`${API_BASE}/api/applications/${id}`, {
             method: "DELETE",
             headers: getAuthHeaders()
@@ -410,27 +445,75 @@ async function deleteApplication(id) {
         await loadApplications();
 
     } catch (error) {
-
         console.error(error);
-
-        showToast(error.message, "error");
+        showToast(error.message || "Delete failed.", "error");
     }
 }
 
-async function sendInvitation() {
-
+async function saveCandidateNotes() {
     if (!selectedApplicationId) {
         showToast("Please select a candidate first.", "error");
         return;
     }
 
-    try {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot save notes.", "error");
+        return;
+    }
 
+    const rating = document.getElementById("starRating")?.value || "";
+    const notes = document.getElementById("candidateNotes")?.value || "";
+
+    try {
+        const response = await fetch(`${API_BASE}/api/applications/${selectedApplicationId}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                rating,
+                notes
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to save notes.");
+        }
+
+        showToast("Candidate notes saved.", "success");
+
+        await loadApplications();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save notes.", "error");
+    }
+}
+
+async function sendInvitation() {
+    if (!selectedApplicationId) {
+        showToast("Please select a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send invitations.", "error");
+        return;
+    }
+
+    const sendInvitationBtn = document.getElementById("sendInvitationBtn");
+
+    if (sendInvitationBtn) {
+        sendInvitationBtn.disabled = true;
+        sendInvitationBtn.textContent = "Sending...";
+    }
+
+    try {
         const payload = {
-            interviewDate: document.getElementById("interviewDate").value,
-            interviewTime: document.getElementById("interviewTime").value,
-            interviewLocation: document.getElementById("interviewLocation").value,
-            interviewMessage: document.getElementById("interviewMessage").value
+            interviewDate: document.getElementById("interviewDate")?.value || "",
+            interviewTime: document.getElementById("interviewTime")?.value || "",
+            interviewLocation: document.getElementById("interviewLocation")?.value || "",
+            interviewMessage: document.getElementById("interviewMessage")?.value || ""
         };
 
         const response = await fetch(
@@ -453,41 +536,259 @@ async function sendInvitation() {
         await loadApplications();
 
     } catch (error) {
+        console.error(error);
+        showToast(error.message || "Invitation failed.", "error");
+    } finally {
+        if (sendInvitationBtn) {
+            sendInvitationBtn.disabled = false;
+            sendInvitationBtn.textContent = "Send Invitation";
+        }
+    }
+}
 
+async function loadContactMessages() {
+    try {
+        const response = await fetch(`${API_BASE}/api/contact-messages`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load contact messages.");
+        }
+
+        allContactMessages = result.messages || [];
+
+        renderContactMessages(allContactMessages);
+
+    } catch (error) {
         console.error(error);
 
-        showToast(error.message, "error");
+        if (contactMessagesTableBody) {
+            contactMessagesTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">Failed to load contact messages.</td>
+                </tr>
+            `;
+        }
+
+        showToast(error.message || "Failed to load contact messages.", "error");
+    }
+}
+
+function renderContactMessages(messages) {
+    if (!contactMessagesTableBody) return;
+
+    if (!messages.length) {
+        contactMessagesTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No contact messages found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    contactMessagesTableBody.innerHTML = "";
+
+    messages.forEach(message => {
+        const tr = document.createElement("tr");
+
+        const safeId = escapeForAttribute(message.id);
+        const safeName = escapeForAttribute(message.name);
+        const safeEmail = escapeForAttribute(message.email);
+        const safeSubject = escapeForAttribute(message.subject);
+        const safeMessage = escapeForAttribute(message.message);
+        const safePhone = escapeForAttribute(message.phone);
+
+        tr.innerHTML = `
+            <td>${escapeHtml(message.name || "")}</td>
+            <td>${escapeHtml(message.email || "")}</td>
+            <td>${escapeHtml(message.phone || "")}</td>
+            <td>${escapeHtml(message.subject || "")}</td>
+            <td>${formatDate(message.createdAt)}</td>
+            <td>${message.read ? "Read" : "New"}</td>
+            <td>
+                <button onclick="viewContactMessage(
+                    '${safeId}',
+                    '${safeName}',
+                    '${safeEmail}',
+                    '${safePhone}',
+                    '${safeSubject}',
+                    '${safeMessage}'
+                )">
+                    View
+                </button>
+
+                <button onclick="markMessageRead('${safeId}')">
+                    Mark Read
+                </button>
+
+                <button onclick="deleteContactMessage('${safeId}')">
+                    Delete
+                </button>
+            </td>
+        `;
+
+        contactMessagesTableBody.appendChild(tr);
+    });
+}
+
+function viewContactMessage(id, name, email, phone, subject, message) {
+    selectedContactMessageId = id;
+
+    alert(
+        `Contact Message\n\n` +
+        `Name: ${name || "N/A"}\n\n` +
+        `Email: ${email || "N/A"}\n\n` +
+        `Phone: ${phone || "N/A"}\n\n` +
+        `Subject: ${subject || "N/A"}\n\n` +
+        `Message:\n${message || "N/A"}`
+    );
+}
+
+async function markMessageRead(id) {
+    try {
+        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                read: true,
+                status: "Read"
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to update message.");
+        }
+
+        showToast("Message marked as read.", "success");
+
+        await loadContactMessages();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to update message.", "error");
+    }
+}
+
+async function deleteContactMessage(id) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot delete messages.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this contact message?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to delete message.");
+        }
+
+        showToast("Contact message deleted.", "success");
+
+        await loadContactMessages();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to delete message.", "error");
+    }
+}
+
+function updateStats(applications) {
+    const total = applications.length;
+
+    const newCount = applications.filter(app =>
+        normaliseStatus(app.status).toLowerCase() === "new"
+    ).length;
+
+    const interviewCount = applications.filter(app =>
+        normaliseStatus(app.status).toLowerCase().includes("interview")
+    ).length;
+
+    const hiredCount = applications.filter(app =>
+        normaliseStatus(app.status).toLowerCase() === "hired"
+    ).length;
+
+    const rejectedCount = applications.filter(app =>
+        normaliseStatus(app.status).toLowerCase() === "rejected"
+    ).length;
+
+    const roles = new Set(
+        applications
+            .map(app => app.position || "")
+            .filter(Boolean)
+    );
+
+    const statuses = new Set(
+        applications
+            .map(app => normaliseStatus(app.status))
+            .filter(Boolean)
+    );
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const thisWeekCount = applications.filter(app => {
+        if (!app.createdAt) return false;
+        const date = new Date(app.createdAt);
+        return !Number.isNaN(date.getTime()) && date >= sevenDaysAgo;
+    }).length;
+
+    if (totalApplications) totalApplications.textContent = total;
+    if (newApplications) newApplications.textContent = newCount;
+    if (interviewApplications) interviewApplications.textContent = interviewCount;
+    if (hiredApplications) hiredApplications.textContent = hiredCount;
+
+    if (applicationsByRole) applicationsByRole.textContent = roles.size;
+    if (statusBreakdown) statusBreakdown.textContent = statuses.size;
+    if (newThisWeek) newThisWeek.textContent = thisWeekCount;
+    if (interviewPipeline) interviewPipeline.textContent = interviewCount;
+
+    const stats = document.getElementById("stats");
+
+    if (stats) {
+        stats.innerHTML = `
+            <p>
+                ATS Summary:
+                ${total} total applications,
+                ${newCount} new,
+                ${interviewCount} in interview,
+                ${hiredCount} hired,
+                ${rejectedCount} rejected.
+            </p>
+        `;
     }
 }
 
 function exportApplicationsCSV() {
-
     showToast("CSV export started.", "info");
 
-    const rows = [];
-
-    const tableRows = applicationsTableBody.querySelectorAll("tr");
-
-    tableRows.forEach(row => {
-
-        const cols = row.querySelectorAll("td");
-
-        if (!cols.length) return;
-
-        const rowData = [];
-
-        cols.forEach((col, index) => {
-
-            if (index < 5) {
-                rowData.push(`"${col.innerText.replace(/"/g, '""')}"`);
-            }
-        });
-
-        rows.push(rowData.join(","));
+    const rows = allApplications.map(application => {
+        return [
+            application.fullName || "",
+            application.email || "",
+            application.position || "",
+            formatDate(application.createdAt),
+            normaliseStatus(application.status),
+            application.rating || "",
+            application.notes || ""
+        ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
     });
 
     const csvContent = [
-        `"Name","Email","Position","Date Applied","Status"`,
+        `"Name","Email","Position","Date Applied","Status","Rating","Notes"`,
         ...rows
     ].join("\n");
 
@@ -498,81 +799,49 @@ function exportApplicationsCSV() {
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
-
     link.href = url;
     link.download = "applications.csv";
 
     document.body.appendChild(link);
-
     link.click();
-
     document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
 }
 
 function logoutAdmin() {
-
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminRole");
 
     authToken = "";
     adminRole = "";
+    selectedApplicationId = null;
+    selectedContactMessageId = null;
+    allApplications = [];
+    allContactMessages = [];
 
     setDashboardVisible(false);
 
     showToast("Logged out successfully.", "success");
 }
 
-function formatDate(dateString) {
-
-    if (!dateString) return "N/A";
-
-    const date = new Date(dateString);
-
-    return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
-}
-
-function escapeQuotes(value) {
-
-    return String(value || "")
-        .replace(/'/g, "\\'")
-        .replace(/"/g, "&quot;");
-}
-
-document.getElementById("sendInvitationBtn")
-    .addEventListener("click", sendInvitation);
-
-document.getElementById("logoutBtn")
-    .addEventListener("click", logoutAdmin);
-
-document.getElementById("exportCsvBtn")
-    .addEventListener("click", exportApplicationsCSV);
+document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
+document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
+document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
+document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
 
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
 window.selectCandidate = selectCandidate;
+window.viewCandidate = viewCandidate;
+window.updateApplicationStatus = updateApplicationStatus;
+window.quickRejectApplication = quickRejectApplication;
 window.deleteContactMessage = deleteContactMessage;
 window.markMessageRead = markMessageRead;
 window.viewContactMessage = viewContactMessage;
 
 if (authToken) {
-
     setDashboardVisible(true);
-
-    adminInfo.innerHTML = `
-        <h3>Logged In As: ${adminRole.toUpperCase()}</h3>
-    `;
-
-    permissionsInfo.innerHTML = `
-        <strong>Permissions:</strong>
-        ${adminRole === "viewer"
-            ? "View-only access enabled."
-            : "Full recruitment management access enabled."}
-    `;
-
-    loadApplications();
-    loadContactMessages();
+    showLoggedInInfo();
+    refreshDashboard();
 }
