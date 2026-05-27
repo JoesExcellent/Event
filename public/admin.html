@@ -84,7 +84,8 @@
         .application-card,
         .analytics-card,
         .notes-card,
-        .invite-card {
+        .invite-card,
+        .ats-panel {
             background: #13283b;
             border: 1px solid rgba(255, 176, 0, 0.25);
             border-radius: 16px;
@@ -151,14 +152,16 @@
             margin-bottom: 30px;
         }
 
-        .stats-grid {
+        .stats-grid,
+        .ats-mini-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 22px;
             margin-bottom: 35px;
         }
 
-        .stat-card {
+        .stat-card,
+        .ats-mini-card {
             background: #13283b;
             border: 1px solid rgba(255, 176, 0, 0.25);
             border-radius: 14px;
@@ -166,7 +169,8 @@
             text-align: center;
         }
 
-        .stat-card span {
+        .stat-card span,
+        .ats-mini-card span {
             width: 36px;
             height: 36px;
             background: #ff6a00;
@@ -178,12 +182,14 @@
             margin-bottom: 12px;
         }
 
-        .stat-card h3 {
+        .stat-card h3,
+        .ats-mini-card h3 {
             font-size: 1rem;
             margin-bottom: 8px;
         }
 
-        .stat-card p {
+        .stat-card p,
+        .ats-mini-card p {
             font-size: 2rem;
             font-weight: 800;
             color: #ffffff;
@@ -223,7 +229,8 @@
         th { color: #ff6a00; }
         td a { color: #ff6a00; font-weight: 700; }
 
-        .form-grid {
+        .form-grid,
+        .ats-two-column {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 22px;
@@ -358,14 +365,16 @@
             margin-bottom: 24px;
         }
 
-        .ats-profile-panel {
+        .ats-profile-panel,
+        .ats-feed-box {
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255, 176, 0, 0.25);
             border-radius: 16px;
             padding: 22px;
         }
 
-        .ats-profile-panel h3 {
+        .ats-profile-panel h3,
+        .ats-feed-box h3 {
             margin-bottom: 14px;
         }
 
@@ -395,19 +404,25 @@
             margin-bottom: 6px;
         }
 
-        .ats-timeline {
+        .ats-timeline,
+        .ats-feed-list,
+        .ats-task-list {
             list-style: none;
             margin-top: 10px;
         }
 
-        .ats-timeline li {
+        .ats-timeline li,
+        .ats-feed-list li,
+        .ats-task-list li {
             border-left: 3px solid #ff6a00;
             padding: 0 0 18px 18px;
             margin-left: 8px;
             color: #f2f2f2;
         }
 
-        .ats-timeline strong {
+        .ats-timeline strong,
+        .ats-feed-list strong,
+        .ats-task-list strong {
             color: #ff6a00;
             display: block;
             margin-bottom: 4px;
@@ -420,6 +435,13 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+        }
+
+        .ats-refresh-line {
+            text-align: center;
+            font-weight: 700;
+            color: #ffb000;
+            margin-bottom: 24px;
         }
 
         .cta-section {
@@ -452,7 +474,9 @@
             .form-grid,
             .ats-filter-grid,
             .ats-profile-grid,
-            .ats-score-box {
+            .ats-score-box,
+            .ats-two-column,
+            .ats-mini-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -531,10 +555,12 @@
         <div class="admin-actions">
             <button id="logoutBtn" type="button">Logout</button>
             <button id="exportCsvBtn" type="button">Export CSV</button>
+            <button id="manualRefreshBtn" type="button">Refresh Dashboard</button>
         </div>
 
         <div id="adminInfo"></div>
         <div id="permissionsInfo" class="permission-box"></div>
+        <p id="lastRefreshInfo" class="ats-refresh-line">Dashboard waiting for login.</p>
 
         <section class="admin-card">
             <h2>Dashboard Overview</h2>
@@ -566,6 +592,59 @@
             </div>
 
             <div id="stats"></div>
+        </section>
+
+        <section class="ats-panel">
+            <h2>ATS Command Centre</h2>
+            <p>Monitor live recruitment activity, urgent tasks, interview reminders and communication status.</p>
+
+            <div class="ats-mini-grid">
+                <div class="ats-mini-card">
+                    <span>1</span>
+                    <h3>Unread Messages</h3>
+                    <p id="unreadMessagesCount">0</p>
+                </div>
+
+                <div class="ats-mini-card">
+                    <span>2</span>
+                    <h3>Pending Interviews</h3>
+                    <p id="pendingInterviewsCount">0</p>
+                </div>
+
+                <div class="ats-mini-card">
+                    <span>3</span>
+                    <h3>Offer Stage</h3>
+                    <p id="offerStageCount">0</p>
+                </div>
+
+                <div class="ats-mini-card">
+                    <span>4</span>
+                    <h3>Follow Ups</h3>
+                    <p id="followUpsCount">0</p>
+                </div>
+            </div>
+
+            <div class="ats-two-column">
+                <div class="ats-feed-box">
+                    <h3>Candidate Activity Feed</h3>
+                    <ul id="candidateActivityFeed" class="ats-feed-list">
+                        <li>
+                            <strong>Waiting For Data</strong>
+                            Activity will appear after login.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="ats-feed-box">
+                    <h3>Recruiter Task Reminders</h3>
+                    <ul id="recruiterTaskList" class="ats-task-list">
+                        <li>
+                            <strong>No Tasks Yet</strong>
+                            Tasks will appear after applications are loaded.
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </section>
 
         <section class="application-card">
@@ -736,6 +815,31 @@ Joe's Excellent Events & Management</textarea>
             <button id="saveNotesBtn" type="button">Save Notes</button>
         </section>
 
+        <section class="ats-panel">
+            <h2>Candidate Communication Centre</h2>
+            <p>Track email delivery, communication status and candidate follow-up requirements.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Email</th>
+                            <th>Invitation Sent</th>
+                            <th>Email ID</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="communicationTableBody">
+                        <tr>
+                            <td colspan="5">Communication records will appear after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section class="analytics-card">
             <h2>Recruitment Analytics</h2>
             <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
@@ -838,6 +942,16 @@ Joe's Excellent Events & Management</textarea>
                 </ul>
             </div>
 
+            <div class="ats-profile-panel">
+                <h3>Candidate Communication History</h3>
+                <ul class="ats-timeline" id="modalCandidateCommunicationTimeline">
+                    <li>
+                        <strong>Waiting For Communication</strong>
+                        Email activity will appear when available.
+                    </li>
+                </ul>
+            </div>
+
             <div class="ats-modal-actions">
                 <button type="button" onclick="selectCandidateFromModal()">Select For Interview</button>
                 <button type="button" onclick="moveModalCandidateToShortlist()">Move To Shortlist</button>
@@ -865,7 +979,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=35"></script>
+<script src="admin.js?v=36"></script>
 
 </body>
 </html>
