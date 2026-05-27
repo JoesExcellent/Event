@@ -4,6 +4,7 @@ let authToken = localStorage.getItem("adminToken") || "";
 let adminRole = localStorage.getItem("adminRole") || "";
 let selectedApplicationId = null;
 let selectedContactMessageId = null;
+let modalApplicationId = null;
 
 let allApplications = [];
 let allContactMessages = [];
@@ -113,8 +114,40 @@ function formatDate(dateString) {
     });
 }
 
+function formatDateTime(dateString) {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+
+    if (Number.isNaN(date.getTime())) {
+        return "N/A";
+    }
+
+    return date.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
 function normaliseStatus(status) {
     return status || "New";
+}
+
+function getStatusClass(status) {
+    return "status-" + normaliseStatus(status)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
+function buildStatusBadge(status) {
+    const safeStatus = normaliseStatus(status);
+    const statusClass = getStatusClass(safeStatus);
+
+    return `<span class="ats-status-badge ${statusClass}">${escapeHtml(safeStatus)}</span>`;
 }
 
 function buildStatusOptions(currentStatus) {
@@ -124,6 +157,21 @@ function buildStatusOptions(currentStatus) {
         const selected = status === activeStatus ? "selected" : "";
         return `<option value="${escapeHtml(status)}" ${selected}>${escapeHtml(status)}</option>`;
     }).join("");
+}
+
+function calculateATSScore(application) {
+    let score = 0;
+
+    if (application.fullName) score += 10;
+    if (application.email) score += 10;
+    if (application.phone) score += 10;
+    if (application.position) score += 10;
+    if (application.availability) score += 10;
+    if (application.message && application.message.length > 20) score += 15;
+    if (application.cv) score += 15;
+    if (application.rating) score += Number(application.rating) * 4;
+
+    return Math.min(score, 100);
 }
 
 function showLoggedInInfo() {
@@ -205,7 +253,6 @@ async function loadApplications() {
         }
 
         allApplications = result.applications || [];
-
         applyCandidateFilters();
 
     } catch (error) {
@@ -281,7 +328,6 @@ function clearCandidateFilters() {
     }
 
     applyCandidateFilters();
-
     showToast("Candidate filters cleared.", "info");
 }
 
@@ -304,13 +350,6 @@ function renderApplications(applications) {
 
         const id = escapeQuotes(application.id);
         const fullName = escapeQuotes(application.fullName);
-        const email = escapeQuotes(application.email);
-        const phone = escapeQuotes(application.phone);
-        const address = escapeQuotes(application.address);
-        const position = escapeQuotes(application.position);
-        const availability = escapeQuotes(application.availability);
-        const message = escapeQuotes(application.message);
-        const notes = escapeQuotes(application.notes);
 
         tr.innerHTML = `
             <td>${escapeHtml(application.fullName || "")}</td>
@@ -321,6 +360,7 @@ function renderApplications(applications) {
                 <select onchange="updateApplicationStatus('${id}', this.value)">
                     ${buildStatusOptions(application.status)}
                 </select>
+                ${buildStatusBadge(application.status)}
             </td>
             <td>
                 ${application.cv
@@ -329,21 +369,8 @@ function renderApplications(applications) {
             </td>
             <td>
                 <button onclick="selectCandidate('${id}', '${fullName}')">Interview</button>
-
-                <button onclick="viewCandidate(
-                    '${id}',
-                    '${fullName}',
-                    '${email}',
-                    '${phone}',
-                    '${address}',
-                    '${position}',
-                    '${availability}',
-                    '${message}',
-                    '${notes}'
-                )">View</button>
-
+                <button onclick="openCandidateModal('${id}')">View</button>
                 <button onclick="quickRejectApplication('${id}')">Reject</button>
-
                 <button onclick="deleteApplication('${id}')">Delete</button>
             </td>
         `;
@@ -352,20 +379,126 @@ function renderApplications(applications) {
     });
 }
 
-function viewCandidate(id, fullName, email, phone, address, position, availability, message, notes) {
+function openCandidateModal(id) {
+    const application = allApplications.find(app => app.id === id);
+
+    if (!application) {
+        showToast("Candidate record could not be found.", "error");
+        return;
+    }
+
+    modalApplicationId = id;
     selectedApplicationId = id;
 
-    alert(
-        `Candidate Profile\n\n` +
-        `Name: ${fullName || "N/A"}\n\n` +
-        `Email: ${email || "N/A"}\n\n` +
-        `Phone: ${phone || "N/A"}\n\n` +
-        `Address: ${address || "N/A"}\n\n` +
-        `Position: ${position || "N/A"}\n\n` +
-        `Availability: ${availability || "N/A"}\n\n` +
-        `Application Message:\n${message || "N/A"}\n\n` +
-        `Admin Notes:\n${notes || "No notes yet."}`
-    );
+    const status = normaliseStatus(application.status);
+    const score = calculateATSScore(application);
+    const rating = application.rating || "0";
+
+    document.getElementById("modalCandidateName").textContent = application.fullName || "Candidate Profile";
+    document.getElementById("modalCandidateEmail").textContent = application.email || "N/A";
+    document.getElementById("modalCandidatePhone").textContent = application.phone || "N/A";
+    document.getElementById("modalCandidateAddress").textContent = application.address || "N/A";
+    document.getElementById("modalCandidatePosition").textContent = application.position || "N/A";
+    document.getElementById("modalCandidateAvailability").textContent = application.availability || "N/A";
+    document.getElementById("modalCandidateDate").textContent = formatDate(application.createdAt);
+    document.getElementById("modalCandidateRating").textContent = rating;
+    document.getElementById("modalCandidateScore").textContent = `${score}%`;
+    document.getElementById("modalCandidateStage").textContent = status;
+    document.getElementById("modalCandidateMessage").textContent = application.message || "No application message available.";
+    document.getElementById("modalCandidateNotes").textContent = application.notes || "No recruiter notes have been saved yet.";
+
+    const modalStatus = document.getElementById("modalCandidateStatus");
+    modalStatus.textContent = status;
+    modalStatus.className = `ats-status-badge ${getStatusClass(status)}`;
+
+    renderCandidateTimeline(application);
+
+    const modal = document.getElementById("candidateProfileModal");
+
+    if (modal) {
+        modal.classList.add("active");
+    }
+}
+
+function closeCandidateModal() {
+    const modal = document.getElementById("candidateProfileModal");
+
+    if (modal) {
+        modal.classList.remove("active");
+    }
+}
+
+function renderCandidateTimeline(application) {
+    const timeline = document.getElementById("modalCandidateTimeline");
+
+    if (!timeline) return;
+
+    const status = normaliseStatus(application.status);
+
+    const items = [
+        {
+            title: "Application Received",
+            text: `Candidate entered the recruitment pipeline on ${formatDate(application.createdAt)}.`
+        }
+    ];
+
+    if (application.cv) {
+        items.push({
+            title: "CV Uploaded",
+            text: "Candidate provided a CV with their application."
+        });
+    }
+
+    if (application.updatedAt) {
+        items.push({
+            title: "Record Updated",
+            text: `Candidate record was last updated on ${formatDateTime(application.updatedAt)}.`
+        });
+    }
+
+    if (application.invitationSent || status.includes("Interview")) {
+        items.push({
+            title: "Interview Stage",
+            text: application.invitationSentAt
+                ? `Interview invitation sent on ${formatDateTime(application.invitationSentAt)}.`
+                : "Candidate has entered the interview stage."
+        });
+    }
+
+    if (application.interviewDate || application.interviewTime || application.interviewLocation) {
+        items.push({
+            title: "Interview Details",
+            text: `Date: ${application.interviewDate || "N/A"} | Time: ${application.interviewTime || "N/A"} | Location: ${application.interviewLocation || "N/A"}`
+        });
+    }
+
+    if (status === "Offer Made") {
+        items.push({
+            title: "Offer Made",
+            text: "Candidate has reached offer stage."
+        });
+    }
+
+    if (status === "Hired") {
+        items.push({
+            title: "Candidate Hired",
+            text: "Candidate has been marked as hired."
+        });
+    }
+
+    if (status === "Rejected") {
+        items.push({
+            title: "Candidate Rejected",
+            text: "Candidate has been marked as rejected."
+        });
+    }
+
+    timeline.innerHTML = items.map(item => `
+        <li>
+            <strong>${escapeHtml(item.title)}</strong>
+            ${escapeHtml(item.text)}
+        </li>
+    `).join("");
 }
 
 function selectCandidate(id, fullName) {
@@ -399,6 +532,23 @@ function selectCandidate(id, fullName) {
     showToast(`Selected ${fullName}`, "info");
 }
 
+function selectCandidateFromModal() {
+    if (!modalApplicationId) {
+        showToast("No candidate selected.", "error");
+        return;
+    }
+
+    const application = allApplications.find(app => app.id === modalApplicationId);
+
+    if (!application) {
+        showToast("Candidate record could not be found.", "error");
+        return;
+    }
+
+    selectCandidate(application.id, application.fullName || "Candidate");
+    closeCandidateModal();
+}
+
 async function updateApplicationStatus(id, status) {
     if (adminRole === "viewer") {
         showToast("Viewer accounts cannot update application status.", "error");
@@ -423,9 +573,37 @@ async function updateApplicationStatus(id, status) {
 
         await loadApplications();
 
+        if (modalApplicationId === id) {
+            openCandidateModal(id);
+        }
+
     } catch (error) {
         console.error(error);
         showToast(error.message || "Failed to update status.", "error");
+    }
+}
+
+async function moveModalCandidateToShortlist() {
+    if (modalApplicationId) {
+        await updateApplicationStatus(modalApplicationId, "Shortlisted");
+    }
+}
+
+async function moveModalCandidateToOffer() {
+    if (modalApplicationId) {
+        await updateApplicationStatus(modalApplicationId, "Offer Made");
+    }
+}
+
+async function moveModalCandidateToHired() {
+    if (modalApplicationId) {
+        await updateApplicationStatus(modalApplicationId, "Hired");
+    }
+}
+
+async function moveModalCandidateToRejected() {
+    if (modalApplicationId) {
+        await updateApplicationStatus(modalApplicationId, "Rejected");
     }
 }
 
@@ -473,6 +651,10 @@ async function saveCandidateNotes() {
 
         await loadApplications();
 
+        if (modalApplicationId === selectedApplicationId) {
+            openCandidateModal(selectedApplicationId);
+        }
+
     } catch (error) {
         console.error(error);
         showToast(error.message || "Failed to save notes.", "error");
@@ -502,6 +684,11 @@ async function deleteApplication(id) {
         }
 
         showToast("Application deleted.", "success");
+
+        if (modalApplicationId === id) {
+            closeCandidateModal();
+            modalApplicationId = null;
+        }
 
         await loadApplications();
 
@@ -555,6 +742,10 @@ async function sendInvitation() {
         showToast("Interview invitation sent successfully.", "success");
 
         await loadApplications();
+
+        if (modalApplicationId === selectedApplicationId) {
+            openCandidateModal(selectedApplicationId);
+        }
 
     } catch (error) {
         console.error(error);
@@ -631,9 +822,7 @@ function renderContactMessages(messages) {
             <td>${message.read ? "Read" : "New"}</td>
             <td>
                 <button onclick="viewContactMessage('${id}', '${name}', '${email}', '${phone}', '${subject}', '${text}')">View</button>
-
                 <button onclick="markMessageRead('${id}')">Mark Read</button>
-
                 <button onclick="deleteContactMessage('${id}')">Delete</button>
             </td>
         `;
@@ -822,9 +1011,11 @@ function logoutAdmin() {
     adminRole = "";
     selectedApplicationId = null;
     selectedContactMessageId = null;
+    modalApplicationId = null;
     allApplications = [];
     allContactMessages = [];
 
+    closeCandidateModal();
     setDashboardVisible(false);
 
     showToast("Logged out successfully.", "success");
@@ -842,7 +1033,13 @@ clearFiltersBtn?.addEventListener("click", clearCandidateFilters);
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
 window.selectCandidate = selectCandidate;
-window.viewCandidate = viewCandidate;
+window.openCandidateModal = openCandidateModal;
+window.closeCandidateModal = closeCandidateModal;
+window.selectCandidateFromModal = selectCandidateFromModal;
+window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
+window.moveModalCandidateToOffer = moveModalCandidateToOffer;
+window.moveModalCandidateToHired = moveModalCandidateToHired;
+window.moveModalCandidateToRejected = moveModalCandidateToRejected;
 window.updateApplicationStatus = updateApplicationStatus;
 window.quickRejectApplication = quickRejectApplication;
 window.deleteContactMessage = deleteContactMessage;
