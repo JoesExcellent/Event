@@ -39,6 +39,10 @@ const statusBreakdown = document.getElementById("statusBreakdown");
 const newThisWeek = document.getElementById("newThisWeek");
 const interviewPipeline = document.getElementById("interviewPipeline");
 
+const candidateSearchInput = document.getElementById("candidateSearchInput");
+const statusFilterSelect = document.getElementById("statusFilterSelect");
+const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
 function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
 
@@ -152,10 +156,7 @@ async function loginAdmin() {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                email,
-                password
-            })
+            body: JSON.stringify({ email, password })
         });
 
         const result = await response.json();
@@ -180,10 +181,8 @@ async function loginAdmin() {
 
     } catch (error) {
         console.error(error);
-
         loginMessage.style.color = "#ff6b6b";
         loginMessage.textContent = error.message || "Login failed.";
-
         showToast(error.message || "Login failed.", "error");
     }
 }
@@ -207,8 +206,7 @@ async function loadApplications() {
 
         allApplications = result.applications || [];
 
-        renderApplications(allApplications);
-        updateStats(allApplications);
+        applyCandidateFilters();
 
     } catch (error) {
         console.error(error);
@@ -225,13 +223,75 @@ async function loadApplications() {
     }
 }
 
+function getFilteredApplications() {
+    const searchValue = candidateSearchInput
+        ? candidateSearchInput.value.trim().toLowerCase()
+        : "";
+
+    const statusValue = statusFilterSelect
+        ? statusFilterSelect.value.trim().toLowerCase()
+        : "";
+
+    return allApplications.filter(application => {
+        const status = normaliseStatus(application.status).toLowerCase();
+
+        const searchableText = [
+            application.fullName,
+            application.email,
+            application.phone,
+            application.address,
+            application.position,
+            application.availability,
+            application.message,
+            application.notes,
+            status
+        ].join(" ").toLowerCase();
+
+        const matchesSearch = !searchValue || searchableText.includes(searchValue);
+        const matchesStatus = !statusValue || status === statusValue;
+
+        return matchesSearch && matchesStatus;
+    });
+}
+
+function applyCandidateFilters() {
+    const filteredApplications = getFilteredApplications();
+
+    renderApplications(filteredApplications);
+    updateStats(filteredApplications);
+
+    const stats = document.getElementById("stats");
+
+    if (stats) {
+        stats.innerHTML += `
+            <p>
+                Showing ${filteredApplications.length} of ${allApplications.length} candidate records.
+            </p>
+        `;
+    }
+}
+
+function clearCandidateFilters() {
+    if (candidateSearchInput) {
+        candidateSearchInput.value = "";
+    }
+
+    if (statusFilterSelect) {
+        statusFilterSelect.value = "";
+    }
+
+    applyCandidateFilters();
+
+    showToast("Candidate filters cleared.", "info");
+}
+
 function renderApplications(applications) {
     if (!applicationsTableBody) return;
 
     if (!applications.length) {
         applicationsTableBody.innerHTML = `
             <tr>
-                <td colspan="7">No applications found.</td>
+                <td colspan="7">No matching applications found.</td>
             </tr>
         `;
         return;
@@ -350,9 +410,7 @@ async function updateApplicationStatus(id, status) {
         const response = await fetch(`${API_BASE}/api/applications/${id}`, {
             method: "PATCH",
             headers: getAuthHeaders(),
-            body: JSON.stringify({
-                status
-            })
+            body: JSON.stringify({ status })
         });
 
         const result = await response.json();
@@ -402,10 +460,7 @@ async function saveCandidateNotes() {
         const response = await fetch(`${API_BASE}/api/applications/${selectedApplicationId}`, {
             method: "PATCH",
             headers: getAuthHeaders(),
-            body: JSON.stringify({
-                rating,
-                notes
-            })
+            body: JSON.stringify({ rating, notes })
         });
 
         const result = await response.json();
@@ -711,7 +766,7 @@ function updateStats(applications) {
         stats.innerHTML = `
             <p>
                 ATS Summary:
-                ${total} total applications,
+                ${total} visible applications,
                 ${newCount} new,
                 ${interviewCount} in interview,
                 ${hiredCount} hired.
@@ -723,7 +778,9 @@ function updateStats(applications) {
 function exportApplicationsCSV() {
     showToast("CSV export started.", "info");
 
-    const rows = allApplications.map(application => {
+    const applicationsToExport = getFilteredApplications();
+
+    const rows = applicationsToExport.map(application => {
         return [
             application.fullName || "",
             application.email || "",
@@ -748,7 +805,7 @@ function exportApplicationsCSV() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = "applications.csv";
+    link.download = "filtered-applications.csv";
 
     document.body.appendChild(link);
     link.click();
@@ -777,6 +834,10 @@ document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvi
 document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
 document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
+
+candidateSearchInput?.addEventListener("input", applyCandidateFilters);
+statusFilterSelect?.addEventListener("change", applyCandidateFilters);
+clearFiltersBtn?.addEventListener("click", clearCandidateFilters);
 
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
