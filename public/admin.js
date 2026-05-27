@@ -1,808 +1,578 @@
-/* =====================================================
-   ADMIN.JS
-   Joe's Excellent Events & Management
-   Corrected for current admin.html
-===================================================== */
-
-const API_BASE_URL = "";
+const API_BASE = "";
 
 let authToken = localStorage.getItem("adminToken") || "";
 let adminRole = localStorage.getItem("adminRole") || "";
-let applications = [];
-let selectedApplicationId = "";
-let dashboardChart = null;
+let selectedApplicationId = null;
+let selectedContactMessageId = null;
 
-/* =====================================================
-   BASIC HELPERS
-===================================================== */
+const loginBox = document.getElementById("loginBox");
+const dashboardContent = document.getElementById("dashboardContent");
+const loginMessage = document.getElementById("loginMessage");
+const adminInfo = document.getElementById("adminInfo");
+const permissionsInfo = document.getElementById("permissionsInfo");
 
-function el(id) {
-    return document.getElementById(id);
+const applicationsTableBody = document.getElementById("applicationsTableBody");
+const contactMessagesTableBody = document.getElementById("contactMessagesTableBody");
+
+const totalApplications = document.getElementById("totalApplications");
+const newApplications = document.getElementById("newApplications");
+const interviewApplications = document.getElementById("interviewApplications");
+const hiredApplications = document.getElementById("hiredApplications");
+
+function showToast(message, type = "info") {
+
+    const toastContainer = document.getElementById("toastContainer");
+
+    const toast = document.createElement("div");
+
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
 }
 
-function safeText(value) {
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+function setDashboardVisible(show) {
+
+    loginBox.style.display = show ? "none" : "block";
+    dashboardContent.style.display = show ? "block" : "none";
 }
 
-function getHeaders() {
+function getAuthHeaders() {
+
     return {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${authToken}`
     };
 }
 
-function formatDate(value) {
-    if (!value) return "";
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return value;
-    }
-
-    return date.toLocaleDateString("en-GB") + ", " + date.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit"
-    });
-}
-
-function showLoginMessage(message, type = "info") {
-    const box = el("loginMessage");
-    if (!box) return;
-
-    box.textContent = message;
-
-    if (type === "success") {
-        box.style.color = "#00d084";
-    } else if (type === "error") {
-        box.style.color = "#ff6a00";
-    } else {
-        box.style.color = "#ffffff";
-    }
-}
-
-function showToast(message, type = "info") {
-    const container = el("toastContainer");
-
-    if (!container) {
-        alert(message);
-        return;
-    }
-
-    const toast = document.createElement("div");
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.remove();
-    }, 5000);
-}
-
-/* =====================================================
-   LOGIN / LOGOUT
-===================================================== */
-
 async function loginAdmin() {
-    const email = el("adminEmail") ? el("adminEmail").value.trim() : "";
-    const password = el("adminPassword") ? el("adminPassword").value.trim() : "";
 
-    if (!email || !password) {
-        showLoginMessage("Please enter your admin email and password.", "error");
-        return;
-    }
+    const email = document.getElementById("adminEmail").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
 
-    showLoginMessage("Logging in...", "info");
+    loginMessage.style.color = "#ffffff";
+    loginMessage.textContent = "Logging in...";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/login`, {
+
+        const response = await fetch(`${API_BASE}/admin/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email, password })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Invalid email or password.");
-        }
-
-        authToken = result.token;
-        adminRole = result.role || "admin";
-
-        localStorage.setItem("adminToken", authToken);
-        localStorage.setItem("adminRole", adminRole);
-
-        showDashboard();
-        await loadApplications();
-
-        showToast("Login successful.", "success");
-
-    } catch (error) {
-        showLoginMessage(error.message || "Login failed.", "error");
-    }
-}
-
-function logoutAdmin() {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminRole");
-
-    authToken = "";
-    adminRole = "";
-    applications = [];
-    selectedApplicationId = "";
-
-    if (el("loginBox")) el("loginBox").style.display = "block";
-    if (el("dashboardContent")) el("dashboardContent").style.display = "none";
-
-    showLoginMessage("Logged out.", "info");
-}
-
-function showDashboard() {
-    if (el("loginBox")) el("loginBox").style.display = "none";
-    if (el("dashboardContent")) el("dashboardContent").style.display = "block";
-
-    if (el("adminInfo")) {
-        el("adminInfo").innerHTML = `Logged in as <strong>${safeText(adminRole || "admin")}</strong>`;
-    }
-
-    if (el("permissionsInfo")) {
-        el("permissionsInfo").innerHTML = `
-            <strong>Permissions</strong><br>
-            Admin users can review applications, update candidates, manage interview invitations and export recruitment data.
-        `;
-    }
-}
-
-/* =====================================================
-   LOAD APPLICATIONS
-===================================================== */
-
-async function loadApplications() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/applications`, {
-            method: "GET",
-            headers: getHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Could not load applications.");
-        }
-
-        applications = result.applications || [];
-
-        updateDashboard();
-
-    } catch (error) {
-        console.error("Load applications error:", error);
-
-        if (
-            error.message.includes("expired") ||
-            error.message.includes("token") ||
-            error.message.includes("401")
-        ) {
-            logoutAdmin();
-        }
-
-        showToast(error.message || "Could not load applications.", "error");
-    }
-}
-
-/* =====================================================
-   DASHBOARD UPDATE
-===================================================== */
-
-function updateDashboard() {
-    updateStats();
-    renderApplicationsTable();
-    renderApplicationsCards();
-    updateAnalytics();
-    renderChart();
-}
-
-function updateStats() {
-    const total = applications.length;
-
-    const newCount = applications.filter(app => (app.status || "New") === "New").length;
-
-    const interviewCount = applications.filter(app =>
-        ["Interview Invited", "Interview Stage", "To Be Interviewed"].includes(app.status)
-    ).length;
-
-    const hiredCount = applications.filter(app =>
-        ["Hired", "Successful"].includes(app.status)
-    ).length;
-
-    if (el("totalApplications")) el("totalApplications").textContent = total;
-    if (el("newApplications")) el("newApplications").textContent = newCount;
-    if (el("interviewApplications")) el("interviewApplications").textContent = interviewCount;
-    if (el("hiredApplications")) el("hiredApplications").textContent = hiredCount;
-
-    if (el("stats")) {
-        el("stats").innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span>1</span>
-                    <h3>Total Applications</h3>
-                    <p>${total}</p>
-                </div>
-
-                <div class="stat-card">
-                    <span>2</span>
-                    <h3>New</h3>
-                    <p>${newCount}</p>
-                </div>
-
-                <div class="stat-card">
-                    <span>3</span>
-                    <h3>Interview Stage</h3>
-                    <p>${interviewCount}</p>
-                </div>
-
-                <div class="stat-card">
-                    <span>4</span>
-                    <h3>Hired</h3>
-                    <p>${hiredCount}</p>
-                </div>
-            </div>
-        `;
-    }
-}
-
-function updateAnalytics() {
-    const roles = new Set(applications.map(app => app.position).filter(Boolean));
-    const statuses = new Set(applications.map(app => app.status || "New"));
-
-    const now = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(now.getDate() - 7);
-
-    const newThisWeek = applications.filter(app => {
-        const created = new Date(app.createdAt);
-        return !Number.isNaN(created.getTime()) && created >= sevenDaysAgo;
-    }).length;
-
-    const interviewPipeline = applications.filter(app =>
-        ["Interview Invited", "Interview Stage", "To Be Interviewed"].includes(app.status)
-    ).length;
-
-    if (el("applicationsByRole")) el("applicationsByRole").textContent = roles.size;
-    if (el("statusBreakdown")) el("statusBreakdown").textContent = statuses.size;
-    if (el("newThisWeek")) el("newThisWeek").textContent = newThisWeek;
-    if (el("interviewPipeline")) el("interviewPipeline").textContent = interviewPipeline;
-}
-
-/* =====================================================
-   RENDER APPLICATIONS TABLE
-===================================================== */
-
-function renderApplicationsTable() {
-    const tbody = el("applicationsTableBody");
-    if (!tbody) return;
-
-    if (!applications.length) {
-        tbody.innerHTML = `<tr><td colspan="7">No applications found.</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = applications.map(app => `
-        <tr>
-            <td>${safeText(app.fullName)}</td>
-            <td>${safeText(app.email)}</td>
-            <td>${safeText(app.position)}</td>
-            <td>${formatDate(app.createdAt)}</td>
-            <td>${safeText(app.status || "New")}</td>
-            <td>${app.cv ? `<a href="${safeText(app.cv)}" target="_blank">CV</a>` : "No CV"}</td>
-            <td>
-                <button type="button" onclick="selectCandidate('${app.id}')">View</button>
-                <button type="button" onclick="markReviewed('${app.id}')">Reviewed</button>
-                <button type="button" onclick="prepareInterviewInvite('${app.id}')">Interview</button>
-                <button type="button" onclick="rejectCandidate('${app.id}')">Reject</button>
-                <button type="button" onclick="deleteApplication('${app.id}')">Delete</button>
-            </td>
-        </tr>
-    `).join("");
-}
-
-/* =====================================================
-   RENDER APPLICATION CARDS
-===================================================== */
-
-function renderApplicationsCards() {
-    const container = el("applications");
-    if (!container) return;
-
-    if (!applications.length) {
-        container.innerHTML = "";
-        return;
-    }
-
-    container.innerHTML = applications.map(app => {
-        const extraFiles = Array.isArray(app.extraFiles) ? app.extraFiles : [];
-
-        return `
-            <div class="application-card">
-                <h3>${safeText(app.fullName)}</h3>
-
-                <p><strong>Email:</strong> ${safeText(app.email)}</p>
-                <p><strong>Phone:</strong> ${safeText(app.phone)}</p>
-                <p><strong>Address:</strong> ${safeText(app.address)}</p>
-                <p><strong>Position:</strong> ${safeText(app.position)}</p>
-                <p><strong>Availability:</strong> ${safeText(app.availability)}</p>
-                <p><strong>Status:</strong> ${safeText(app.status || "New")}</p>
-                <p><strong>Date Applied:</strong> ${formatDate(app.createdAt)}</p>
-
-                <p><strong>About Candidate:</strong></p>
-                <p>${safeText(app.message)}</p>
-
-                <p>
-                    <strong>CV:</strong>
-                    ${app.cv ? `<a href="${safeText(app.cv)}" target="_blank">Download CV</a>` : "No CV uploaded"}
-                </p>
-
-                <p><strong>Additional Files:</strong></p>
-                <ul>
-                    ${
-                        extraFiles.length
-                            ? extraFiles.map(file => `<li><a href="${safeText(file)}" target="_blank">Download File</a></li>`).join("")
-                            : "<li>No additional files uploaded</li>"
-                    }
-                </ul>
-
-                <label for="status-${app.id}">Status</label>
-                <select id="status-${app.id}">
-                    <option value="New" ${(app.status || "New") === "New" ? "selected" : ""}>New</option>
-                    <option value="Reviewed" ${app.status === "Reviewed" ? "selected" : ""}>Reviewed</option>
-                    <option value="Interview Invited" ${app.status === "Interview Invited" ? "selected" : ""}>Interview Invited</option>
-                    <option value="Rejected" ${app.status === "Rejected" ? "selected" : ""}>Rejected</option>
-                    <option value="Hired" ${app.status === "Hired" ? "selected" : ""}>Hired</option>
-                </select>
-
-                <label for="rating-${app.id}">Rating</label>
-                <select id="rating-${app.id}">
-                    <option value="0" ${Number(app.rating || 0) === 0 ? "selected" : ""}>No rating</option>
-                    <option value="1" ${Number(app.rating || 0) === 1 ? "selected" : ""}>1 Star</option>
-                    <option value="2" ${Number(app.rating || 0) === 2 ? "selected" : ""}>2 Stars</option>
-                    <option value="3" ${Number(app.rating || 0) === 3 ? "selected" : ""}>3 Stars</option>
-                    <option value="4" ${Number(app.rating || 0) === 4 ? "selected" : ""}>4 Stars</option>
-                    <option value="5" ${Number(app.rating || 0) === 5 ? "selected" : ""}>5 Stars</option>
-                </select>
-
-                <label for="notes-${app.id}">Notes</label>
-                <textarea id="notes-${app.id}">${safeText(app.notes || "")}</textarea>
-
-                <label for="cardInterviewDate-${app.id}">Interview Date</label>
-                <input type="date" id="cardInterviewDate-${app.id}" value="${safeText(app.interviewDate || "")}">
-
-                <label for="cardInterviewTime-${app.id}">Interview Time</label>
-                <input type="time" id="cardInterviewTime-${app.id}" value="${safeText(app.interviewTime || "")}">
-
-                <button type="button" onclick="saveCandidate('${app.id}')">Save Updates</button>
-                <button type="button" onclick="markReviewed('${app.id}')">Mark Reviewed</button>
-                <button type="button" onclick="prepareInterviewInvite('${app.id}')">Invite To Interview</button>
-                <button type="button" onclick="rejectCandidate('${app.id}')">Reject</button>
-                <button type="button" onclick="deleteApplication('${app.id}')">Delete</button>
-            </div>
-        `;
-    }).join("");
-}
-
-/* =====================================================
-   UPDATE APPLICATION
-===================================================== */
-
-async function updateApplication(id, updateData) {
-    const response = await fetch(`${API_BASE_URL}/api/applications/${id}`, {
-        method: "PATCH",
-        headers: getHeaders(),
-        body: JSON.stringify(updateData)
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.success) {
-        throw new Error(result.message || "Update failed.");
-    }
-
-    await loadApplications();
-}
-
-async function saveCandidate(id) {
-    try {
-        const status = el(`status-${id}`)?.value || "New";
-        const rating = Number(el(`rating-${id}`)?.value || 0);
-        const notes = el(`notes-${id}`)?.value || "";
-        const interviewDate = el(`cardInterviewDate-${id}`)?.value || "";
-        const interviewTime = el(`cardInterviewTime-${id}`)?.value || "";
-
-        await updateApplication(id, {
-            status,
-            rating,
-            notes,
-            interviewDate,
-            interviewTime
-        });
-
-        showToast("Candidate updated successfully.", "success");
-
-    } catch (error) {
-        showToast(error.message || "Could not save candidate.", "error");
-    }
-}
-
-async function markReviewed(id) {
-    try {
-        await updateApplication(id, { status: "Reviewed" });
-        showToast("Candidate marked as reviewed.", "success");
-    } catch (error) {
-        showToast(error.message || "Could not mark candidate as reviewed.", "error");
-    }
-}
-
-async function rejectCandidate(id) {
-    if (!confirm("Reject this candidate?")) return;
-
-    try {
-        await updateApplication(id, { status: "Rejected" });
-        showToast("Candidate rejected.", "success");
-    } catch (error) {
-        showToast(error.message || "Could not reject candidate.", "error");
-    }
-}
-
-async function deleteApplication(id) {
-    if (!confirm("Delete this application permanently?")) return;
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/applications/${id}`, {
-            method: "DELETE",
-            headers: getHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Delete failed.");
-        }
-
-        await loadApplications();
-        showToast("Application deleted.", "success");
-
-    } catch (error) {
-        showToast(error.message || "Could not delete application.", "error");
-    }
-}
-
-/* =====================================================
-   INTERVIEW INVITATION
-===================================================== */
-
-function selectCandidate(id) {
-    const app = applications.find(item => item.id === id);
-    if (!app) return;
-
-    selectedApplicationId = id;
-
-    if (el("selectedCandidate")) {
-        el("selectedCandidate").value = app.fullName || "";
-    }
-
-    if (el("starRating")) {
-        el("starRating").value = String(app.rating || "");
-    }
-
-    if (el("candidateNotes")) {
-        el("candidateNotes").value = app.notes || "";
-    }
-
-    prepareInterviewInvite(id);
-}
-
-function prepareInterviewInvite(id) {
-    const app = applications.find(item => item.id === id);
-
-    if (!app) {
-        showToast("Candidate not found.", "error");
-        return;
-    }
-
-    selectedApplicationId = id;
-
-    if (el("candidateName")) {
-        el("candidateName").value = app.fullName || "";
-    }
-
-    if (el("interviewDate")) {
-        el("interviewDate").value = app.interviewDate || "";
-    }
-
-    if (el("interviewTime")) {
-        el("interviewTime").value = app.interviewTime || "";
-    }
-
-    if (el("interviewLocation")) {
-        el("interviewLocation").value =
-            app.interviewLocation ||
-            "Joe's Excellent Events & Management, Newcastle upon Tyne";
-    }
-
-    if (el("interviewMessage")) {
-        el("interviewMessage").value =
-`Dear ${app.fullName || "Candidate"},
-
-Thank you for your application to Joe's Excellent Events & Management.
-
-We are pleased to invite you to attend an interview for the position of ${app.position || "the role you applied for"}.
-
-We would like to discuss your application, experience, skills and interest in joining our team.
-
-Please reply to confirm that you are able to attend.
-
-Kind regards,
-
-Recruitment Team
-Joe's Excellent Events & Management`;
-    }
-
-    showToast(`Interview template prepared for ${app.fullName}.`, "success");
-}
-
-async function sendInvitation() {
-    if (!selectedApplicationId) {
-        showToast("Please select a candidate first.", "error");
-        return;
-    }
-
-    const app = applications.find(item => item.id === selectedApplicationId);
-
-    if (!app) {
-        showToast("Candidate not found.", "error");
-        return;
-    }
-
-    const date = el("interviewDate")?.value || "";
-    const time = el("interviewTime")?.value || "";
-    const location = el("interviewLocation")?.value || "";
-    const message = el("interviewMessage")?.value || "";
-
-    if (!date || !time || !location) {
-        showToast("Please enter interview date, time and location.", "error");
-        return;
-    }
-
-    if (!confirm(`Send interview invitation email to ${app.fullName}?`)) {
-        return;
-    }
-
-    showToast("Sending interview invitation email...", "info");
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/applications/${selectedApplicationId}/invite`, {
-            method: "POST",
-            headers: getHeaders(),
             body: JSON.stringify({
-                interviewDate: date,
-                interviewTime: time,
-                interviewLocation: location,
-                interviewMessage: message
+                email,
+                password
             })
         });
 
         const result = await response.json();
 
-        if (!response.ok || !result.success) {
-            throw new Error(result.message || "Email invitation failed.");
+        if (!response.ok) {
+            throw new Error(result.message || "Login failed.");
         }
 
-        showToast(`Interview invitation sent successfully to ${app.email}.`, "success");
+        authToken = result.token;
+        adminRole = result.role;
+
+        localStorage.setItem("adminToken", authToken);
+        localStorage.setItem("adminRole", adminRole);
+
+        loginMessage.style.color = "#4cd964";
+        loginMessage.textContent = "Login successful.";
+
+        adminInfo.innerHTML = `
+            <h3>Logged In As: ${adminRole.toUpperCase()}</h3>
+        `;
+
+        permissionsInfo.innerHTML = `
+            <strong>Permissions:</strong>
+            ${adminRole === "viewer"
+                ? "View-only access enabled."
+                : "Full recruitment management access enabled."}
+        `;
+
+        setDashboardVisible(true);
+
+        await loadApplications();
+        await loadContactMessages();
+
+    } catch (error) {
+
+        console.error(error);
+
+        loginMessage.style.color = "#ff6b6b";
+        loginMessage.textContent = error.message || "Login failed.";
+
+        showToast(error.message, "error");
+    }
+}
+
+async function loadApplications() {
+
+    try {
+
+        const response = await fetch(`${API_BASE}/api/applications`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load applications.");
+        }
+
+        renderApplications(result.applications || []);
+        updateStats(result.applications || []);
+
+    } catch (error) {
+
+        console.error(error);
+
+        applicationsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">Failed to load applications.</td>
+            </tr>
+        `;
+
+        showToast(error.message, "error");
+    }
+}
+
+function renderApplications(applications) {
+
+    if (!applications.length) {
+
+        applicationsTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No applications found.</td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    applicationsTableBody.innerHTML = "";
+
+    applications.forEach(application => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${application.fullName || ""}</td>
+            <td>${application.email || ""}</td>
+            <td>${application.position || ""}</td>
+            <td>${formatDate(application.createdAt)}</td>
+            <td>${application.status || "New"}</td>
+            <td>
+                ${application.cv
+                    ? `<a href="${application.cv}" target="_blank">Download CV</a>`
+                    : "No CV"}
+            </td>
+            <td>
+                <button onclick="selectCandidate('${application.id}', '${escapeQuotes(application.fullName)}')">
+                    Interview
+                </button>
+
+                <button onclick="deleteApplication('${application.id}')">
+                    Delete
+                </button>
+            </td>
+        `;
+
+        applicationsTableBody.appendChild(tr);
+    });
+}
+
+async function loadContactMessages() {
+
+    try {
+
+        const response = await fetch(`${API_BASE}/api/contact-messages`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load contact messages.");
+        }
+
+        renderContactMessages(result.messages || []);
+
+    } catch (error) {
+
+        console.error(error);
+
+        contactMessagesTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">Failed to load contact messages.</td>
+            </tr>
+        `;
+
+        showToast(error.message, "error");
+    }
+}
+
+function renderContactMessages(messages) {
+
+    if (!messages.length) {
+
+        contactMessagesTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No contact messages found.</td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    contactMessagesTableBody.innerHTML = "";
+
+    messages.forEach(message => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${message.name || ""}</td>
+            <td>${message.email || ""}</td>
+            <td>${message.phone || ""}</td>
+            <td>${message.subject || ""}</td>
+            <td>${formatDate(message.createdAt)}</td>
+            <td>${message.read ? "Read" : "New"}</td>
+            <td>
+
+                <button onclick="viewContactMessage(
+                    '${message.id}',
+                    '${escapeQuotes(message.name)}',
+                    '${escapeQuotes(message.email)}',
+                    '${escapeQuotes(message.subject)}',
+                    '${escapeQuotes(message.message)}'
+                )">
+                    View
+                </button>
+
+                <button onclick="markMessageRead('${message.id}')">
+                    Mark Read
+                </button>
+
+                <button onclick="deleteContactMessage('${message.id}')">
+                    Delete
+                </button>
+
+            </td>
+        `;
+
+        contactMessagesTableBody.appendChild(tr);
+    });
+}
+
+function viewContactMessage(id, name, email, subject, message) {
+
+    selectedContactMessageId = id;
+
+    alert(
+        `Name: ${name}\n\n` +
+        `Email: ${email}\n\n` +
+        `Subject: ${subject}\n\n` +
+        `Message:\n${message}`
+    );
+}
+
+async function markMessageRead(id) {
+
+    try {
+
+        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                read: true,
+                status: "Read"
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to update message.");
+        }
+
+        showToast("Message marked as read.", "success");
+
+        await loadContactMessages();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(error.message, "error");
+    }
+}
+
+async function deleteContactMessage(id) {
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot delete messages.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this contact message?")) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(`${API_BASE}/api/contact-messages/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to delete message.");
+        }
+
+        showToast("Contact message deleted.", "success");
+
+        await loadContactMessages();
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(error.message, "error");
+    }
+}
+
+function updateStats(applications) {
+
+    totalApplications.textContent = applications.length;
+
+    const newCount = applications.filter(app =>
+        (app.status || "").toLowerCase().includes("new")
+    ).length;
+
+    const interviewCount = applications.filter(app =>
+        (app.status || "").toLowerCase().includes("interview")
+    ).length;
+
+    const hiredCount = applications.filter(app =>
+        (app.status || "").toLowerCase().includes("hired")
+    ).length;
+
+    newApplications.textContent = newCount;
+    interviewApplications.textContent = interviewCount;
+    hiredApplications.textContent = hiredCount;
+}
+
+function selectCandidate(id, fullName) {
+
+    selectedApplicationId = id;
+
+    document.getElementById("candidateName").value = fullName;
+    document.getElementById("selectedCandidate").value = fullName;
+
+    showToast(`Selected ${fullName}`, "info");
+}
+
+async function deleteApplication(id) {
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot delete applications.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this application?")) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(`${API_BASE}/api/applications/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Delete failed.");
+        }
+
+        showToast("Application deleted.", "success");
 
         await loadApplications();
 
     } catch (error) {
-        showToast(error.message || "Could not send invitation email.", "error");
+
+        console.error(error);
+
+        showToast(error.message, "error");
     }
 }
 
-async function saveNotes() {
+async function sendInvitation() {
+
     if (!selectedApplicationId) {
         showToast("Please select a candidate first.", "error");
         return;
     }
 
     try {
-        const rating = Number(el("starRating")?.value || 0);
-        const notes = el("candidateNotes")?.value || "";
 
-        await updateApplication(selectedApplicationId, {
-            rating,
-            notes
-        });
+        const payload = {
+            interviewDate: document.getElementById("interviewDate").value,
+            interviewTime: document.getElementById("interviewTime").value,
+            interviewLocation: document.getElementById("interviewLocation").value,
+            interviewMessage: document.getElementById("interviewMessage").value
+        };
 
-        showToast("Admin notes saved.", "success");
+        const response = await fetch(
+            `${API_BASE}/api/applications/${selectedApplicationId}/invite`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Invitation failed.");
+        }
+
+        showToast("Interview invitation sent successfully.", "success");
+
+        await loadApplications();
 
     } catch (error) {
-        showToast(error.message || "Could not save notes.", "error");
+
+        console.error(error);
+
+        showToast(error.message, "error");
     }
 }
 
-/* =====================================================
-   EXPORT CSV
-===================================================== */
+function exportApplicationsCSV() {
 
-function exportCsv() {
-    if (!applications.length) {
-        showToast("No applications to export.", "error");
-        return;
-    }
+    showToast("CSV export started.", "info");
 
-    const headers = [
-        "Name",
-        "Email",
-        "Phone",
-        "Address",
-        "Position",
-        "Availability",
-        "Status",
-        "Rating",
-        "Date Applied",
-        "Notes"
-    ];
+    const rows = [];
 
-    const rows = applications.map(app => [
-        app.fullName || "",
-        app.email || "",
-        app.phone || "",
-        app.address || "",
-        app.position || "",
-        app.availability || "",
-        app.status || "New",
-        app.rating || "",
-        app.createdAt || "",
-        app.notes || ""
-    ]);
+    const tableRows = applicationsTableBody.querySelectorAll("tr");
 
-    const csv = [headers, ...rows]
-        .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(","))
-        .join("\n");
+    tableRows.forEach(row => {
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const cols = row.querySelectorAll("td");
+
+        if (!cols.length) return;
+
+        const rowData = [];
+
+        cols.forEach((col, index) => {
+
+            if (index < 5) {
+                rowData.push(`"${col.innerText.replace(/"/g, '""')}"`);
+            }
+        });
+
+        rows.push(rowData.join(","));
+    });
+
+    const csvContent = [
+        `"Name","Email","Position","Date Applied","Status"`,
+        ...rows
+    ].join("\n");
+
+    const blob = new Blob([csvContent], {
+        type: "text/csv"
+    });
+
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
+
     link.href = url;
     link.download = "applications.csv";
+
+    document.body.appendChild(link);
+
     link.click();
 
-    URL.revokeObjectURL(url);
+    document.body.removeChild(link);
 }
 
-/* =====================================================
-   CHART
-===================================================== */
+function logoutAdmin() {
 
-function renderChart() {
-    const canvas = el("applicationsChart");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminRole");
 
-    if (!canvas || typeof Chart === "undefined") {
-        return;
-    }
+    authToken = "";
+    adminRole = "";
 
-    const counts = {
-        New: 0,
-        Reviewed: 0,
-        "Interview Invited": 0,
-        Rejected: 0,
-        Hired: 0
-    };
+    setDashboardVisible(false);
 
-    applications.forEach(app => {
-        const status = app.status || "New";
+    showToast("Logged out successfully.", "success");
+}
 
-        if (counts[status] !== undefined) {
-            counts[status]++;
-        }
-    });
+function formatDate(dateString) {
 
-    if (dashboardChart) {
-        dashboardChart.destroy();
-    }
+    if (!dateString) return "N/A";
 
-    dashboardChart = new Chart(canvas, {
-        type: "bar",
-        data: {
-            labels: Object.keys(counts),
-            datasets: [{
-                label: "Applications",
-                data: Object.values(counts),
-                backgroundColor: [
-                    "#ff6a00",
-                    "#ffaa00",
-                    "#00a8ff",
-                    "#c0392b",
-                    "#27ae60"
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: "#ffffff"
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: {
-                        color: "#ffffff"
-                    }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: "#ffffff",
-                        precision: 0
-                    }
-                }
-            }
-        }
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
     });
 }
 
-/* =====================================================
-   STARTUP
-===================================================== */
+function escapeQuotes(value) {
 
-document.addEventListener("DOMContentLoaded", async () => {
-    if (el("logoutBtn")) {
-        el("logoutBtn").addEventListener("click", logoutAdmin);
-    }
+    return String(value || "")
+        .replace(/'/g, "\\'")
+        .replace(/"/g, "&quot;");
+}
 
-    if (el("exportCsvBtn")) {
-        el("exportCsvBtn").addEventListener("click", exportCsv);
-    }
+document.getElementById("sendInvitationBtn")
+    .addEventListener("click", sendInvitation);
 
-    if (el("sendInvitationBtn")) {
-        el("sendInvitationBtn").addEventListener("click", sendInvitation);
-    }
+document.getElementById("logoutBtn")
+    .addEventListener("click", logoutAdmin);
 
-    if (el("saveNotesBtn")) {
-        el("saveNotesBtn").addEventListener("click", saveNotes);
-    }
-
-    if (authToken) {
-        showDashboard();
-        await loadApplications();
-    } else {
-        if (el("loginBox")) el("loginBox").style.display = "block";
-        if (el("dashboardContent")) el("dashboardContent").style.display = "none";
-    }
-});
-
-/* =====================================================
-   GLOBAL FUNCTIONS FOR HTML BUTTONS
-===================================================== */
+document.getElementById("exportCsvBtn")
+    .addEventListener("click", exportApplicationsCSV);
 
 window.loginAdmin = loginAdmin;
-window.logoutAdmin = logoutAdmin;
-window.selectCandidate = selectCandidate;
-window.prepareInterviewInvite = prepareInterviewInvite;
-window.saveCandidate = saveCandidate;
-window.markReviewed = markReviewed;
-window.rejectCandidate = rejectCandidate;
 window.deleteApplication = deleteApplication;
-window.sendInvitation = sendInvitation;
-window.saveNotes = saveNotes;
-window.exportCsv = exportCsv;
+window.selectCandidate = selectCandidate;
+window.deleteContactMessage = deleteContactMessage;
+window.markMessageRead = markMessageRead;
+window.viewContactMessage = viewContactMessage;
+
+if (authToken) {
+
+    setDashboardVisible(true);
+
+    adminInfo.innerHTML = `
+        <h3>Logged In As: ${adminRole.toUpperCase()}</h3>
+    `;
+
+    permissionsInfo.innerHTML = `
+        <strong>Permissions:</strong>
+        ${adminRole === "viewer"
+            ? "View-only access enabled."
+            : "Full recruitment management access enabled."}
+    `;
+
+    loadApplications();
+    loadContactMessages();
+}
