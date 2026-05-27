@@ -6,11 +6,7 @@
     <title>Admin Dashboard | Joe's Excellent Events & Management</title>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -45,7 +41,6 @@
         nav a:hover,
         nav a.active {
             background: #ff6a00;
-            color: #ffffff;
             padding: 12px 18px;
             border-radius: 10px;
         }
@@ -76,10 +71,7 @@
             text-transform: uppercase;
         }
 
-        .hero-placeholder span {
-            color: #ff6a00;
-            display: block;
-        }
+        .hero-placeholder span { color: #ff6a00; display: block; }
 
         .dashboard {
             max-width: 1200px;
@@ -108,14 +100,8 @@
             text-align: center;
         }
 
-        h3 {
-            color: #ff6a00;
-            margin-bottom: 18px;
-        }
-
-        p {
-            color: #f2f2f2;
-        }
+        h3 { color: #ff6a00; margin-bottom: 18px; }
+        p { color: #f2f2f2; }
 
         label {
             display: block;
@@ -158,9 +144,7 @@
         }
 
         button:hover,
-        .btn:hover {
-            background: #ff7a1a;
-        }
+        .btn:hover { background: #ff7a1a; }
 
         .admin-actions {
             text-align: center;
@@ -205,9 +189,22 @@
             color: #ffffff;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
+        .ats-filter-box {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 28px 0;
         }
+
+        .ats-filter-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr auto;
+            gap: 18px;
+            align-items: end;
+        }
+
+        .table-wrapper { overflow-x: auto; }
 
         table {
             width: 100%;
@@ -223,14 +220,8 @@
             font-size: 0.9rem;
         }
 
-        th {
-            color: #ff6a00;
-        }
-
-        td a {
-            color: #ff6a00;
-            font-weight: 700;
-        }
+        th { color: #ff6a00; }
+        td a { color: #ff6a00; font-weight: 700; }
 
         .form-grid {
             display: grid;
@@ -238,9 +229,7 @@
             gap: 22px;
         }
 
-        .form-group.full {
-            grid-column: 1 / -1;
-        }
+        .form-group.full { grid-column: 1 / -1; }
 
         .chart-wrapper {
             position: relative;
@@ -287,17 +276,9 @@
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
-        .toast-success {
-            background: #27ae60;
-        }
-
-        .toast-error {
-            background: #c0392b;
-        }
-
-        .toast-info {
-            background: #2980b9;
-        }
+        .toast-success { background: #27ae60; }
+        .toast-error { background: #c0392b; }
+        .toast-info { background: #2980b9; }
 
         .cta-section {
             background: #0b2a44;
@@ -314,13 +295,8 @@
             border-radius: 16px;
         }
 
-        .cta-box h2 {
-            color: #ffffff;
-        }
-
-        .cta-box span {
-            color: #ff6a00;
-        }
+        .cta-box h2 { color: #ffffff; }
+        .cta-box span { color: #ff6a00; }
 
         footer {
             background: #020b14;
@@ -331,17 +307,14 @@
 
         @media (max-width: 900px) {
             .stats-grid,
-            .form-grid {
+            .form-grid,
+            .ats-filter-grid {
                 grid-template-columns: 1fr;
             }
 
-            nav {
-                gap: 18px;
-            }
+            nav { gap: 18px; }
 
-            .dashboard {
-                padding: 50px 7%;
-            }
+            .dashboard { padding: 50px 7%; }
 
             button,
             .btn {
@@ -360,177 +333,206 @@
 
 <body>
 
-    <header>
-        <nav class="navbar">
-            <a href="index.html">Home</a>
-            <a href="home.html">About</a>
-            <a href="our-services.html">Our Services</a>
-            <a href="careers.html">Careers</a>
-            <a href="apply.html">Apply</a>
-            <a href="contact us.html">Contact Us</a>
-            <a href="admin.html" class="active">Admin</a>
-        </nav>
-    </header>
+<header>
+    <nav class="navbar">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="apply.html">Apply</a>
+        <a href="contact us.html">Contact Us</a>
+        <a href="admin.html" class="active">Admin</a>
+    </nav>
+</header>
 
-    <section class="hero">
-        <div class="hero-placeholder">
-            <h1>
-                Recruitment
-                <span>Admin Dashboard</span>
-            </h1>
-        </div>
+<section class="hero">
+    <div class="hero-placeholder">
+        <h1>
+            Recruitment
+            <span>Admin Dashboard</span>
+        </h1>
+    </div>
+</section>
+
+<div id="toastContainer"></div>
+
+<main class="dashboard">
+
+    <section id="loginBox" class="login-box">
+        <h2>Admin Login</h2>
+        <p>Enter your admin details to access candidate applications, recruitment tracking and interview tools.</p>
+
+        <label for="adminEmail">Admin Email</label>
+        <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="username">
+
+        <label for="adminPassword">Admin Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password">
+
+        <button id="loginBtn" type="button" onclick="loginAdmin()">Login</button>
+
+        <p id="loginMessage"></p>
     </section>
 
-    <div id="toastContainer"></div>
+    <section id="dashboardContent" style="display:none;">
 
-    <main class="dashboard">
+        <div class="admin-actions">
+            <button id="logoutBtn" type="button">Logout</button>
+            <button id="exportCsvBtn" type="button">Export CSV</button>
+        </div>
 
-        <section id="loginBox" class="login-box">
-            <h2>Admin Login</h2>
-            <p>Enter your admin details to access candidate applications, recruitment tracking and interview tools.</p>
+        <div id="adminInfo"></div>
+        <div id="permissionsInfo" class="permission-box"></div>
 
-            <label for="adminEmail">Admin Email</label>
-            <input type="email" id="adminEmail" placeholder="Enter admin email" autocomplete="username">
+        <section class="admin-card">
+            <h2>Dashboard Overview</h2>
 
-            <label for="adminPassword">Admin Password</label>
-            <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>1</span>
+                    <h3>Total Applications</h3>
+                    <p id="totalApplications">0</p>
+                </div>
 
-            <button id="loginBtn" type="button" onclick="loginAdmin()">Login</button>
+                <div class="stat-card">
+                    <span>2</span>
+                    <h3>New Applications</h3>
+                    <p id="newApplications">0</p>
+                </div>
 
-            <p id="loginMessage"></p>
-        </section>
+                <div class="stat-card">
+                    <span>3</span>
+                    <h3>Interview Stage</h3>
+                    <p id="interviewApplications">0</p>
+                </div>
 
-        <section id="dashboardContent" style="display:none;">
-
-            <div class="admin-actions">
-                <button id="logoutBtn" type="button">Logout</button>
-                <button id="exportCsvBtn" type="button">Export CSV</button>
+                <div class="stat-card">
+                    <span>4</span>
+                    <h3>Hired Candidates</h3>
+                    <p id="hiredApplications">0</p>
+                </div>
             </div>
 
-            <div id="adminInfo"></div>
-            <div id="permissionsInfo" class="permission-box"></div>
+            <div id="stats"></div>
+        </section>
 
-            <section class="admin-card">
-                <h2>Dashboard Overview</h2>
+        <section class="application-card">
+            <h2>Candidate Applications</h2>
+            <p>Search, filter, review and manage candidates through the recruitment pipeline.</p>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <span>1</span>
-                        <h3>Total Applications</h3>
-                        <p id="totalApplications">0</p>
+            <div class="ats-filter-box">
+                <div class="ats-filter-grid">
+                    <div>
+                        <label for="candidateSearchInput">Search Candidates</label>
+                        <input type="text" id="candidateSearchInput" placeholder="Search by name, email, role or status">
                     </div>
 
-                    <div class="stat-card">
-                        <span>2</span>
-                        <h3>New Applications</h3>
-                        <p id="newApplications">0</p>
+                    <div>
+                        <label for="statusFilterSelect">Filter By Status</label>
+                        <select id="statusFilterSelect">
+                            <option value="">All Statuses</option>
+                            <option value="New">New</option>
+                            <option value="Screening">Screening</option>
+                            <option value="Shortlisted">Shortlisted</option>
+                            <option value="Interview Invited">Interview Invited</option>
+                            <option value="Interview Completed">Interview Completed</option>
+                            <option value="Offer Made">Offer Made</option>
+                            <option value="Hired">Hired</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Archived">Archived</option>
+                        </select>
                     </div>
 
-                    <div class="stat-card">
-                        <span>3</span>
-                        <h3>Interview Stage</h3>
-                        <p id="interviewApplications">0</p>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>4</span>
-                        <h3>Hired Candidates</h3>
-                        <p id="hiredApplications">0</p>
+                    <div>
+                        <button id="clearFiltersBtn" type="button">Clear Filters</button>
                     </div>
                 </div>
+            </div>
 
-                <div id="stats"></div>
-            </section>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Position</th>
+                            <th>Date Applied</th>
+                            <th>Status</th>
+                            <th>CV</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
 
-            <section class="application-card">
-                <h2>Candidate Applications</h2>
-                <p>Review candidate details, track application status, download CVs and manage recruitment actions.</p>
+                    <tbody id="applicationsTableBody">
+                        <tr>
+                            <td colspan="7">Applications will appear here after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Position</th>
-                                <th>Date Applied</th>
-                                <th>Status</th>
-                                <th>CV</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
+            <div id="applications"></div>
+        </section>
 
-                        <tbody id="applicationsTableBody">
-                            <tr>
-                                <td colspan="7">Applications will appear here after login.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <section class="application-card">
+            <h2>Contact Messages</h2>
+            <p>View and manage messages submitted through the Contact Us page.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Subject</th>
+                            <th>Date Sent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="contactMessagesTableBody">
+                        <tr>
+                            <td colspan="7">Contact messages will appear here after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="contactMessages"></div>
+        </section>
+
+        <section class="invite-card">
+            <h2>Interview Invitation</h2>
+            <p>
+                Select a candidate using the Interview button, then complete the interview details below.
+                Press Send Invitation to email the candidate and update their recruitment status.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="candidateName">Candidate Name</label>
+                    <input type="text" id="candidateName" placeholder="Candidate name">
                 </div>
 
-                <div id="applications"></div>
-            </section>
-
-            <section class="application-card">
-                <h2>Contact Messages</h2>
-                <p>View and manage messages submitted through the Contact Us page.</p>
-
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Subject</th>
-                                <th>Date Sent</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-
-                        <tbody id="contactMessagesTableBody">
-                            <tr>
-                                <td colspan="7">Contact messages will appear here after login.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="form-group">
+                    <label for="interviewDate">Interview Date</label>
+                    <input type="date" id="interviewDate">
                 </div>
 
-                <div id="contactMessages"></div>
-            </section>
+                <div class="form-group">
+                    <label for="interviewTime">Time</label>
+                    <input type="time" id="interviewTime">
+                </div>
 
-            <section class="invite-card">
-                <h2>Interview Invitation</h2>
-                <p>
-                    Select a candidate using the Interview button, then complete the interview details below.
-                    Press Send Invitation to email the candidate and update their recruitment status.
-                </p>
+                <div class="form-group">
+                    <label for="interviewLocation">Location</label>
+                    <input type="text" id="interviewLocation" placeholder="Interview location">
+                </div>
 
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="candidateName">Candidate Name</label>
-                        <input type="text" id="candidateName" placeholder="Candidate name">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="interviewDate">Interview Date</label>
-                        <input type="date" id="interviewDate">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="interviewTime">Time</label>
-                        <input type="time" id="interviewTime">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="interviewLocation">Location</label>
-                        <input type="text" id="interviewLocation" placeholder="Interview location">
-                    </div>
-
-                    <div class="form-group full">
-                        <label for="interviewMessage">Email Invitation Template</label>
-                        <textarea id="interviewMessage">Dear Candidate,
+                <div class="form-group full">
+                    <label for="interviewMessage">Email Invitation Template</label>
+                    <textarea id="interviewMessage">Dear Candidate,
 
 Thank you for your application to Joe's Excellent Events & Management.
 
@@ -544,99 +546,99 @@ Kind regards,
 
 Recruitment Team
 Joe's Excellent Events & Management</textarea>
-                    </div>
                 </div>
+            </div>
 
-                <button id="sendInvitationBtn" type="button">Send Invitation</button>
-            </section>
-
-            <section class="notes-card">
-                <h2>Admin Notes</h2>
-                <p>Add internal notes, rating and candidate updates for recruitment management.</p>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="selectedCandidate">Candidate Name</label>
-                        <input type="text" id="selectedCandidate" placeholder="Selected candidate">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="starRating">Star Rating</label>
-                        <select id="starRating">
-                            <option value="">Select rating</option>
-                            <option value="1">1 Star</option>
-                            <option value="2">2 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="5">5 Stars</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group full">
-                        <label for="candidateNotes">Candidate Notes</label>
-                        <textarea id="candidateNotes" placeholder="Add internal notes here"></textarea>
-                    </div>
-                </div>
-
-                <button id="saveNotesBtn" type="button">Save Notes</button>
-            </section>
-
-            <section class="analytics-card">
-                <h2>Recruitment Analytics</h2>
-                <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
-
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <span>1</span>
-                        <h3>Applications By Role</h3>
-                        <p id="applicationsByRole">0</p>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>2</span>
-                        <h3>Status Breakdown</h3>
-                        <p id="statusBreakdown">0</p>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>3</span>
-                        <h3>New This Week</h3>
-                        <p id="newThisWeek">0</p>
-                    </div>
-
-                    <div class="stat-card">
-                        <span>4</span>
-                        <h3>Interview Pipeline</h3>
-                        <p id="interviewPipeline">0</p>
-                    </div>
-                </div>
-
-                <div class="chart-wrapper">
-                    <canvas id="applicationsChart"></canvas>
-                </div>
-            </section>
-
+            <button id="sendInvitationBtn" type="button">Send Invitation</button>
         </section>
 
-    </main>
+        <section class="notes-card">
+            <h2>Admin Notes</h2>
+            <p>Add internal notes, rating and candidate updates for recruitment management.</p>
 
-    <section class="cta-section">
-        <div class="cta-box">
-            <h2>Recruitment Management <span>Built For Growth</span></h2>
-            <p>
-                This dashboard supports candidate tracking, interview coordination, recruitment reporting and professional application management.
-            </p>
-        </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="selectedCandidate">Candidate Name</label>
+                    <input type="text" id="selectedCandidate" placeholder="Selected candidate">
+                </div>
+
+                <div class="form-group">
+                    <label for="starRating">Star Rating</label>
+                    <select id="starRating">
+                        <option value="">Select rating</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="candidateNotes">Candidate Notes</label>
+                    <textarea id="candidateNotes" placeholder="Add internal notes here"></textarea>
+                </div>
+            </div>
+
+            <button id="saveNotesBtn" type="button">Save Notes</button>
+        </section>
+
+        <section class="analytics-card">
+            <h2>Recruitment Analytics</h2>
+            <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>1</span>
+                    <h3>Applications By Role</h3>
+                    <p id="applicationsByRole">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>2</span>
+                    <h3>Status Breakdown</h3>
+                    <p id="statusBreakdown">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>3</span>
+                    <h3>New This Week</h3>
+                    <p id="newThisWeek">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>4</span>
+                    <h3>Interview Pipeline</h3>
+                    <p id="interviewPipeline">0</p>
+                </div>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="applicationsChart"></canvas>
+            </div>
+        </section>
+
     </section>
 
-    <footer>
-        <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
-        <p>All rights reserved.</p>
-    </footer>
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="charts.js?v=29"></script>
-    <script src="admin.js?v=32"></script>
+<section class="cta-section">
+    <div class="cta-box">
+        <h2>Recruitment Management <span>Built For Growth</span></h2>
+        <p>
+            This dashboard supports candidate tracking, interview coordination, recruitment reporting and professional application management.
+        </p>
+    </div>
+</section>
+
+<footer>
+    <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+    <p>All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="charts.js?v=29"></script>
+<script src="admin.js?v=34"></script>
 
 </body>
 </html>
