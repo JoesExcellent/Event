@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,12 +41,12 @@
             text-decoration: none;
             font-size: 0.95rem;
             font-weight: 700;
+            transition: 0.3s ease;
         }
 
         nav a:hover,
         nav a.active {
             background: #ff6a00;
-            color: #ffffff;
             padding: 12px 18px;
             border-radius: 10px;
         }
@@ -56,149 +57,135 @@
             border-bottom: 2px solid #ff6a00;
         }
 
-        .hero-placeholder {
+        .hero-image {
             max-width: 1200px;
-            min-height: 320px;
+            height: 340px;
             margin: auto;
-            border: 1px solid #ffb000;
             border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #ffb000;
             background: #123756;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px;
         }
 
-        .hero-placeholder h1 {
-            font-size: clamp(2.3rem, 5vw, 4.5rem);
-            line-height: 1.1;
-            text-transform: uppercase;
-        }
-
-        .hero-placeholder span {
-            color: #ff6a00;
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
         }
 
-        .intro-section {
+        .contact-intro {
             background: #0b2a44;
-            padding: 75px 7%;
+            padding: 80px 7%;
         }
 
         .intro-grid {
-            max-width: 1100px;
+            max-width: 1150px;
             margin: auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 55px;
+            gap: 60px;
             align-items: center;
         }
 
-        .photo-placeholder {
-            width: 100%;
-            min-height: 260px;
-            border: 1px solid #ffb000;
+        .intro-image {
+            height: 380px;
             border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #ffb000;
             background: #123756;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 30px;
         }
 
-        .photo-placeholder p {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .text-box h2 {
-            font-size: clamp(2.1rem, 4vw, 3.5rem);
-            line-height: 1.1;
-            text-transform: uppercase;
-            margin-bottom: 22px;
-        }
-
-        .text-box h2 span {
-            color: #ff6a00;
+        .intro-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             display: block;
         }
 
-        .text-box p {
-            margin-bottom: 18px;
+        .intro-text h2 {
+            font-size: clamp(2.2rem, 5vw, 4rem);
+            line-height: 1.1;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .white-text {
+            display: block;
+            color: #ffffff;
+        }
+
+        .orange-text {
+            display: block;
+            color: #ff6a00;
+        }
+
+        .intro-text p {
             color: #f2f2f2;
+            margin-bottom: 18px;
         }
 
         .info-section {
             background: #061726;
             padding: 80px 7%;
+            text-align: center;
         }
 
         .section-heading {
-            text-align: center;
             max-width: 900px;
-            margin: 0 auto 50px;
+            margin: auto auto 50px;
         }
 
         .section-heading h2 {
             color: #ff6a00;
             font-size: clamp(2rem, 4vw, 3rem);
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .info-grid {
-            max-width: 1100px;
+            max-width: 1150px;
             margin: auto;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
+            gap: 24px;
         }
 
         .info-card {
             background: #13283b;
-            padding: 30px 22px;
-            border-radius: 14px;
+            padding: 32px 24px;
+            border-radius: 16px;
             border: 1px solid rgba(255, 176, 0, 0.25);
-            text-align: center;
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
         .info-card span {
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             background: #ff6a00;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .info-card h3 {
             color: #ff6a00;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
-        .info-card p {
-            color: #f2f2f2;
-            font-size: 0.9rem;
-            word-break: break-word;
-        }
-
-        .form-section {
+        .contact-form-section {
             background: #0b2a44;
             padding: 80px 7%;
         }
 
-        .contact-form {
-            max-width: 900px;
+        .form-wrapper {
+            max-width: 1050px;
             margin: auto;
             background: #13283b;
-            padding: 40px;
-            border-radius: 16px;
+            padding: 50px;
+            border-radius: 18px;
             border: 1px solid rgba(255, 176, 0, 0.25);
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
@@ -206,12 +193,7 @@
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 22px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
+            gap: 24px;
         }
 
         .form-group.full {
@@ -219,29 +201,30 @@
         }
 
         label {
+            display: block;
+            margin-bottom: 8px;
             color: #ff6a00;
             font-weight: 700;
-            margin-bottom: 8px;
         }
 
         input,
         textarea {
             width: 100%;
-            padding: 13px 14px;
-            border: 1px solid rgba(255, 176, 0, 0.45);
+            padding: 14px;
             border-radius: 8px;
+            border: 1px solid rgba(255, 176, 0, 0.35);
             background: #0b2a44;
             color: #ffffff;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 0.95rem;
+            margin-bottom: 18px;
         }
 
         textarea {
-            min-height: 150px;
+            min-height: 180px;
             resize: vertical;
         }
 
-        .submit-btn {
+        button {
             background: #ff6a00;
             color: #ffffff;
             border: none;
@@ -249,105 +232,108 @@
             border-radius: 8px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 25px;
-            font-size: 1rem;
+            transition: 0.3s ease;
         }
 
-        .form-message {
-            margin-top: 18px;
-            font-weight: 700;
+        button:hover {
+            background: #ff7a1a;
         }
 
         .why-section {
             background: #061726;
             padding: 80px 7%;
+            text-align: center;
         }
 
         .why-grid {
-            max-width: 1100px;
+            max-width: 1150px;
             margin: auto;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
+            gap: 24px;
         }
 
         .why-card {
             background: #13283b;
-            padding: 30px 22px;
-            border-radius: 14px;
+            padding: 30px 24px;
+            border-radius: 16px;
             border: 1px solid rgba(255, 176, 0, 0.25);
-            text-align: center;
         }
 
         .why-card span {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             background: #ff6a00;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .why-card h3 {
             color: #ff6a00;
-            margin-bottom: 10px;
+            margin-bottom: 14px;
         }
 
-        .why-card p {
-            color: #f2f2f2;
-            font-size: 0.9rem;
-        }
-
-        .map-section {
+        .location-section {
             background: #0b2a44;
             padding: 80px 7%;
         }
 
-        .map-grid {
-            max-width: 1100px;
+        .location-grid {
+            max-width: 1150px;
             margin: auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 55px;
+            gap: 60px;
             align-items: center;
         }
 
-        .map-box {
-            background: rgba(255, 255, 255, 0.06);
-            padding: 34px;
-            border-radius: 14px;
+        .location-text {
+            background: rgba(255,255,255,0.05);
+            padding: 40px;
+            border-radius: 18px;
         }
 
-        .map-box h2 {
-            font-size: 2rem;
-            line-height: 1.2;
-            margin-bottom: 18px;
+        .location-text h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 20px;
         }
 
-        .map-box span {
+        .location-text span {
             color: #ff6a00;
         }
 
-        .map-box p {
-            margin-bottom: 18px;
+        .location-image {
+            height: 360px;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #ffb000;
+            background: #123756;
+        }
+
+        .location-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .cta-section {
             background: #061726;
-            padding: 75px 7%;
+            padding: 80px 7%;
             border-bottom: 2px solid #ff6a00;
-            text-align: center;
         }
 
         .cta-box {
-            max-width: 950px;
+            max-width: 1100px;
             margin: auto;
-            background: rgba(255, 255, 255, 0.08);
-            padding: 50px;
-            border-radius: 16px;
+            background: rgba(255,255,255,0.06);
+            padding: 60px;
+            border-radius: 18px;
+            text-align: center;
         }
 
         .cta-box h2 {
@@ -361,27 +347,26 @@
 
         footer {
             background: #020b14;
-            text-align: center;
             padding: 30px 20px;
+            text-align: center;
             font-size: 0.9rem;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 950px) {
             .intro-grid,
-            .form-grid,
+            .location-grid,
             .info-grid,
             .why-grid,
-            .map-grid {
+            .form-grid {
                 grid-template-columns: 1fr;
-                text-align: center;
             }
 
             nav {
                 gap: 18px;
             }
 
-            .contact-form {
-                padding: 28px;
+            .form-wrapper {
+                padding: 35px;
             }
         }
     </style>
@@ -390,7 +375,7 @@
 <body>
 
     <header>
-        <nav class="navbar">
+        <nav>
             <a href="index.html">Home</a>
             <a href="home.html">About</a>
             <a href="our-services.html">Our Services</a>
@@ -402,213 +387,220 @@
     </header>
 
     <section class="hero">
-        <div class="hero-placeholder">
-            <h1>
-                Let’s Start
-                <span>The Conversation</span>
-            </h1>
+        <div class="hero-image">
+            <img src="images/contact-hero.png" alt="Professional business communication">
         </div>
     </section>
 
-    <main>
+    <section class="contact-intro">
 
-        <section class="intro-section">
-            <div class="intro-grid">
+        <div class="intro-grid">
 
-                <div class="photo-placeholder">
-                    <p>Contact Us Photograph Placeholder</p>
-                </div>
-
-                <div class="text-box">
-                    <h2>
-                        We’re Here
-                        <span>To Help</span>
-                    </h2>
-
-                    <p>
-                        Whether you are making a business enquiry, looking for recruitment support, exploring a partnership or simply want to find out more, Joe’s Excellent Events & Management is ready to respond with professionalism and care.
-                    </p>
-
-                    <p>
-                        We welcome enquiries from clients, candidates, partners and organisations who want reliable support, clear communication and people-focused service.
-                    </p>
-                </div>
-
+            <div class="intro-image">
+                <img src="images/contact-team.png" alt="Joe's Excellent Events and Management team">
             </div>
-        </section>
 
-        <section class="info-section">
-            <div class="section-heading">
-                <h2>Contact Information</h2>
+            <div class="intro-text">
+
+                <h2>
+                    <span class="white-text">We're Here</span>
+                    <span class="orange-text">To Help</span>
+                </h2>
+
                 <p>
-                    Use the details below to contact Joe’s Excellent Events & Management directly.
+                    Whether you are making a business enquiry, looking for recruitment support, exploring a partnership or simply want to find out more, Joe’s Excellent Events & Management is ready to respond with professionalism and care.
                 </p>
-            </div>
 
-            <div class="info-grid">
-
-                <div class="info-card">
-                    <span>1</span>
-                    <h3>Phone</h3>
-                    <p>07845 546844</p>
-                </div>
-
-                <div class="info-card">
-                    <span>2</span>
-                    <h3>Email</h3>
-                    <p>joseph.eldridge1964@gmail.com</p>
-                </div>
-
-                <div class="info-card">
-                    <span>3</span>
-                    <h3>Office Address</h3>
-                    <p>73 Leazes Court, Barrack Road, Newcastle upon Tyne, NE4 5AY</p>
-                </div>
-
-                <div class="info-card">
-                    <span>4</span>
-                    <h3>Business Hours</h3>
-                    <p>Monday to Friday<br>9:00 AM – 5:00 PM</p>
-                </div>
-
-            </div>
-        </section>
-
-        <section class="form-section">
-            <div class="section-heading">
-                <h2>Send A Message</h2>
                 <p>
-                    Complete the form below and we will respond to your enquiry as soon as possible.
+                    We welcome enquiries from clients, candidates, partners and organisations who want reliable support, clear communication and people-focused service.
                 </p>
+
             </div>
 
-            <form class="contact-form" id="contactForm">
+        </div>
+
+    </section>
+
+    <section class="info-section">
+
+        <div class="section-heading">
+            <h2>Contact Information</h2>
+            <p>
+                Use the details below to contact Joe’s Excellent Events & Management directly.
+            </p>
+        </div>
+
+        <div class="info-grid">
+
+            <div class="info-card">
+                <span>1</span>
+                <h3>Phone</h3>
+                <p>07845 546844</p>
+            </div>
+
+            <div class="info-card">
+                <span>2</span>
+                <h3>Email</h3>
+                <p>joseph.eldridge1964@gmail.com</p>
+            </div>
+
+            <div class="info-card">
+                <span>3</span>
+                <h3>Office Address</h3>
+                <p>73 Leazes Court,<br>Barrack Road,<br>Newcastle Upon Tyne,<br>NE4 5AY</p>
+            </div>
+
+            <div class="info-card">
+                <span>4</span>
+                <h3>Business Hours</h3>
+                <p>Monday to Friday<br>8:00 AM – 5:00 PM</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="contact-form-section">
+
+        <div class="section-heading">
+            <h2>Send A Message</h2>
+            <p>
+                Complete the form below and we will respond to your enquiry as soon as possible.
+            </p>
+        </div>
+
+        <div class="form-wrapper">
+
+            <form>
 
                 <div class="form-grid">
 
                     <div class="form-group">
-                        <label for="fullName">Full Name</label>
-                        <input type="text" id="fullName" name="fullName" required>
+                        <label>Full Name</label>
+                        <input type="text" placeholder="Enter your name">
                     </div>
 
                     <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required>
+                        <label>Email Address</label>
+                        <input type="email" placeholder="Enter your email">
                     </div>
 
                     <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone">
+                        <label>Phone Number</label>
+                        <input type="text" placeholder="Enter your phone number">
                     </div>
 
                     <div class="form-group">
-                        <label for="subject">Subject</label>
-                        <input type="text" id="subject" name="subject" required>
+                        <label>Subject</label>
+                        <input type="text" placeholder="Enter message subject">
                     </div>
 
                     <div class="form-group full">
-                        <label for="message">Message</label>
-                        <textarea id="message" name="message" required></textarea>
+                        <label>Message</label>
+                        <textarea placeholder="Write your message here"></textarea>
                     </div>
 
                 </div>
 
-                <button type="submit" class="submit-btn">Send Message</button>
-
-                <p id="formMessage" class="form-message"></p>
+                <button type="submit">Send Message</button>
 
             </form>
-        </section>
 
-        <section class="why-section">
-            <div class="section-heading">
-                <h2>Why Contact Us?</h2>
-                <p>
-                    We are here to support professional enquiries, recruitment conversations, partnerships and general support requests.
-                </p>
+        </div>
+
+    </section>
+
+    <section class="why-section">
+
+        <div class="section-heading">
+            <h2>Why Contact Us?</h2>
+
+            <p>
+                We are here to support professional enquiries, recruitment conversations, partnerships and general support requests.
+            </p>
+        </div>
+
+        <div class="why-grid">
+
+            <div class="why-card">
+                <span>1</span>
+                <h3>Business Enquiries</h3>
+                <p>Speak to us about event support, customer engagement and brand growth.</p>
             </div>
 
-            <div class="why-grid">
-
-                <div class="why-card">
-                    <span>1</span>
-                    <h3>Business Enquiries</h3>
-                    <p>Speak to us about event support, customer engagement and brand growth.</p>
-                </div>
-
-                <div class="why-card">
-                    <span>2</span>
-                    <h3>Recruitment Support</h3>
-                    <p>Ask about careers, applications and opportunities to grow with us.</p>
-                </div>
-
-                <div class="why-card">
-                    <span>3</span>
-                    <h3>Partnerships</h3>
-                    <p>Explore ways to work together through professional collaboration.</p>
-                </div>
-
-                <div class="why-card">
-                    <span>4</span>
-                    <h3>General Support</h3>
-                    <p>Send a message and we will respond with care and professionalism.</p>
-                </div>
-
+            <div class="why-card">
+                <span>2</span>
+                <h3>Recruitment Support</h3>
+                <p>Ask about careers, applications and opportunities to grow with us.</p>
             </div>
-        </section>
 
-        <section class="map-section">
-            <div class="map-grid">
-
-                <div class="map-box">
-                    <h2>Find Us <span>In Newcastle</span></h2>
-
-                    <p>
-                        Joe’s Excellent Events & Management is based in Newcastle upon Tyne and supports clients, candidates and partners through reliable communication and professional service.
-                    </p>
-
-                    <p>
-                        This section can later be replaced with a map image, office photograph or location graphic to strengthen the professional look of the Contact Us page.
-                    </p>
-                </div>
-
-                <div class="photo-placeholder">
-                    <p>Map / Office Photograph Placeholder</p>
-                </div>
-
+            <div class="why-card">
+                <span>3</span>
+                <h3>Partnerships</h3>
+                <p>Explore ways to work together through professional collaboration.</p>
             </div>
-        </section>
 
-        <section class="cta-section">
-            <div class="cta-box">
-                <h2>We’d Love <span>To Hear From You</span></h2>
+            <div class="why-card">
+                <span>4</span>
+                <h3>General Support</h3>
+                <p>Send a message and we will respond with care and professionalism.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="location-section">
+
+        <div class="location-grid">
+
+            <div class="location-text">
+
+                <h2>
+                    Find Us <span>In Newcastle</span>
+                </h2>
 
                 <p>
-                    Whether your enquiry is about business support, careers, partnerships or professional services, Joe’s Excellent Events & Management is ready to help.
+                    Joe’s Excellent Events & Management is based in Newcastle upon Tyne and supports clients, candidates and partners through reliable communication and professional service.
                 </p>
-            </div>
-        </section>
 
-    </main>
+                <br>
+
+                <p>
+                    Our location reflects our ambition, professionalism and strong connection to the local community and wider business sector.
+                </p>
+
+            </div>
+
+            <div class="location-image">
+                <img src="images/contact-map.png" alt="Newcastle office location">
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="cta-section">
+
+        <div class="cta-box">
+
+            <h2>
+                We'd Love <span>To Hear From You</span>
+            </h2>
+
+            <p>
+                Whether your enquiry is about business support, careers, partnerships or professional services, Joe’s Excellent Events & Management is ready to help.
+            </p>
+
+        </div>
+
+    </section>
 
     <footer>
         <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
         <p>All rights reserved.</p>
     </footer>
 
-    <script>
-        const contactForm = document.getElementById("contactForm");
-        const formMessage = document.getElementById("formMessage");
-
-        contactForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            formMessage.textContent = "Thank you. Your message has been received.";
-            formMessage.style.color = "#ff6a00";
-
-            contactForm.reset();
-        });
-    </script>
-
 </body>
+
 </html>
