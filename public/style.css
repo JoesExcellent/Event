@@ -1,840 +1,352 @@
+/* =====================================================
+   GLOBAL RESET
+===================================================== */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* =====================================================
+   BODY
+===================================================== */
+
 body {
-    background: #061a2d;
-    color: #ffffff;
+    background: #02111f;
     font-family: Arial, Helvetica, sans-serif;
+    color: #ffffff;
+    overflow-x: hidden;
 }
 
-.hidden {
-    display: none !important;
-}
+/* =====================================================
+   NAVIGATION
+===================================================== */
 
 .navbar {
-    background: #03111f;
-    padding: 30px 60px;
+    background: #010b16;
+    border-bottom: 1px solid #ff7a00;
+    padding: 24px 40px;
+}
+
+.navbar ul {
     display: flex;
-    gap: 55px;
+    justify-content: center;
     align-items: center;
-    border-bottom: 4px solid #ff6a00;
+    gap: 50px;
+    list-style: none;
     flex-wrap: wrap;
 }
 
 .navbar a {
     color: #ffffff;
     text-decoration: none;
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: 0.3s ease;
 }
 
-.navbar a.active {
-    background: #ff6a00;
-    padding: 18px 26px;
-    border-radius: 14px;
+.navbar a:hover {
+    color: #ff7a00;
 }
-.dashboard-photo-placeholder {
+
+.contact-button,
+.admin-button {
+    background: #ff7a00;
+    padding: 14px 24px;
+    border-radius: 10px;
+    color: #ffffff !important;
+}
+
+/* =====================================================
+   CONTACT HERO
+===================================================== */
+
+.contact-hero {
+    background: #02111f;
+    padding: 50px 40px;
+}
+
+.contact-hero-image {
     width: 100%;
-    height: 280px;
-    background: linear-gradient(135deg, #123456, #1e4d7a);
-    border-bottom: 3px solid #ff6600;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
-    text-align: center;
-
-    letter-spacing: 1px;
+    max-width: 1700px;
+    margin: auto;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid #ff7a00;
+    box-shadow: 0 0 40px rgba(0,0,0,0.45);
 }
-.dashboard {
+
+.contact-hero-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* =====================================================
+   CONTACT INTRO
+===================================================== */
+
+.contact-intro {
+    background: #0a2b47;
+    border-top: 1px solid #ff7a00;
+    padding: 90px 40px;
+}
+
+.intro-grid {
     max-width: 1500px;
     margin: auto;
-    padding: 55px 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 70px;
+    align-items: center;
 }
 
-.dashboard-header,
-.login-card,
-.admin-hero,
-.stat-card,
-.analytics-card,
-.filters-card,
-.applications-card,
-.admin-info {
-    background: #123d66;
-    border-radius: 28px;
-}
-
-.dashboard-header {
-    padding: 55px;
-    margin-bottom: 55px;
-}
-
-.dashboard-header h1 {
-    font-size: 4.2rem;
-    margin-bottom: 18px;
-}
-
-.dashboard-header p {
-    font-size: 1.7rem;
-    color: #dcecff;
-}
-
-.login-section {
-    display: flex;
-    justify-content: center;
-}
-
-.login-card {
+.contact-photo img {
     width: 100%;
-    max-width: 620px;
-    padding: 55px;
+    border-radius: 24px;
+    border: 1px solid #ff7a00;
+    box-shadow: 0 0 30px rgba(0,0,0,0.4);
 }
 
-.login-card h2 {
-    font-size: 3rem;
-    margin-bottom: 35px;
-}
-
-.login-card label {
-    display: block;
-    font-size: 1.3rem;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.login-card input {
-    width: 100%;
-    padding: 22px;
-    border-radius: 14px;
-    border: none;
-    margin-bottom: 25px;
-    font-size: 1.3rem;
-}
-
-button {
-    background: #ff6a00;
-    color: #ffffff;
-    border: none;
-    border-radius: 14px;
-    padding: 16px 28px;
-    font-size: 1.2rem;
+.intro-text h2 {
+    font-size: 5rem;
+    line-height: 1.05;
+    margin-bottom: 30px;
     font-weight: 800;
-    cursor: pointer;
 }
 
-button:hover {
-    opacity: 0.9;
+.intro-text h2 span {
+    color: #ff7a00;
 }
 
-.admin-hero {
-    padding: 45px;
-    margin-bottom: 40px;
-}
-
-.admin-hero h2 {
-    font-size: 2.4rem;
+.intro-text p {
+    font-size: 1.45rem;
+    line-height: 2;
+    color: #f1f1f1;
     margin-bottom: 30px;
 }
 
-.photo-placeholder img {
-    width: 100%;
-    max-height: 360px;
-    object-fit: cover;
-    border-radius: 24px;
-    display: block;
-    margin-bottom: 35px;
+/* =====================================================
+   CONTACT FORM
+===================================================== */
+
+.contact-form-section {
+    background: linear-gradient(to bottom, #08213a, #071b2d);
+    padding: 100px 40px;
 }
 
-.intro-box {
-    background: #102d49;
-    border-left: 6px solid #ff6a00;
-    border-radius: 18px;
-    padding: 32px;
-    font-size: 1.45rem;
-    line-height: 1.8;
+.contact-form-container {
+    max-width: 1400px;
+    margin: auto;
+}
+
+.contact-form-title {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.contact-form-title h2 {
+    font-size: 4rem;
+    color: #ff7a00;
     margin-bottom: 20px;
 }
 
-.top-buttons {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
+.contact-form-title p {
+    font-size: 1.2rem;
 }
 
-.stats-grid {
+.contact-form {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,122,0,0.3);
+    border-radius: 24px;
+    padding: 60px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.3);
+}
+
+.form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 14px;
-    margin-top: 20px;
+    grid-template-columns: 1fr 1fr;
+    gap: 35px;
 }
 
-.stat-card {
-    background: #173a63;
-    border-left: 4px solid #00d9ff;
-    border-radius: 18px;
-    padding: 18px;
-    min-height: 120px;
+.form-group {
     display: flex;
     flex-direction: column;
-    justify-content: center;
 }
 
-.stat-card h3 {
-    font-size: 1rem;
-    margin-bottom: 10px;
-    color: #ffffff;
+.form-group label {
+    margin-bottom: 12px;
+    color: #ff7a00;
     font-weight: 700;
 }
 
-.stat-card p {
-    font-size: 2rem;
-    font-weight: 800;
+.form-group input,
+.form-group textarea {
+    background: #0c3153;
+    border: 1px solid rgba(255,122,0,0.4);
     color: #ffffff;
-    line-height: 1;
-}
-.analytics-card {
-    padding: 40px;
-    margin-bottom: 40px;
-}
-
-.analytics-card h2 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-}
-
-.chart-box {
-    height: 300px;
-    max-height: 300px;
-}
-
-.filters-card {
-    padding: 35px;
-    margin-bottom: 40px;
-    display: flex;
-    gap: 18px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.filters-card input,
-.filters-card select {
-    padding: 16px;
+    padding: 18px;
     border-radius: 10px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    min-height: 220px;
+    resize: vertical;
+}
+
+.full-width {
+    grid-column: span 2;
+}
+
+.submit-btn {
+    margin-top: 35px;
+    background: #ff7a00;
+    color: #ffffff;
     border: none;
-    min-width: 240px;
+    padding: 18px 40px;
     font-size: 1rem;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s ease;
 }
 
-#showingCount {
-    color: #ffae00;
+.submit-btn:hover {
+    background: #ff922d;
+}
+
+/* =====================================================
+   LOCATION SECTION
+===================================================== */
+
+.location-section {
+    background: #0a2b47;
+    padding: 90px 40px;
+    border-top: 1px solid #ff7a00;
+}
+
+.location-grid {
+    max-width: 1600px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 70px;
+    align-items: center;
+}
+
+.location-text {
+    background: rgba(255,255,255,0.04);
+    padding: 60px;
+    border-radius: 28px;
+}
+
+.location-text h2 {
+    font-size: 4.5rem;
+    line-height: 1.1;
+    margin-bottom: 35px;
+    font-weight: 800;
+}
+
+.location-text h2 span {
+    color: #ff7a00;
+}
+
+.location-text p {
     font-size: 1.5rem;
-    font-weight: bold;
-    width: 100%;
-    margin-top: 20px;
-}
-
-.applications-card {
-    padding: 40px;
-    margin-bottom: 40px;
-}
-
-.applications-card h2 {
-    font-size: 2.5rem;
-    margin-bottom: 30px;
-}
-
-.candidate-card {
-    background: #164a77;
-    border-radius: 20px;
-    padding: 28px;
-    margin-bottom: 25px;
-}
-
-.candidate-card h3 {
-    font-size: 1.7rem;
-    margin: 12px 0;
-}
-
-.candidate-card p {
-    margin-bottom: 8px;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 10px 16px;
-    border-radius: 999px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.status-new {
-    background: #00d9ff;
-    color: #03111f;
-}
-
-.status-reviewed {
-    background: #ffc400;
-    color: #03111f;
-}
-
-.status-interview {
-    background: #9c27b0;
-}
-
-.status-rejected {
-    background: #cf352b;
-}
-
-.status-hired {
-    background: #3fa34d;
-}
-
-.candidate-actions {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-top: 22px;
-}
-
-.candidate-actions button {
-    padding: 13px 20px;
-    font-size: 1rem;
-}
-
-.save-btn,
-.invite-btn,
-.delete-btn {
-    background: #ff6a00;
-}
-
-.reject-btn {
-    background: #cf352b;
-}
-
-.admin-info {
-    padding: 45px;
-}
-
-.admin-info h2 {
-    font-size: 2.6rem;
+    line-height: 2;
     margin-bottom: 35px;
 }
 
-.admin-info p {
-    font-size: 1.6rem;
-    margin-bottom: 25px;
-}
-
-.admin-info span {
-    color: #ffae00;
-}
-
-/* =====================================================
-   ADMIN CHART SIZE FIX
-   Full working graph sizing included here.
-   Reduces the Recruitment Analytics graph height and width
-   without changing login, roles, buttons, or placeholders.
-===================================================== */
-
-.analytics-section {
-    margin-bottom: 40px;
-}
-
-.chart-card {
-    background: #123d66;
+.map-photo {
+    width: 100%;
     border-radius: 28px;
-    padding: 26px 30px 30px;
-    margin: 0 auto 40px;
-    max-width: 760px;
-}
-
-.chart-card h2 {
-    font-size: 2.2rem;
-    margin-bottom: 14px;
-}
-
-.chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 560px;
-    height: 170px !important;
-    max-height: 170px !important;
-    margin: 0 auto;
     overflow: hidden;
+    border: 2px solid #ff7a00;
+    box-shadow: 0 0 40px rgba(0,0,0,0.45);
 }
 
-.chart-container canvas,
-#recruitmentChart,
-#applicationsChart {
-    width: 100% !important;
-    height: 170px !important;
-    max-height: 170px !important;
-}
-
-/* This supports the older admin.html chart classes too */
-.analytics-card {
-    max-width: 760px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.chart-wrapper {
-    position: relative;
+.map-photo img {
     width: 100%;
-    max-width: 560px;
-    height: 170px !important;
-    max-height: 170px !important;
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-.chart-wrapper canvas,
-#applicationsChart {
-    width: 100% !important;
-    height: 170px !important;
-    max-height: 170px !important;
-}
-
-/* =====================================================
-   ADMIN BUTTON SIZE FIX
-   Keeps orange button style but prevents oversized dashboard buttons.
-===================================================== */
-
-.top-buttons button,
-#logoutBtn,
-#exportCsvBtn,
-#clearFiltersBtn {
-    padding: 10px 18px !important;
-    font-size: 1rem !important;
-    border-radius: 10px !important;
-    line-height: 1.1 !important;
-    min-width: auto !important;
-    width: auto !important;
-}
-
-.candidate-actions button,
-.save-btn,
-.reject-btn,
-.invite-btn,
-.delete-btn {
-    padding: 9px 14px !important;
-    font-size: 0.95rem !important;
-    border-radius: 8px !important;
-    line-height: 1.1 !important;
-    min-width: auto !important;
-    width: auto !important;
-}
-
-.filters-card button {
-    padding: 10px 16px !important;
-    font-size: 1rem !important;
-    border-radius: 9px !important;
-    min-width: auto !important;
-    width: auto !important;
-}
-
-/* Keep the login button readable but not oversized */
-.login-card button {
-    padding: 13px 24px !important;
-    font-size: 1.1rem !important;
-    border-radius: 12px !important;
-    min-width: auto !important;
-    width: auto !important;
-}
-
-/* =====================================================
-   RESTORE ADMIN PHOTOGRAPH PLACEHOLDER
-   Restores the large dashed banner placeholder without changing buttons.
-===================================================== */
-
-.hero-photo-placeholder {
-    width: 100%;
-    height: 320px;
-
-    overflow: hidden;
-
-    border-bottom: 3px solid #ff6a00;
-}
-
-.hero-photo-placeholder img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
-
+    height: auto;
     display: block;
-}.text-placeholder {
-    background: #102d49;
-    border-left: 6px solid #ff6a00;
-    border-radius: 18px;
-    padding: 26px 32px;
-    margin: 0 0 28px;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.footer {
+    background: #010b16;
+    border-top: 1px solid #ff7a00;
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.footer p {
     color: #ffffff;
-    font-size: 1.25rem;
-    line-height: 1.7;
+    line-height: 1.8;
 }
 
 /* =====================================================
-   RESPONSIVE
+   MOBILE RESPONSIVE
 ===================================================== */
 
-@media (max-width: 800px) {
-    .navbar {
-        padding: 22px;
-        gap: 25px;
+@media (max-width: 1200px) {
+
+    .intro-grid,
+    .location-grid,
+    .form-grid {
+        grid-template-columns: 1fr;
     }
 
-    .navbar a {
+    .full-width {
+        grid-column: span 1;
+    }
+
+    .intro-text h2,
+    .location-text h2,
+    .contact-form-title h2 {
+        font-size: 3rem;
+    }
+
+    .intro-text p,
+    .location-text p {
         font-size: 1.1rem;
+        line-height: 1.8;
     }
 
-    .dashboard-header h1 {
-        font-size: 2.4rem;
+    .contact-form {
+        padding: 35px;
     }
 
-    .dashboard-header p {
-        font-size: 1.1rem;
-    }
-
-    .chart-box {
-        height: 180px;
-    }
-
-    .chart-card,
-    .analytics-card {
-        max-width: 100%;
-    }
-
-    .chart-container,
-    .chart-container canvas,
-    .chart-wrapper,
-    .chart-wrapper canvas,
-    #recruitmentChart,
-    #applicationsChart {
-        height: 160px !important;
-        max-height: 160px !important;
-    }
-
-    .filters-card input,
-    .filters-card select,
-    .filters-card button {
-        width: 100%;
-    }
-
-    .hero-image-placeholder {
-        min-height: 210px;
-        font-size: 1.1rem;
-    }
-
-    .text-placeholder {
-        font-size: 1rem;
-        padding: 20px;
+    .navbar ul {
+        gap: 24px;
     }
 }
-/* FINAL STATS PANEL REDUCTION */
-.stats-grid {
-    grid-template-columns: repeat(6, 1fr) !important;
-    gap: 18px !important;
-    margin: 20px 0 35px !important;
-}
 
-.stat-card {
-    min-height: 90px !important;
-    padding: 16px 18px !important;
-    border-radius: 14px !important;
-}
+@media (max-width: 768px) {
 
-.stat-card h3 {
-    font-size: 0.95rem !important;
-    margin-bottom: 8px !important;
-}
-
-.stat-card p {
-    font-size: 1.8rem !important;
-    line-height: 1 !important;
-}
-
-@media (max-width: 900px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-/* FINAL RECRUITMENT ANALYTICS SIZE REDUCTION */
-
-.analytics-card {
-    max-width: 620px !important;
-    padding: 20px !important;
-    margin: 25px auto !important;
-    border-radius: 20px !important;
-}
-
-.analytics-card h2 {
-    font-size: 1.8rem !important;
-    margin-bottom: 12px !important;
-}
-
-.chart-container,
-.chart-wrapper {
-    max-width: 420px !important;
-    height: 120px !important;
-    max-height: 120px !important;
-    margin: 0 auto !important;
-}
-
-.chart-container canvas,
-.chart-wrapper canvas,
-#recruitmentChart,
-#applicationsChart {
-    height: 120px !important;
-    max-height: 120px !important;
-}
-
-/* Mobile */
-@media (max-width: 800px) {
-
-    .analytics-card {
-        max-width: 95% !important;
-        padding: 18px !important;
+    .contact-hero,
+    .contact-intro,
+    .contact-form-section,
+    .location-section {
+        padding: 60px 20px;
     }
 
-    .analytics-card h2 {
-        font-size: 1.4rem !important;
+    .intro-text h2,
+    .location-text h2,
+    .contact-form-title h2 {
+        font-size: 2.3rem;
     }
 
-    .chart-container,
-    .chart-wrapper,
-    .chart-container canvas,
-    .chart-wrapper canvas,
-    #recruitmentChart,
-    #applicationsChart {
-        height: 100px !important;
-        max-height: 100px !important;
-    }
-}
-/* FINAL SEARCH FILTERS SIZE REDUCTION */
-
-.filters-card {
-    max-width: 700px !important;
-    margin: 25px auto !important;
-    padding: 22px !important;
-    border-radius: 18px !important;
-}
-
-.filters-card h2 {
-    font-size: 1.7rem !important;
-    margin-bottom: 14px !important;
-}
-
-.filters-card label {
-    font-size: 0.9rem !important;
-    margin-bottom: 6px !important;
-}
-
-.filters-card input,
-.filters-card select {
-    padding: 10px 14px !important;
-    font-size: 0.9rem !important;
-    min-width: auto !important;
-    border-radius: 8px !important;
-    margin-bottom: 8px !important;
-}
-
-#clearFiltersBtn,
-.filters-card button {
-    padding: 10px 18px !important;
-    font-size: 0.95rem !important;
-    border-radius: 10px !important;
-}
-
-#showingCount {
-    font-size: 0.9rem !important;
-    margin-top: 10px !important;
-}
-
-/* Mobile */
-@media (max-width: 800px) {
-
-    .filters-card {
-        max-width: 95% !important;
-        padding: 18px !important;
+    .contact-form {
+        padding: 25px;
     }
 
-    .filters-card h2 {
-        font-size: 1.4rem !important;
+    .navbar ul {
+        flex-direction: column;
+        gap: 18px;
     }
-}
-/* FINAL WORKING SEARCH FILTER REDUCTION */
-
-#filterBox {
-    max-width: 620px !important;
-    margin: 22px auto !important;
-    padding: 18px !important;
-    border-radius: 16px !important;
-}
-
-#filterBox h2 {
-    font-size: 1.4rem !important;
-    margin-bottom: 12px !important;
-}
-
-#filterBox label {
-    font-size: 0.8rem !important;
-    margin-top: 8px !important;
-    margin-bottom: 4px !important;
-}
-
-#filterBox input,
-#filterBox select {
-    padding: 9px 12px !important;
-    font-size: 0.85rem !important;
-    border-radius: 7px !important;
-    margin-bottom: 8px !important;
-}
-
-#filterBox button {
-    padding: 9px 16px !important;
-    font-size: 0.85rem !important;
-    border-radius: 8px !important;
-}
-
-#filterCount {
-    font-size: 0.8rem !important;
-    margin-top: 8px !important;
-}
-
-/* =====================================================
-   FINAL SAFE PLACEHOLDER FIX
-   Restores the admin dashboard banner only.
-   Removes candidate photograph and description placeholders only.
-===================================================== */
-
-.dashboard > .hero-image-placeholder {
-    width: 100% !important;
-    min-height: 300px !important;
-    margin: 35px 0 30px !important;
-    border: 4px dashed rgba(120, 190, 230, 0.65) !important;
-    border-radius: 24px !important;
-    background: linear-gradient(135deg, #155b7e, #123d66) !important;
-    color: #a7e8ff !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    font-size: 1.6rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.3px !important;
-}
-
-#applications .hero-image-placeholder,
-#applications .text-placeholder,
-#applications .candidate-photo-placeholder,
-#applications .photo-placeholder {
-    display: none !important;
-}
-/* =====================================================
-   REDUCE CANDIDATE CARD SIZE BY 50%
-===================================================== */
-
-.candidate-card {
-    padding: 18px !important;
-    border-radius: 16px !important;
-    max-width: 700px !important;
-    margin: 25px auto !important;
-}
-
-.candidate-card h3 {
-    font-size: 1.1rem !important;
-    margin-bottom: 10px !important;
-}
-
-.candidate-card p,
-.candidate-card strong,
-.candidate-card a {
-    font-size: 0.72rem !important;
-    line-height: 1.35 !important;
-}
-
-.candidate-card label {
-    font-size: 0.75rem !important;
-    margin-bottom: 4px !important;
-}
-
-.candidate-card select,
-.candidate-card textarea,
-.candidate-card input {
-    padding: 8px 10px !important;
-    font-size: 0.8rem !important;
-    border-radius: 8px !important;
-    margin-bottom: 10px !important;
-}
-
-.candidate-card textarea {
-    min-height: 90px !important;
-}
-
-.candidate-actions {
-    gap: 8px !important;
-    margin-top: 12px !important;
-}
-
-.candidate-actions button {
-    padding: 7px 10px !important;
-    font-size: 0.7rem !important;
-    border-radius: 7px !important;
-}
-/* REDUCE LIVE APPLICATION / CANDIDATE CARD SIZE */
-
-#applications .application-card {
-    max-width: 700px !important;
-    margin: 25px auto !important;
-    padding: 18px !important;
-    border-radius: 16px !important;
-}
-
-#applications .application-card h2 {
-    font-size: 1.4rem !important;
-    margin-bottom: 10px !important;
-}
-
-#applications .application-card p,
-#applications .application-card strong,
-#applications .application-card a {
-    font-size: 0.75rem !important;
-    line-height: 1.35 !important;
-}
-
-#applications .application-card label {
-    font-size: 0.75rem !important;
-    margin: 10px 0 4px !important;
-}
-
-#applications .application-card select,
-#applications .application-card input,
-#applications .application-card textarea {
-    padding: 8px 10px !important;
-    font-size: 0.8rem !important;
-    border-radius: 8px !important;
-    margin-bottom: 10px !important;
-}
-
-#applications .application-card textarea {
-    min-height: 80px !important;
-}
-
-#applications .candidate-actions {
-    gap: 8px !important;
-    margin-top: 12px !important;
-}
-
-#applications .candidate-actions button {
-    padding: 7px 10px !important;
-    font-size: 0.7rem !important;
-    border-radius: 7px !important;
 }
