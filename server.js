@@ -13,16 +13,9 @@ const PORT = process.env.PORT || 8080;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
-app.use(cors({
-    origin: true,
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
+app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
@@ -49,26 +42,20 @@ try {
     console.error("Firebase setup failed:", error.message);
 }
 
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, UPLOADS_DIR);
-    },
-    filename(req, file, cb) {
-        const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        cb(null, Date.now() + "-" + safeName);
-    }
-});
-
 const upload = multer({
-    storage,
+    storage: multer.diskStorage({
+        destination(req, file, cb) {
+            cb(null, UPLOADS_DIR);
+        },
+        filename(req, file, cb) {
+            const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+            cb(null, Date.now() + "-" + safeName);
+        }
+    }),
     limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret";
-
-function createToken(user) {
-    return jwt.sign(user, JWT_SECRET, { expiresIn: "8h" });
-}
 
 function verifyToken(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -100,33 +87,67 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
+async function sendEmailWithResend({ to, subject, html, text }) {
+    if (!process.env.RESEND_API_KEY) {
+        throw new Error("RESEND_API_KEY is missing.");
+    }
+
+    const from = process.env.EMAIL_FROM || "Joe's Excellent Events & Management <recruitment@joemoboawards2025.co.uk>";
+    const replyTo = process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
+    const copyTo = process.env.EMAIL_COPY_TO || "joseph.eldridge1964@gmail.com";
+
+    const payload = {
+        from,
+        to: [to],
+        bcc: copyTo && copyTo !== to ? [copyTo] : undefined,
+        subject,
+        html,
+        text,
+        reply_to: replyTo
+    };
+
+    const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.message || result.error || "Resend email failed.");
+    }
+
+    return result;
+}
+
 function buildInterviewEmail(application, details) {
-    const candidateName = application.fullName || "Candidate";
+    const name = application.fullName || "Candidate";
+    const email = application.email;
     const position = application.position || "the position applied for";
-    const interviewDate = details.interviewDate || "To be confirmed";
-    const interviewTime = details.interviewTime || "To be confirmed";
-    const interviewLocation = details.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
-
-    const message = details.interviewMessage || `Thank you for your application.
-
-We are pleased to invite you to attend an interview with Joe's Excellent Events & Management.`;
+    const date = details.interviewDate || "To be confirmed";
+    const time = details.interviewTime || "To be confirmed";
+    const location = details.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
+    const message = details.interviewMessage || "Thank you for your application. We are pleased to invite you to attend an interview.";
 
     const subject = "Interview Invitation - Joe's Excellent Events & Management";
 
-    const plainText = `Dear ${candidateName},
+    const text = `Dear ${name},
 
 ${message}
 
 Interview Details:
 Position: ${position}
-Date: ${interviewDate}
-Time: ${interviewTime}
-Location: ${interviewLocation}
+Date: ${date}
+Time: ${time}
+Location: ${location}
 
 Please reply to confirm that you are able to attend.
 
 Kind regards,
-
 Joe's Excellent Events & Management
 Recruitment Team`;
 
@@ -134,20 +155,15 @@ Recruitment Team`;
         <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
             <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
                 <h1 style="color:#ff6a00;text-align:center;">Interview Invitation</h1>
-
-                <p>Dear ${escapeHtml(candidateName)},</p>
-
+                <p>Dear ${escapeHtml(name)},</p>
                 <p style="white-space:pre-line;">${escapeHtml(message)}</p>
-
                 <h2 style="color:#ff6a00;">Interview Details</h2>
-
                 <p><strong>Position:</strong> ${escapeHtml(position)}</p>
-                <p><strong>Date:</strong> ${escapeHtml(interviewDate)}</p>
-                <p><strong>Time:</strong> ${escapeHtml(interviewTime)}</p>
-                <p><strong>Location:</strong> ${escapeHtml(interviewLocation)}</p>
-
+                <p><strong>Date:</strong> ${escapeHtml(date)}</p>
+                <p><strong>Time:</strong> ${escapeHtml(time)}</p>
+                <p><strong>Location:</strong> ${escapeHtml(location)}</p>
+                <p><strong>Candidate Email:</strong> ${escapeHtml(email)}</p>
                 <p>Please reply to confirm that you are able to attend.</p>
-
                 <p style="margin-top:30px;">
                     Kind regards,<br>
                     <strong>Joe's Excellent Events & Management</strong><br>
@@ -157,40 +173,7 @@ Recruitment Team`;
         </div>
     `;
 
-    return { subject, plainText, html };
-}
-
-async function sendEmailWithResend({ to, subject, html, plainText }) {
-    if (!process.env.RESEND_API_KEY) {
-        throw new Error("RESEND_API_KEY is missing.");
-    }
-
-    const fromAddress = process.env.EMAIL_FROM || "Joe's Excellent Events & Management <onboarding@resend.dev>";
-    const replyTo = process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
-
-    const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            from: fromAddress,
-            to,
-            subject,
-            html,
-            text: plainText,
-            reply_to: replyTo
-        })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-        throw new Error(result.message || "Resend email failed.");
-    }
-
-    return result;
+    return { subject, text, html };
 }
 
 app.get("/health", (req, res) => {
@@ -198,7 +181,9 @@ app.get("/health", (req, res) => {
         success: true,
         message: "Server is running",
         firebaseConnected: !!db,
-        resendReady: !!process.env.RESEND_API_KEY
+        resendReady: !!process.env.RESEND_API_KEY,
+        emailFrom: process.env.EMAIL_FROM || null,
+        emailCopyTo: process.env.EMAIL_COPY_TO || null
     });
 });
 
@@ -206,29 +191,12 @@ app.post("/admin/login", (req, res) => {
     const { email, password } = req.body;
 
     const users = [
-        {
-            role: "admin",
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD
-        },
-        {
-            role: "recruiter",
-            email: process.env.RECRUITER_EMAIL,
-            password: process.env.RECRUITER_PASSWORD
-        },
-        {
-            role: "viewer",
-            email: process.env.VIEWER_EMAIL,
-            password: process.env.VIEWER_PASSWORD
-        }
+        { role: "admin", email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD },
+        { role: "recruiter", email: process.env.RECRUITER_EMAIL, password: process.env.RECRUITER_PASSWORD },
+        { role: "viewer", email: process.env.VIEWER_EMAIL, password: process.env.VIEWER_PASSWORD }
     ];
 
-    const user = users.find(u =>
-        u.email &&
-        u.password &&
-        u.email === email &&
-        u.password === password
-    );
+    const user = users.find(u => u.email && u.password && u.email === email && u.password === password);
 
     if (!user) {
         return res.status(401).json({
@@ -237,10 +205,7 @@ app.post("/admin/login", (req, res) => {
         });
     }
 
-    const token = createToken({
-        email: user.email,
-        role: user.role
-    });
+    const token = jwt.sign({ email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
         success: true,
@@ -258,34 +223,17 @@ app.post(
     ]),
     async (req, res) => {
         try {
-            const {
-                fullName,
-                email,
-                phone,
-                address,
-                position,
-                availability,
-                message
-            } = req.body;
-
-            if (!fullName || !email) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Full name and email are required."
-                });
-            }
-
             const cvFile = req.files?.cv?.[0] || null;
             const extraFiles = req.files?.extraFiles || [];
 
             const applicationData = {
-                fullName,
-                email,
-                phone: phone || "",
-                address: address || "",
-                position: position || "",
-                availability: availability || "",
-                message: message || "",
+                fullName: req.body.fullName || "",
+                email: req.body.email || "",
+                phone: req.body.phone || "",
+                address: req.body.address || "",
+                position: req.body.position || "",
+                availability: req.body.availability || "",
+                message: req.body.message || "",
                 status: "New",
                 rating: 0,
                 notes: "",
@@ -302,37 +250,23 @@ app.post(
                 extraFiles: extraFiles.map(file => `/uploads/${file.filename}`)
             };
 
-            let savedId;
-
-            if (db) {
-                const docRef = await db.collection("applications").add(applicationData);
-                savedId = docRef.id;
-            } else {
-                const localFile = path.join(__dirname, "applications.json");
-                let applications = [];
-
-                if (fs.existsSync(localFile)) {
-                    applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-                }
-
-                savedId = Date.now().toString();
-
-                applications.push({
-                    id: savedId,
-                    ...applicationData
+            if (!applicationData.fullName || !applicationData.email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Full name and email are required."
                 });
-
-                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
             }
+
+            const docRef = await db.collection("applications").add(applicationData);
 
             res.json({
                 success: true,
                 message: "Application submitted successfully.",
-                id: savedId
+                id: docRef.id
             });
 
         } catch (error) {
-            console.error("Application submission error:", error);
+            console.error("Application error:", error.message);
 
             res.status(500).json({
                 success: false,
@@ -344,25 +278,12 @@ app.post(
 
 app.get("/api/applications", verifyToken, async (req, res) => {
     try {
-        let applications = [];
+        const snapshot = await db.collection("applications").orderBy("createdAt", "desc").get();
 
-        if (db) {
-            const snapshot = await db
-                .collection("applications")
-                .orderBy("createdAt", "desc")
-                .get();
-
-            applications = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (fs.existsSync(localFile)) {
-                applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            }
-        }
+        const applications = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
         res.json({
             success: true,
@@ -370,7 +291,7 @@ app.get("/api/applications", verifyToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Fetch applications error:", error);
+        console.error("Fetch applications error:", error.message);
 
         res.status(500).json({
             success: false,
@@ -381,42 +302,10 @@ app.get("/api/applications", verifyToken, async (req, res) => {
 
 app.patch("/api/applications/:id", verifyToken, async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const updateData = {
+        await db.collection("applications").doc(req.params.id).update({
             ...req.body,
             updatedAt: new Date().toISOString()
-        };
-
-        if (db) {
-            await db.collection("applications").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = applications.findIndex(app => app.id === id);
-
-            if (index === -1) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-
-            applications[index] = {
-                ...applications[index],
-                ...updateData
-            };
-
-            fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-        }
+        });
 
         res.json({
             success: true,
@@ -424,7 +313,7 @@ app.patch("/api/applications/:id", verifyToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Update application error:", error);
+        console.error("Update application error:", error.message);
 
         res.status(500).json({
             success: false,
@@ -435,8 +324,6 @@ app.patch("/api/applications/:id", verifyToken, async (req, res) => {
 
 app.delete("/api/applications/:id", verifyToken, async (req, res) => {
     try {
-        const { id } = req.params;
-
         if (req.user.role === "viewer") {
             return res.status(403).json({
                 success: false,
@@ -444,23 +331,7 @@ app.delete("/api/applications/:id", verifyToken, async (req, res) => {
             });
         }
 
-        if (db) {
-            await db.collection("applications").doc(id).delete();
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            let applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            applications = applications.filter(app => app.id !== id);
-
-            fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-        }
+        await db.collection("applications").doc(req.params.id).delete();
 
         res.json({
             success: true,
@@ -468,7 +339,7 @@ app.delete("/api/applications/:id", verifyToken, async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Delete application error:", error);
+        console.error("Delete application error:", error.message);
 
         res.status(500).json({
             success: false,
@@ -479,8 +350,6 @@ app.delete("/api/applications/:id", verifyToken, async (req, res) => {
 
 app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
     try {
-        const { id } = req.params;
-
         if (req.user.role === "viewer") {
             return res.status(403).json({
                 success: false,
@@ -488,42 +357,20 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             });
         }
 
-        let application = null;
+        const docRef = db.collection("applications").doc(req.params.id);
+        const doc = await docRef.get();
 
-        if (db) {
-            const doc = await db.collection("applications").doc(id).get();
-
-            if (!doc.exists) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-
-            application = {
-                id: doc.id,
-                ...doc.data()
-            };
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            application = applications.find(app => app.id === id);
-
-            if (!application) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
+        if (!doc.exists) {
+            return res.status(404).json({
+                success: false,
+                message: "Application not found."
+            });
         }
+
+        const application = {
+            id: doc.id,
+            ...doc.data()
+        };
 
         if (!application.email) {
             return res.status(400).json({
@@ -538,10 +385,10 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             to: application.email,
             subject: emailContent.subject,
             html: emailContent.html,
-            plainText: emailContent.plainText
+            text: emailContent.text
         });
 
-        const updateData = {
+        await docRef.update({
             status: "Interview Invited",
             interviewDate: req.body.interviewDate || "",
             interviewTime: req.body.interviewTime || "",
@@ -551,33 +398,16 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             invitationSentAt: new Date().toISOString(),
             invitationEmailId: emailResult.id || "",
             updatedAt: new Date().toISOString()
-        };
-
-        if (db) {
-            await db.collection("applications").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = applications.findIndex(app => app.id === id);
-
-            if (index !== -1) {
-                applications[index] = {
-                    ...applications[index],
-                    ...updateData
-                };
-
-                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-            }
-        }
+        });
 
         res.json({
             success: true,
-            message: `Interview invitation email sent to ${application.email}.`,
+            message: `Interview invitation email sent to ${application.email}. A copy was also sent to ${process.env.EMAIL_COPY_TO || "joseph.eldridge1964@gmail.com"}.`,
             emailId: emailResult.id || null
         });
 
     } catch (error) {
-        console.error("Interview invitation email error:", error);
+        console.error("Resend invite error:", error.message);
 
         res.status(500).json({
             success: false,
@@ -594,23 +424,10 @@ app.get("/admin", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
-app.get("/careers", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "careers.html"));
-});
-
 app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: "Route not found."
-    });
-});
-
-app.use((error, req, res, next) => {
-    console.error("Server error:", error.message);
-
-    res.status(500).json({
-        success: false,
-        message: error.message || "Internal server error."
     });
 });
 
