@@ -5,6 +5,7 @@ let adminRole = localStorage.getItem("adminRole") || "";
 let selectedApplicationId = null;
 let selectedContactMessageId = null;
 let modalApplicationId = null;
+let autoRefreshTimer = null;
 
 let allApplications = [];
 let allContactMessages = [];
@@ -29,6 +30,7 @@ const permissionsInfo = document.getElementById("permissionsInfo");
 
 const applicationsTableBody = document.getElementById("applicationsTableBody");
 const contactMessagesTableBody = document.getElementById("contactMessagesTableBody");
+const communicationTableBody = document.getElementById("communicationTableBody");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -40,9 +42,19 @@ const statusBreakdown = document.getElementById("statusBreakdown");
 const newThisWeek = document.getElementById("newThisWeek");
 const interviewPipeline = document.getElementById("interviewPipeline");
 
+const unreadMessagesCount = document.getElementById("unreadMessagesCount");
+const pendingInterviewsCount = document.getElementById("pendingInterviewsCount");
+const offerStageCount = document.getElementById("offerStageCount");
+const followUpsCount = document.getElementById("followUpsCount");
+
+const candidateActivityFeed = document.getElementById("candidateActivityFeed");
+const recruiterTaskList = document.getElementById("recruiterTaskList");
+const lastRefreshInfo = document.getElementById("lastRefreshInfo");
+
 const candidateSearchInput = document.getElementById("candidateSearchInput");
 const statusFilterSelect = document.getElementById("statusFilterSelect");
 const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+const manualRefreshBtn = document.getElementById("manualRefreshBtn");
 
 function showToast(message, type = "info") {
     const toastContainer = document.getElementById("toastContainer");
@@ -64,13 +76,8 @@ function showToast(message, type = "info") {
 }
 
 function setDashboardVisible(show) {
-    if (loginBox) {
-        loginBox.style.display = show ? "none" : "block";
-    }
-
-    if (dashboardContent) {
-        dashboardContent.style.display = show ? "block" : "none";
-    }
+    if (loginBox) loginBox.style.display = show ? "none" : "block";
+    if (dashboardContent) dashboardContent.style.display = show ? "block" : "none";
 }
 
 function getAuthHeaders() {
@@ -145,9 +152,7 @@ function getStatusClass(status) {
 
 function buildStatusBadge(status) {
     const safeStatus = normaliseStatus(status);
-    const statusClass = getStatusClass(safeStatus);
-
-    return `<span class="ats-status-badge ${statusClass}">${escapeHtml(safeStatus)}</span>`;
+    return `<span class="ats-status-badge ${getStatusClass(safeStatus)}">${escapeHtml(safeStatus)}</span>`;
 }
 
 function buildStatusOptions(currentStatus) {
@@ -176,9 +181,7 @@ function calculateATSScore(application) {
 
 function showLoggedInInfo() {
     if (adminInfo) {
-        adminInfo.innerHTML = `
-            <h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>
-        `;
+        adminInfo.innerHTML = `<h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>`;
     }
 
     if (permissionsInfo) {
@@ -201,9 +204,7 @@ async function loginAdmin() {
     try {
         const response = await fetch(`${API_BASE}/admin/login`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
         });
 
@@ -226,6 +227,7 @@ async function loginAdmin() {
         setDashboardVisible(true);
 
         await refreshDashboard();
+        startAutoRefresh();
 
     } catch (error) {
         console.error(error);
@@ -235,9 +237,48 @@ async function loginAdmin() {
     }
 }
 
-async function refreshDashboard() {
+async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
+
+    updateCommandCentre();
+    renderActivityFeed();
+    renderRecruiterTasks();
+    renderCommunicationCentre();
+    updateLastRefreshTime();
+
+    if (showMessage) {
+        showToast("Dashboard refreshed.", "success");
+    }
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+
+    autoRefreshTimer = setInterval(async () => {
+        if (authToken) {
+            await refreshDashboard(false);
+        }
+    }, 60000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
+    }
+}
+
+function updateLastRefreshTime() {
+    if (!lastRefreshInfo) return;
+
+    const now = new Date();
+
+    lastRefreshInfo.textContent = `Dashboard last refreshed at ${now.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    })}. Auto-refresh is active.`;
 }
 
 async function loadApplications() {
@@ -319,13 +360,8 @@ function applyCandidateFilters() {
 }
 
 function clearCandidateFilters() {
-    if (candidateSearchInput) {
-        candidateSearchInput.value = "";
-    }
-
-    if (statusFilterSelect) {
-        statusFilterSelect.value = "";
-    }
+    if (candidateSearchInput) candidateSearchInput.value = "";
+    if (statusFilterSelect) statusFilterSelect.value = "";
 
     applyCandidateFilters();
     showToast("Candidate filters cleared.", "info");
@@ -412,6 +448,7 @@ function openCandidateModal(id) {
     modalStatus.className = `ats-status-badge ${getStatusClass(status)}`;
 
     renderCandidateTimeline(application);
+    renderCandidateCommunicationTimeline(application);
 
     const modal = document.getElementById("candidateProfileModal");
 
@@ -473,23 +510,52 @@ function renderCandidateTimeline(application) {
     }
 
     if (status === "Offer Made") {
-        items.push({
-            title: "Offer Made",
-            text: "Candidate has reached offer stage."
-        });
+        items.push({ title: "Offer Made", text: "Candidate has reached offer stage." });
     }
 
     if (status === "Hired") {
-        items.push({
-            title: "Candidate Hired",
-            text: "Candidate has been marked as hired."
-        });
+        items.push({ title: "Candidate Hired", text: "Candidate has been marked as hired." });
     }
 
     if (status === "Rejected") {
+        items.push({ title: "Candidate Rejected", text: "Candidate has been marked as rejected." });
+    }
+
+    timeline.innerHTML = items.map(item => `
+        <li>
+            <strong>${escapeHtml(item.title)}</strong>
+            ${escapeHtml(item.text)}
+        </li>
+    `).join("");
+}
+
+function renderCandidateCommunicationTimeline(application) {
+    const timeline = document.getElementById("modalCandidateCommunicationTimeline");
+
+    if (!timeline) return;
+
+    const items = [];
+
+    if (application.invitationSent) {
         items.push({
-            title: "Candidate Rejected",
-            text: "Candidate has been marked as rejected."
+            title: "Interview Invitation Sent",
+            text: application.invitationSentAt
+                ? `Email sent on ${formatDateTime(application.invitationSentAt)}.`
+                : "Interview invitation email has been sent."
+        });
+    }
+
+    if (application.invitationEmailId) {
+        items.push({
+            title: "Email Delivery Reference",
+            text: `Resend Email ID: ${application.invitationEmailId}`
+        });
+    }
+
+    if (!items.length) {
+        items.push({
+            title: "No Email Activity Yet",
+            text: "No interview invitation has been recorded for this candidate yet."
         });
     }
 
@@ -509,24 +575,14 @@ function selectCandidate(id, fullName) {
     const starRating = document.getElementById("starRating");
     const candidateNotes = document.getElementById("candidateNotes");
 
-    if (candidateNameInput) {
-        candidateNameInput.value = fullName || "";
-    }
-
-    if (selectedCandidateInput) {
-        selectedCandidateInput.value = fullName || "";
-    }
+    if (candidateNameInput) candidateNameInput.value = fullName || "";
+    if (selectedCandidateInput) selectedCandidateInput.value = fullName || "";
 
     const selectedApplication = allApplications.find(app => app.id === id);
 
     if (selectedApplication) {
-        if (starRating) {
-            starRating.value = selectedApplication.rating || "";
-        }
-
-        if (candidateNotes) {
-            candidateNotes.value = selectedApplication.notes || "";
-        }
+        if (starRating) starRating.value = selectedApplication.rating || "";
+        if (candidateNotes) candidateNotes.value = selectedApplication.notes || "";
     }
 
     showToast(`Selected ${fullName}`, "info");
@@ -571,7 +627,7 @@ async function updateApplicationStatus(id, status) {
 
         showToast(`Application moved to ${status}.`, "success");
 
-        await loadApplications();
+        await refreshDashboard();
 
         if (modalApplicationId === id) {
             openCandidateModal(id);
@@ -584,27 +640,19 @@ async function updateApplicationStatus(id, status) {
 }
 
 async function moveModalCandidateToShortlist() {
-    if (modalApplicationId) {
-        await updateApplicationStatus(modalApplicationId, "Shortlisted");
-    }
+    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Shortlisted");
 }
 
 async function moveModalCandidateToOffer() {
-    if (modalApplicationId) {
-        await updateApplicationStatus(modalApplicationId, "Offer Made");
-    }
+    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Offer Made");
 }
 
 async function moveModalCandidateToHired() {
-    if (modalApplicationId) {
-        await updateApplicationStatus(modalApplicationId, "Hired");
-    }
+    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Hired");
 }
 
 async function moveModalCandidateToRejected() {
-    if (modalApplicationId) {
-        await updateApplicationStatus(modalApplicationId, "Rejected");
-    }
+    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Rejected");
 }
 
 async function quickRejectApplication(id) {
@@ -649,7 +697,7 @@ async function saveCandidateNotes() {
 
         showToast("Candidate notes saved.", "success");
 
-        await loadApplications();
+        await refreshDashboard();
 
         if (modalApplicationId === selectedApplicationId) {
             openCandidateModal(selectedApplicationId);
@@ -690,7 +738,7 @@ async function deleteApplication(id) {
             modalApplicationId = null;
         }
 
-        await loadApplications();
+        await refreshDashboard();
 
     } catch (error) {
         console.error(error);
@@ -741,7 +789,7 @@ async function sendInvitation() {
 
         showToast("Interview invitation sent successfully.", "success");
 
-        await loadApplications();
+        await refreshDashboard();
 
         if (modalApplicationId === selectedApplicationId) {
             openCandidateModal(selectedApplicationId);
@@ -771,7 +819,6 @@ async function loadContactMessages() {
         }
 
         allContactMessages = result.messages || [];
-
         renderContactMessages(allContactMessages);
 
     } catch (error) {
@@ -862,8 +909,7 @@ async function markMessageRead(id) {
         }
 
         showToast("Message marked as read.", "success");
-
-        await loadContactMessages();
+        await refreshDashboard();
 
     } catch (error) {
         console.error(error);
@@ -894,8 +940,7 @@ async function deleteContactMessage(id) {
         }
 
         showToast("Contact message deleted.", "success");
-
-        await loadContactMessages();
+        await refreshDashboard();
 
     } catch (error) {
         console.error(error);
@@ -964,6 +1009,149 @@ function updateStats(applications) {
     }
 }
 
+function updateCommandCentre() {
+    const unread = allContactMessages.filter(message => !message.read).length;
+
+    const pendingInterviews = allApplications.filter(app =>
+        normaliseStatus(app.status).toLowerCase().includes("interview") &&
+        normaliseStatus(app.status) !== "Interview Completed"
+    ).length;
+
+    const offers = allApplications.filter(app =>
+        normaliseStatus(app.status) === "Offer Made"
+    ).length;
+
+    const followUps = allApplications.filter(app =>
+        normaliseStatus(app.status) === "New" ||
+        normaliseStatus(app.status) === "Screening" ||
+        normaliseStatus(app.status) === "Shortlisted"
+    ).length;
+
+    if (unreadMessagesCount) unreadMessagesCount.textContent = unread;
+    if (pendingInterviewsCount) pendingInterviewsCount.textContent = pendingInterviews;
+    if (offerStageCount) offerStageCount.textContent = offers;
+    if (followUpsCount) followUpsCount.textContent = followUps;
+}
+
+function renderActivityFeed() {
+    if (!candidateActivityFeed) return;
+
+    const activities = [];
+
+    allApplications
+        .slice()
+        .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0))
+        .slice(0, 8)
+        .forEach(app => {
+            activities.push({
+                title: `${app.fullName || "Candidate"} - ${normaliseStatus(app.status)}`,
+                text: `Role: ${app.position || "N/A"} | Updated: ${formatDateTime(app.updatedAt || app.createdAt)}`
+            });
+        });
+
+    if (!activities.length) {
+        activities.push({
+            title: "No Candidate Activity",
+            text: "Candidate activity will appear once applications are received."
+        });
+    }
+
+    candidateActivityFeed.innerHTML = activities.map(item => `
+        <li>
+            <strong>${escapeHtml(item.title)}</strong>
+            ${escapeHtml(item.text)}
+        </li>
+    `).join("");
+}
+
+function renderRecruiterTasks() {
+    if (!recruiterTaskList) return;
+
+    const tasks = [];
+
+    allContactMessages
+        .filter(message => !message.read)
+        .slice(0, 5)
+        .forEach(message => {
+            tasks.push({
+                title: "Unread Contact Message",
+                text: `${message.name || "Website visitor"} sent: ${message.subject || "No subject"}`
+            });
+        });
+
+    allApplications
+        .filter(app => normaliseStatus(app.status) === "New")
+        .slice(0, 5)
+        .forEach(app => {
+            tasks.push({
+                title: "Review New Application",
+                text: `${app.fullName || "Candidate"} applied for ${app.position || "a role"}.`
+            });
+        });
+
+    allApplications
+        .filter(app => normaliseStatus(app.status) === "Interview Invited" && !app.interviewDate)
+        .slice(0, 5)
+        .forEach(app => {
+            tasks.push({
+                title: "Confirm Interview Details",
+                text: `${app.fullName || "Candidate"} has been invited but interview details may need checking.`
+            });
+        });
+
+    if (!tasks.length) {
+        tasks.push({
+            title: "No Urgent Tasks",
+            text: "There are no urgent recruiter actions at this time."
+        });
+    }
+
+    recruiterTaskList.innerHTML = tasks.map(item => `
+        <li>
+            <strong>${escapeHtml(item.title)}</strong>
+            ${escapeHtml(item.text)}
+        </li>
+    `).join("");
+}
+
+function renderCommunicationCentre() {
+    if (!communicationTableBody) return;
+
+    const communicationRecords = allApplications.filter(app =>
+        app.email || app.invitationSent || app.invitationEmailId
+    );
+
+    if (!communicationRecords.length) {
+        communicationTableBody.innerHTML = `
+            <tr>
+                <td colspan="5">No communication records found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    communicationTableBody.innerHTML = "";
+
+    communicationRecords.forEach(app => {
+        const needsFollowUp =
+            normaliseStatus(app.status) === "New" ||
+            normaliseStatus(app.status) === "Screening" ||
+            normaliseStatus(app.status) === "Shortlisted";
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${escapeHtml(app.fullName || "Candidate")}</td>
+            <td>${escapeHtml(app.email || "N/A")}</td>
+            <td>${app.invitationSent ? "Yes" : "No"}</td>
+            <td>${escapeHtml(app.invitationEmailId || "N/A")}</td>
+            <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
+        `;
+
+        communicationTableBody.appendChild(tr);
+    });
+}
+
 function exportApplicationsCSV() {
     showToast("CSV export started.", "info");
 
@@ -977,12 +1165,13 @@ function exportApplicationsCSV() {
             formatDate(application.createdAt),
             normaliseStatus(application.status),
             application.rating || "",
+            calculateATSScore(application),
             application.notes || ""
         ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
     });
 
     const csvContent = [
-        `"Name","Email","Position","Date Applied","Status","Rating","Notes"`,
+        `"Name","Email","Position","Date Applied","Status","Rating","ATS Score","Notes"`,
         ...rows
     ].join("\n");
 
@@ -1015,6 +1204,7 @@ function logoutAdmin() {
     allApplications = [];
     allContactMessages = [];
 
+    stopAutoRefresh();
     closeCandidateModal();
     setDashboardVisible(false);
 
@@ -1029,6 +1219,7 @@ document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidate
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
 clearFiltersBtn?.addEventListener("click", clearCandidateFilters);
+manualRefreshBtn?.addEventListener("click", () => refreshDashboard(true));
 
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
@@ -1050,4 +1241,5 @@ if (authToken) {
     setDashboardVisible(true);
     showLoggedInInfo();
     refreshDashboard();
+    startAutoRefresh();
 }
