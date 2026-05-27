@@ -1,8 +1,3 @@
-/* =====================================================
-   JOE'S EXCELLENT EVENT MANAGEMENT - SERVER.JS
-   Railway + Firebase Admin + Interview Email Invitations
-===================================================== */
-
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -13,11 +8,7 @@ const admin = require("firebase-admin");
 require("dotenv").config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-/* =====================================================
-   FOLDERS
-===================================================== */
+const PORT = process.env.PORT || 8080;
 
 const PUBLIC_DIR = path.join(__dirname, "public");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
@@ -26,111 +17,54 @@ if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-/* =====================================================
-   CORS SETUP
-===================================================== */
-
-const allowedOrigins = [
-    "https://www.joemoboawards2025.co.uk",
-    "https://joemoboawards2025.co.uk",
-    process.env.FRONTEND_ORIGIN,
-    process.env.FRONTEND_ORIGIN_WWW
-].filter(Boolean);
-
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-
-        return callback(new Error("Not allowed by CORS"));
-    },
+    origin: true,
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
-
 app.use(express.static(PUBLIC_DIR));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-/* =====================================================
-   FIREBASE ADMIN SETUP
-===================================================== */
-
 let db = null;
-let bucket = null;
 
 try {
-    if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
-        console.warn("WARNING: FIREBASE_SERVICE_ACCOUNT is missing.");
-    } else {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
         if (!admin.apps.length) {
             admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount),
-                storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+                credential: admin.credential.cert(serviceAccount)
             });
         }
 
         db = admin.firestore();
-
-        if (process.env.FIREBASE_STORAGE_BUCKET) {
-            bucket = admin.storage().bucket();
-        }
-
         console.log("Firebase connected successfully.");
+    } else {
+        console.warn("FIREBASE_SERVICE_ACCOUNT is missing.");
     }
 } catch (error) {
     console.error("Firebase setup failed:", error.message);
 }
 
-/* =====================================================
-   MULTER FILE UPLOAD SETUP
-===================================================== */
-
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination(req, file, cb) {
         cb(null, UPLOADS_DIR);
     },
-    filename: function (req, file, cb) {
-        const safeOriginalName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        const uniqueName = Date.now() + "-" + safeOriginalName;
-        cb(null, uniqueName);
+    filename(req, file, cb) {
+        const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+        cb(null, Date.now() + "-" + safeName);
     }
 });
 
 const upload = multer({
     storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024
-    },
-    fileFilter: function (req, file, cb) {
-        const allowedTypes = [
-            "application/pdf",
-            "application/msword",
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "image/jpeg",
-            "image/png"
-        ];
-
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error("Only PDF, Word, JPG and PNG files are allowed."));
-        }
-    }
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-/* =====================================================
-   AUTH HELPERS
-===================================================== */
-
-const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret-immediately";
+const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret";
 
 function createToken(user) {
     return jwt.sign(user, JWT_SECRET, { expiresIn: "8h" });
@@ -146,22 +80,16 @@ function verifyToken(req, res, next) {
         });
     }
 
-    const token = authHeader.split(" ")[1];
-
     try {
-        req.user = jwt.verify(token, JWT_SECRET);
+        req.user = jwt.verify(authHeader.split(" ")[1], JWT_SECRET);
         next();
-    } catch (error) {
+    } catch {
         return res.status(401).json({
             success: false,
             message: "Login expired. Please log in again."
         });
     }
 }
-
-/* =====================================================
-   EMAIL HELPERS - RESEND
-===================================================== */
 
 function escapeHtml(value) {
     return String(value || "")
@@ -175,21 +103,19 @@ function escapeHtml(value) {
 function buildInterviewEmail(application, details) {
     const candidateName = application.fullName || "Candidate";
     const position = application.position || "the position applied for";
-    const interviewDate = details.interviewDate || "to be confirmed";
-    const interviewTime = details.interviewTime || "to be confirmed";
-    const interviewLocation = details.interviewLocation || "to be confirmed";
+    const interviewDate = details.interviewDate || "To be confirmed";
+    const interviewTime = details.interviewTime || "To be confirmed";
+    const interviewLocation = details.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
 
-    const customMessage = details.interviewMessage || `
-Thank you for your application to Joe’s Excellent Events & Management.
+    const message = details.interviewMessage || `Thank you for your application.
 
-We are pleased to invite you to attend an interview to discuss your application, experience and interest in joining our team.
-`;
+We are pleased to invite you to attend an interview with Joe's Excellent Events & Management.`;
 
-    const subject = `Interview Invitation - Joe's Excellent Events & Management`;
+    const subject = "Interview Invitation - Joe's Excellent Events & Management";
 
     const plainText = `Dear ${candidateName},
 
-${customMessage}
+${message}
 
 Interview Details:
 Position: ${position}
@@ -205,13 +131,13 @@ Joe's Excellent Events & Management
 Recruitment Team`;
 
     const html = `
-        <div style="font-family: Arial, Helvetica, sans-serif; background:#061726; color:#ffffff; padding:30px;">
-            <div style="max-width:700px; margin:auto; background:#13283b; border-radius:18px; padding:30px; border:1px solid #ff6a00;">
-                <h1 style="color:#ff6a00; text-align:center;">Interview Invitation</h1>
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">Interview Invitation</h1>
 
                 <p>Dear ${escapeHtml(candidateName)},</p>
 
-                <p style="white-space:pre-line;">${escapeHtml(customMessage)}</p>
+                <p style="white-space:pre-line;">${escapeHtml(message)}</p>
 
                 <h2 style="color:#ff6a00;">Interview Details</h2>
 
@@ -234,13 +160,51 @@ Recruitment Team`;
     return { subject, plainText, html };
 }
 
+function buildContactEmail(contactData) {
+    const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
+
+    const plainText = `New Contact Us Message
+
+Name: ${contactData.name}
+Email: ${contactData.email}
+Phone: ${contactData.phone}
+Subject: ${contactData.subject}
+
+Message:
+${contactData.message}
+
+Sent: ${contactData.createdAt}`;
+
+    const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">New Contact Us Message</h1>
+
+                <p><strong>Name:</strong> ${escapeHtml(contactData.name)}</p>
+                <p><strong>Email:</strong> ${escapeHtml(contactData.email)}</p>
+                <p><strong>Phone:</strong> ${escapeHtml(contactData.phone)}</p>
+                <p><strong>Subject:</strong> ${escapeHtml(contactData.subject)}</p>
+
+                <h2 style="color:#ff6a00;">Message</h2>
+                <p style="white-space:pre-line;">${escapeHtml(contactData.message)}</p>
+
+                <p style="margin-top:30px;">
+                    <strong>Sent:</strong> ${escapeHtml(contactData.createdAt)}
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, plainText, html };
+}
+
 async function sendEmailWithResend({ to, subject, html, plainText }) {
     if (!process.env.RESEND_API_KEY) {
-        throw new Error("RESEND_API_KEY is missing from Railway variables.");
+        throw new Error("RESEND_API_KEY is missing.");
     }
 
     const fromAddress = process.env.EMAIL_FROM || "Joe's Excellent Events & Management <onboarding@resend.dev>";
-    const replyTo = process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER || process.env.ADMIN_EMAIL || "";
+    const replyTo = process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
 
     const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -254,7 +218,7 @@ async function sendEmailWithResend({ to, subject, html, plainText }) {
             subject,
             html,
             text: plainText,
-            reply_to: replyTo || undefined
+            reply_to: replyTo
         })
     });
 
@@ -267,23 +231,14 @@ async function sendEmailWithResend({ to, subject, html, plainText }) {
     return result;
 }
 
-/* =====================================================
-   HEALTH CHECK
-===================================================== */
-
 app.get("/health", (req, res) => {
     res.json({
         success: true,
         message: "Server is running",
         firebaseConnected: !!db,
-        storageConnected: !!bucket,
-        emailReady: !!process.env.RESEND_API_KEY
+        resendReady: !!process.env.RESEND_API_KEY
     });
 });
-
-/* =====================================================
-   ADMIN / RECRUITER LOGIN
-===================================================== */
 
 app.post("/admin/login", (req, res) => {
     const { email, password } = req.body;
@@ -306,14 +261,14 @@ app.post("/admin/login", (req, res) => {
         }
     ];
 
-    const matchedUser = users.find(user =>
-        user.email &&
-        user.password &&
-        user.email === email &&
-        user.password === password
+    const user = users.find(u =>
+        u.email &&
+        u.password &&
+        u.email === email &&
+        u.password === password
     );
 
-    if (!matchedUser) {
+    if (!user) {
         return res.status(401).json({
             success: false,
             message: "Invalid email or password."
@@ -321,21 +276,17 @@ app.post("/admin/login", (req, res) => {
     }
 
     const token = createToken({
-        email: matchedUser.email,
-        role: matchedUser.role
+        email: user.email,
+        role: user.role
     });
 
     res.json({
         success: true,
         message: "Login successful.",
         token,
-        role: matchedUser.role
+        role: user.role
     });
 });
-
-/* =====================================================
-   APPLICATION FORM SUBMISSION
-===================================================== */
 
 app.post(
     "/api/apply",
@@ -362,8 +313,8 @@ app.post(
                 });
             }
 
-            const cvFile = req.files && req.files.cv ? req.files.cv[0] : null;
-            const extraFiles = req.files && req.files.extraFiles ? req.files.extraFiles : [];
+            const cvFile = req.files?.cv?.[0] || null;
+            const extraFiles = req.files?.extraFiles || [];
 
             const applicationData = {
                 fullName,
@@ -382,13 +333,14 @@ app.post(
                 interviewMessage: "",
                 invitationSent: false,
                 invitationSentAt: "",
+                invitationEmailId: "",
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 cv: cvFile ? `/uploads/${cvFile.filename}` : "",
                 extraFiles: extraFiles.map(file => `/uploads/${file.filename}`)
             };
 
-            let savedId = null;
+            let savedId;
 
             if (db) {
                 const docRef = await db.collection("applications").add(applicationData);
@@ -402,6 +354,7 @@ app.post(
                 }
 
                 savedId = Date.now().toString();
+
                 applications.push({
                     id: savedId,
                     ...applicationData
@@ -421,15 +374,122 @@ app.post(
 
             res.status(500).json({
                 success: false,
-                message: "Server error. Application was not submitted."
+                message: "Application was not submitted."
             });
         }
     }
 );
 
-/* =====================================================
-   GET ALL APPLICATIONS
-===================================================== */
+app.post("/api/contact", async (req, res) => {
+    try {
+        const {
+            name,
+            fullName,
+            email,
+            phone,
+            subject,
+            message
+        } = req.body;
+
+        const contactName = name || fullName || "";
+        const contactEmail = email || "";
+        const contactPhone = phone || "";
+        const contactSubject = subject || "Website Enquiry";
+        const contactMessage = message || "";
+
+        if (!contactName || !contactEmail || !contactMessage) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, email and message are required."
+            });
+        }
+
+        const contactData = {
+            name: contactName,
+            email: contactEmail,
+            phone: contactPhone,
+            subject: contactSubject,
+            message: contactMessage,
+            status: "New",
+            read: false,
+            emailSent: false,
+            resendEmailId: "",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        let savedId;
+
+        if (db) {
+            const docRef = await db.collection("contactMessages").add(contactData);
+            savedId = docRef.id;
+        } else {
+            const localFile = path.join(__dirname, "contactMessages.json");
+            let contactMessages = [];
+
+            if (fs.existsSync(localFile)) {
+                contactMessages = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            }
+
+            savedId = Date.now().toString();
+
+            contactMessages.push({
+                id: savedId,
+                ...contactData
+            });
+
+            fs.writeFileSync(localFile, JSON.stringify(contactMessages, null, 2));
+        }
+
+        try {
+            const contactEmailContent = buildContactEmail(contactData);
+            const emailTo = process.env.CONTACT_EMAIL_TO || process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
+
+            const emailResult = await sendEmailWithResend({
+                to: emailTo,
+                subject: contactEmailContent.subject,
+                html: contactEmailContent.html,
+                plainText: contactEmailContent.plainText
+            });
+
+            if (db) {
+                await db.collection("contactMessages").doc(savedId).update({
+                    emailSent: true,
+                    resendEmailId: emailResult.id || "",
+                    updatedAt: new Date().toISOString()
+                });
+            } else {
+                const localFile = path.join(__dirname, "contactMessages.json");
+                const contactMessages = JSON.parse(fs.readFileSync(localFile, "utf8"));
+                const index = contactMessages.findIndex(item => item.id === savedId);
+
+                if (index !== -1) {
+                    contactMessages[index].emailSent = true;
+                    contactMessages[index].resendEmailId = emailResult.id || "";
+                    contactMessages[index].updatedAt = new Date().toISOString();
+                    fs.writeFileSync(localFile, JSON.stringify(contactMessages, null, 2));
+                }
+            }
+
+        } catch (emailError) {
+            console.error("Contact notification email error:", emailError.message);
+        }
+
+        res.json({
+            success: true,
+            message: "Your message has been sent successfully.",
+            id: savedId
+        });
+
+    } catch (error) {
+        console.error("Contact form error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Your message could not be sent."
+        });
+    }
+});
 
 app.get("/api/applications", verifyToken, async (req, res) => {
     try {
@@ -468,9 +528,42 @@ app.get("/api/applications", verifyToken, async (req, res) => {
     }
 });
 
-/* =====================================================
-   UPDATE APPLICATION
-===================================================== */
+app.get("/api/contact-messages", verifyToken, async (req, res) => {
+    try {
+        let messages = [];
+
+        if (db) {
+            const snapshot = await db
+                .collection("contactMessages")
+                .orderBy("createdAt", "desc")
+                .get();
+
+            messages = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } else {
+            const localFile = path.join(__dirname, "contactMessages.json");
+
+            if (fs.existsSync(localFile)) {
+                messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            }
+        }
+
+        res.json({
+            success: true,
+            messages
+        });
+
+    } catch (error) {
+        console.error("Fetch contact messages error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch contact messages."
+        });
+    }
+});
 
 app.patch("/api/applications/:id", verifyToken, async (req, res) => {
     try {
@@ -489,7 +582,7 @@ app.patch("/api/applications/:id", verifyToken, async (req, res) => {
             if (!fs.existsSync(localFile)) {
                 return res.status(404).json({
                     success: false,
-                    message: "No local applications file found."
+                    message: "Applications file not found."
                 });
             }
 
@@ -526,9 +619,59 @@ app.patch("/api/applications/:id", verifyToken, async (req, res) => {
     }
 });
 
-/* =====================================================
-   DELETE APPLICATION
-===================================================== */
+app.patch("/api/contact-messages/:id", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const updateData = {
+            ...req.body,
+            updatedAt: new Date().toISOString()
+        };
+
+        if (db) {
+            await db.collection("contactMessages").doc(id).update(updateData);
+        } else {
+            const localFile = path.join(__dirname, "contactMessages.json");
+
+            if (!fs.existsSync(localFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Contact messages file not found."
+                });
+            }
+
+            const messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            const index = messages.findIndex(item => item.id === id);
+
+            if (index === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Contact message not found."
+                });
+            }
+
+            messages[index] = {
+                ...messages[index],
+                ...updateData
+            };
+
+            fs.writeFileSync(localFile, JSON.stringify(messages, null, 2));
+        }
+
+        res.json({
+            success: true,
+            message: "Contact message updated successfully."
+        });
+
+    } catch (error) {
+        console.error("Update contact message error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update contact message."
+        });
+    }
+});
 
 app.delete("/api/applications/:id", verifyToken, async (req, res) => {
     try {
@@ -549,7 +692,7 @@ app.delete("/api/applications/:id", verifyToken, async (req, res) => {
             if (!fs.existsSync(localFile)) {
                 return res.status(404).json({
                     success: false,
-                    message: "No local applications file found."
+                    message: "Applications file not found."
                 });
             }
 
@@ -574,9 +717,49 @@ app.delete("/api/applications/:id", verifyToken, async (req, res) => {
     }
 });
 
-/* =====================================================
-   SEND ACTIVE INTERVIEW INVITATION EMAIL
-===================================================== */
+app.delete("/api/contact-messages/:id", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot delete contact messages."
+            });
+        }
+
+        if (db) {
+            await db.collection("contactMessages").doc(id).delete();
+        } else {
+            const localFile = path.join(__dirname, "contactMessages.json");
+
+            if (!fs.existsSync(localFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Contact messages file not found."
+                });
+            }
+
+            let messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            messages = messages.filter(item => item.id !== id);
+
+            fs.writeFileSync(localFile, JSON.stringify(messages, null, 2));
+        }
+
+        res.json({
+            success: true,
+            message: "Contact message deleted successfully."
+        });
+
+    } catch (error) {
+        console.error("Delete contact message error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete contact message."
+        });
+    }
+});
 
 app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
     try {
@@ -588,13 +771,6 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
                 message: "Viewers cannot send interview invitations."
             });
         }
-
-        const {
-            interviewDate,
-            interviewTime,
-            interviewLocation,
-            interviewMessage
-        } = req.body;
 
         let application = null;
 
@@ -618,7 +794,7 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             if (!fs.existsSync(localFile)) {
                 return res.status(404).json({
                     success: false,
-                    message: "No local applications file found."
+                    message: "Applications file not found."
                 });
             }
 
@@ -640,12 +816,7 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             });
         }
 
-        const emailContent = buildInterviewEmail(application, {
-            interviewDate,
-            interviewTime,
-            interviewLocation,
-            interviewMessage
-        });
+        const emailContent = buildInterviewEmail(application, req.body);
 
         const emailResult = await sendEmailWithResend({
             to: application.email,
@@ -656,10 +827,10 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
 
         const updateData = {
             status: "Interview Invited",
-            interviewDate: interviewDate || "",
-            interviewTime: interviewTime || "",
-            interviewLocation: interviewLocation || "",
-            interviewMessage: interviewMessage || "",
+            interviewDate: req.body.interviewDate || "",
+            interviewTime: req.body.interviewTime || "",
+            interviewLocation: req.body.interviewLocation || "",
+            interviewMessage: req.body.interviewMessage || "",
             invitationSent: true,
             invitationSentAt: new Date().toISOString(),
             invitationEmailId: emailResult.id || "",
@@ -673,12 +844,14 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
             const index = applications.findIndex(app => app.id === id);
 
-            applications[index] = {
-                ...applications[index],
-                ...updateData
-            };
+            if (index !== -1) {
+                applications[index] = {
+                    ...applications[index],
+                    ...updateData
+                };
 
-            fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            }
         }
 
         res.json({
@@ -697,10 +870,6 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
     }
 });
 
-/* =====================================================
-   FRONTEND ROUTES
-===================================================== */
-
 app.get("/", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
@@ -713,20 +882,12 @@ app.get("/careers", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "careers.html"));
 });
 
-/* =====================================================
-   404 HANDLER
-===================================================== */
-
 app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: "Route not found."
     });
 });
-
-/* =====================================================
-   ERROR HANDLER
-===================================================== */
 
 app.use((error, req, res, next) => {
     console.error("Server error:", error.message);
@@ -736,10 +897,6 @@ app.use((error, req, res, next) => {
         message: error.message || "Internal server error."
     });
 });
-
-/* =====================================================
-   START SERVER
-===================================================== */
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
