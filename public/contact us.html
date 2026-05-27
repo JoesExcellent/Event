@@ -42,29 +42,30 @@
             font-size: 0.95rem;
             font-weight: 700;
             transition: 0.3s ease;
+            padding: 10px 16px;
+            border-radius: 8px;
         }
 
         nav a:hover,
         nav a.active {
             background: #ff6a00;
-            padding: 12px 18px;
-            border-radius: 10px;
         }
 
         .hero {
             background: #020b14;
-            padding: 35px 7%;
+            padding: 30px 7%;
             border-bottom: 2px solid #ff6a00;
         }
 
         .hero-image {
             max-width: 1200px;
-            height: 340px;
+            height: 360px;
             margin: auto;
             border-radius: 18px;
             overflow: hidden;
             border: 1px solid #ffb000;
             background: #123756;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
         }
 
         .hero-image img {
@@ -89,11 +90,12 @@
         }
 
         .intro-image {
-            height: 380px;
+            height: 420px;
             border-radius: 18px;
             overflow: hidden;
             border: 1px solid #ffb000;
             background: #123756;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
         }
 
         .intro-image img {
@@ -104,9 +106,9 @@
         }
 
         .intro-text h2 {
-            font-size: clamp(2.2rem, 5vw, 4rem);
-            line-height: 1.1;
-            margin-bottom: 24px;
+            font-size: clamp(2.4rem, 5vw, 4.3rem);
+            line-height: 1.05;
+            margin-bottom: 26px;
             text-transform: uppercase;
         }
 
@@ -123,23 +125,28 @@
         .intro-text p {
             color: #f2f2f2;
             margin-bottom: 18px;
+            font-size: 1.05rem;
         }
 
         .info-section {
             background: #061726;
-            padding: 80px 7%;
+            padding: 85px 7%;
             text-align: center;
         }
 
         .section-heading {
             max-width: 900px;
-            margin: auto auto 50px;
+            margin: auto auto 55px;
         }
 
         .section-heading h2 {
             color: #ff6a00;
-            font-size: clamp(2rem, 4vw, 3rem);
-            margin-bottom: 16px;
+            font-size: clamp(2.1rem, 4vw, 3.2rem);
+            margin-bottom: 14px;
+        }
+
+        .section-heading p {
+            color: #f1f1f1;
         }
 
         .info-grid {
@@ -152,48 +159,54 @@
 
         .info-card {
             background: #13283b;
-            padding: 32px 24px;
+            padding: 36px 24px;
             border-radius: 16px;
             border: 1px solid rgba(255, 176, 0, 0.25);
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            transition: 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-5px);
         }
 
         .info-card span {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             background: #ff6a00;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .info-card h3 {
             color: #ff6a00;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            font-size: 1.15rem;
         }
 
         .contact-form-section {
             background: #0b2a44;
-            padding: 80px 7%;
+            padding: 85px 7%;
         }
 
         .form-wrapper {
-            max-width: 1050px;
+            max-width: 1100px;
             margin: auto;
             background: #13283b;
-            padding: 50px;
+            padding: 55px;
             border-radius: 18px;
             border: 1px solid rgba(255, 176, 0, 0.25);
-            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
         }
 
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
+            gap: 26px;
         }
 
         .form-group.full {
@@ -202,7 +215,7 @@
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #ff6a00;
             font-weight: 700;
         }
@@ -210,13 +223,14 @@
         input,
         textarea {
             width: 100%;
-            padding: 14px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px solid rgba(255, 176, 0, 0.35);
             background: #0b2a44;
             color: #ffffff;
             font-family: Arial, Helvetica, sans-serif;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
+            font-size: 0.96rem;
         }
 
         textarea {
@@ -237,11 +251,12 @@
 
         button:hover {
             background: #ff7a1a;
+            transform: translateY(-2px);
         }
 
         .why-section {
             background: #061726;
-            padding: 80px 7%;
+            padding: 85px 7%;
             text-align: center;
         }
 
@@ -255,35 +270,36 @@
 
         .why-card {
             background: #13283b;
-            padding: 30px 24px;
+            padding: 34px 24px;
             border-radius: 16px;
             border: 1px solid rgba(255, 176, 0, 0.25);
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.35);
         }
 
         .why-card span {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             background: #ff6a00;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .why-card h3 {
             color: #ff6a00;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
         .location-section {
             background: #0b2a44;
-            padding: 80px 7%;
+            padding: 90px 7%;
         }
 
         .location-grid {
-            max-width: 1150px;
+            max-width: 1200px;
             margin: auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -293,52 +309,66 @@
 
         .location-text {
             background: rgba(255,255,255,0.05);
-            padding: 40px;
-            border-radius: 18px;
+            padding: 48px;
+            border-radius: 20px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
         .location-text h2 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            margin-bottom: 20px;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            margin-bottom: 28px;
+            line-height: 1.1;
         }
 
         .location-text span {
             color: #ff6a00;
         }
 
+        .location-text p {
+            font-size: 1.08rem;
+            margin-bottom: 22px;
+            color: #f3f3f3;
+        }
+
         .location-image {
-            height: 360px;
-            border-radius: 18px;
+            height: 520px;
+            border-radius: 20px;
             overflow: hidden;
             border: 1px solid #ffb000;
-            background: #123756;
+            background: #061726;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
         }
 
         .location-image img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             display: block;
+            background: #061726;
         }
 
         .cta-section {
             background: #061726;
-            padding: 80px 7%;
+            padding: 90px 7%;
             border-bottom: 2px solid #ff6a00;
         }
 
         .cta-box {
-            max-width: 1100px;
+            max-width: 1150px;
             margin: auto;
-            background: rgba(255,255,255,0.06);
-            padding: 60px;
-            border-radius: 18px;
+            background: rgba(255,255,255,0.05);
+            padding: 65px;
+            border-radius: 20px;
             text-align: center;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
         .cta-box h2 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            margin-bottom: 18px;
+            font-size: clamp(2.3rem, 5vw, 4rem);
+            margin-bottom: 20px;
         }
 
         .cta-box span {
@@ -347,12 +377,13 @@
 
         footer {
             background: #020b14;
-            padding: 30px 20px;
+            padding: 32px 20px;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
         }
 
-        @media (max-width: 950px) {
+        @media (max-width: 980px) {
+
             .intro-grid,
             .location-grid,
             .info-grid,
@@ -362,11 +393,23 @@
             }
 
             nav {
-                gap: 18px;
+                gap: 16px;
             }
 
             .form-wrapper {
                 padding: 35px;
+            }
+
+            .hero-image {
+                height: 250px;
+            }
+
+            .location-image {
+                height: auto;
+            }
+
+            .location-image img {
+                object-fit: contain;
             }
         }
     </style>
@@ -375,6 +418,7 @@
 <body>
 
     <header>
+
         <nav>
             <a href="index.html">Home</a>
             <a href="home.html">About</a>
@@ -384,12 +428,15 @@
             <a href="contact us.html" class="active">Contact Us</a>
             <a href="admin.html">Admin</a>
         </nav>
+
     </header>
 
     <section class="hero">
+
         <div class="hero-image">
-            <img src="images/contact-hero.png" alt="Professional business communication">
+            <img src="images/contact-hero.png" alt="Joe's Excellent Events and Management Contact Hero">
         </div>
+
     </section>
 
     <section class="contact-intro">
@@ -397,7 +444,7 @@
         <div class="intro-grid">
 
             <div class="intro-image">
-                <img src="images/contact-team.png" alt="Joe's Excellent Events and Management team">
+                <img src="images/contact-team.png" alt="Joe's Excellent Events and Management Team">
             </div>
 
             <div class="intro-text">
@@ -424,10 +471,13 @@
     <section class="info-section">
 
         <div class="section-heading">
+
             <h2>Contact Information</h2>
+
             <p>
                 Use the details below to contact Joe’s Excellent Events & Management directly.
             </p>
+
         </div>
 
         <div class="info-grid">
@@ -447,13 +497,21 @@
             <div class="info-card">
                 <span>3</span>
                 <h3>Office Address</h3>
-                <p>73 Leazes Court,<br>Barrack Road,<br>Newcastle Upon Tyne,<br>NE4 5AY</p>
+                <p>
+                    73 Leazes Court,<br>
+                    Barrack Road,<br>
+                    Newcastle Upon Tyne,<br>
+                    NE4 5AY
+                </p>
             </div>
 
             <div class="info-card">
                 <span>4</span>
                 <h3>Business Hours</h3>
-                <p>Monday to Friday<br>8:00 AM – 5:00 PM</p>
+                <p>
+                    Monday to Friday<br>
+                    8:00 AM – 5:00 PM
+                </p>
             </div>
 
         </div>
@@ -463,10 +521,13 @@
     <section class="contact-form-section">
 
         <div class="section-heading">
+
             <h2>Send A Message</h2>
+
             <p>
                 Complete the form below and we will respond to your enquiry as soon as possible.
             </p>
+
         </div>
 
         <div class="form-wrapper">
@@ -513,11 +574,13 @@
     <section class="why-section">
 
         <div class="section-heading">
+
             <h2>Why Contact Us?</h2>
 
             <p>
                 We are here to support professional enquiries, recruitment conversations, partnerships and general support requests.
             </p>
+
         </div>
 
         <div class="why-grid">
@@ -525,25 +588,33 @@
             <div class="why-card">
                 <span>1</span>
                 <h3>Business Enquiries</h3>
-                <p>Speak to us about event support, customer engagement and brand growth.</p>
+                <p>
+                    Speak to us about event support, customer engagement and brand growth.
+                </p>
             </div>
 
             <div class="why-card">
                 <span>2</span>
                 <h3>Recruitment Support</h3>
-                <p>Ask about careers, applications and opportunities to grow with us.</p>
+                <p>
+                    Ask about careers, applications and opportunities to grow with us.
+                </p>
             </div>
 
             <div class="why-card">
                 <span>3</span>
                 <h3>Partnerships</h3>
-                <p>Explore ways to work together through professional collaboration.</p>
+                <p>
+                    Explore ways to work together through professional collaboration.
+                </p>
             </div>
 
             <div class="why-card">
                 <span>4</span>
                 <h3>General Support</h3>
-                <p>Send a message and we will respond with care and professionalism.</p>
+                <p>
+                    Send a message and we will respond with care and professionalism.
+                </p>
             </div>
 
         </div>
@@ -564,8 +635,6 @@
                     Joe’s Excellent Events & Management is based in Newcastle upon Tyne and supports clients, candidates and partners through reliable communication and professional service.
                 </p>
 
-                <br>
-
                 <p>
                     Our location reflects our ambition, professionalism and strong connection to the local community and wider business sector.
                 </p>
@@ -573,7 +642,7 @@
             </div>
 
             <div class="location-image">
-                <img src="images/contact-map.png" alt="Newcastle office location">
+                <img src="images/contact-map.png" alt="Joe's Excellent Events and Management Newcastle Location">
             </div>
 
         </div>
@@ -597,8 +666,11 @@
     </section>
 
     <footer>
+
         <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+
         <p>All rights reserved.</p>
+
     </footer>
 
 </body>
