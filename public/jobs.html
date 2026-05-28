@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Job Vacancies | Joe's Excellent Events & Management</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #061726;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #ff6a00;
+            padding: 18px 7%;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 42px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        nav a:hover,
+        nav a.active {
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
+        }
+
+        .hero {
+            background: #020b14;
+            padding: 70px 7%;
+            border-bottom: 2px solid #ff6a00;
+            text-align: center;
+        }
+
+        .hero-box {
+            max-width: 1100px;
+            margin: auto;
+            background: #123756;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            padding: 60px 35px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-box h1 {
+            font-size: clamp(2.5rem, 5vw, 5rem);
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero-box span {
+            color: #ff6a00;
+            display: block;
+        }
+
+        .hero-box p {
+            max-width: 850px;
+            margin: auto;
+            color: #f2f2f2;
+            font-size: 1.1rem;
+        }
+
+        .intro-section {
+            background: #0b2a44;
+            padding: 70px 7%;
+            text-align: center;
+        }
+
+        .intro-section h2 {
+            color: #ff6a00;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
+        .intro-section p {
+            max-width: 900px;
+            margin: auto;
+            color: #f2f2f2;
+        }
+
+        .jobs-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
+
+        .jobs-grid {
+            max-width: 1200px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .job-card {
+            background: #13283b;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 18px;
+            padding: 34px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .job-card h2 {
+            color: #ff6a00;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .job-meta span {
+            background: rgba(255, 106, 0, 0.18);
+            border: 1px solid rgba(255, 176, 0, 0.35);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .job-card p {
+            color: #f2f2f2;
+            margin-bottom: 18px;
+        }
+
+        .job-card h3 {
+            color: #ff6a00;
+            margin: 22px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .job-card ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .job-card li {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 11px 13px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #f2f2f2;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #ff6a00;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #ff7a1a;
+        }
+
+        .gdpr-section {
+            background: #0b2a44;
+            padding: 70px 7%;
+        }
+
+        .gdpr-box {
+            max-width: 1100px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 176, 0, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+        }
+
+        .gdpr-box h2 {
+            color: #ff6a00;
+            margin-bottom: 16px;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+        }
+
+        .gdpr-box p {
+            color: #f2f2f2;
+            margin-bottom: 14px;
+        }
+
+        .cta-section {
+            background: #061726;
+            padding: 75px 7%;
+            border-bottom: 2px solid #ff6a00;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 900px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 50px;
+            border-radius: 16px;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
+        .cta-box span {
+            color: #ff6a00;
+        }
+
+        footer {
+            background: #020b14;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .jobs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                gap: 18px;
+            }
+
+            .hero-box,
+            .cta-box,
+            .gdpr-box {
+                padding: 34px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <nav class="navbar">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="jobs.html" class="active">Jobs</a>
+        <a href="apply.html">Apply</a>
+        <a href="contact us.html">Contact Us</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-box">
+        <h1>
+            Live Job
+            <span>Vacancies</span>
+        </h1>
+
+        <p>
+            Explore current opportunities with Joe’s Excellent Events & Management. We are looking for motivated, reliable and people-focused candidates who want to grow through professional experience, client support and leadership development.
+        </p>
+    </div>
+</section>
+
+<section class="intro-section">
+    <h2>Current Opportunities</h2>
+    <p>
+        Our live vacancies are designed for candidates who want to build confidence, develop professional skills and contribute to excellent client, event and brand support services.
+    </p>
+</section>
+
+<section class="jobs-section">
+    <div class="jobs-grid">
+
+        <article class="job-card">
+            <h2>Customer Engagement Assistant</h2>
+
+            <div class="job-meta">
+                <span>Newcastle upon Tyne</span>
+                <span>Part-Time / Flexible</span>
+                <span>Entry-Level Friendly</span>
+            </div>
+
+            <p>
+                Support customer communication, client engagement and professional service delivery while developing confidence, organisation and people-focused skills.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Support positive communication with customers and clients.</li>
+                <li>Represent the organisation in a professional and respectful manner.</li>
+                <li>Assist with customer enquiries and service information.</li>
+                <li>Help maintain strong client relationships through reliable support.</li>
+            </ul>
+
+            <h3>We Are Looking For</h3>
+            <ul>
+                <li>Good communication and listening skills.</li>
+                <li>A professional, polite and positive attitude.</li>
+                <li>Reliability, confidence and willingness to learn.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Event Support Assistant</h2>
+
+            <div class="job-meta">
+                <span>Newcastle upon Tyne</span>
+                <span>Event-Based</span>
+                <span>Training Provided</span>
+            </div>
+
+            <p>
+                Assist with event preparation, guest support, organisation and professional event delivery for clients, brands and community-facing projects.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Support event setup, coordination and guest assistance.</li>
+                <li>Help maintain smooth communication during events.</li>
+                <li>Represent the organisation with professionalism and care.</li>
+                <li>Work as part of a team to support successful event outcomes.</li>
+            </ul>
+
+            <h3>We Are Looking For</h3>
+            <ul>
+                <li>Energy, reliability and strong teamwork.</li>
+                <li>Good organisation and attention to detail.</li>
+                <li>A helpful attitude and willingness to support others.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Brand Representative</h2>
+
+            <div class="job-meta">
+                <span>Newcastle upon Tyne</span>
+                <span>Flexible Opportunities</span>
+                <span>People-Focused Role</span>
+            </div>
+
+            <p>
+                Help brands connect with customers through positive communication, presentation, product awareness and professional public-facing support.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Represent clients and brands in a confident and respectful way.</li>
+                <li>Communicate key brand messages clearly and professionally.</li>
+                <li>Support promotional activity, engagement and customer awareness.</li>
+                <li>Build trust through positive first impressions.</li>
+            </ul>
+
+            <h3>We Are Looking For</h3>
+            <ul>
+                <li>Confidence speaking with people.</li>
+                <li>Professional presentation and positive energy.</li>
+                <li>Commitment to learning and improving.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Trainee Leadership Assistant</h2>
+
+            <div class="job-meta">
+                <span>Newcastle upon Tyne</span>
+                <span>Development Pathway</span>
+                <span>Leadership Training</span>
+            </div>
+
+            <p>
+                A development opportunity for candidates who want to grow into leadership, team support, coordination and professional management responsibilities.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Support team coordination and professional service delivery.</li>
+                <li>Develop confidence in communication and responsibility.</li>
+                <li>Assist with planning, organisation and candidate support.</li>
+                <li>Learn leadership skills through practical experience.</li>
+            </ul>
+
+            <h3>We Are Looking For</h3>
+            <ul>
+                <li>Ambition, resilience and willingness to grow.</li>
+                <li>Respectful communication and strong reliability.</li>
+                <li>Interest in leadership, management and personal development.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+    </div>
+</section>
+
+<section class="gdpr-section">
+    <div class="gdpr-box">
+        <h2>Candidate Privacy and GDPR Commitment</h2>
+
+        <p>
+            Joe’s Excellent Events & Management is committed to handling candidate information responsibly, securely and in accordance with UK GDPR and data protection legislation.
+        </p>
+
+        <p>
+            When you apply for a role, your personal information may be used for recruitment, communication, interview coordination, candidate management and employment-related assessment purposes.
+        </p>
+
+        <p>
+            You may request access, correction or deletion of your personal data at any time.
+        </p>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-box">
+        <h2>Ready To <span>Apply?</span></h2>
+
+        <p>
+            Choose the role that best matches your interests, skills and ambitions, then complete the application form so our recruitment team can review your details.
+        </p>
+
+        <a href="apply.html" class="btn">Go To Application Form</a>
+    </div>
+</section>
+
+<footer>
+    <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+    <p>All rights reserved.</p>
+</footer>
+
+</body>
+</html>
