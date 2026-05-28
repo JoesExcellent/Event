@@ -7,6 +7,42 @@
 
     <!-- CACHE REFRESH -->
     <link rel="stylesheet" href="style.css?v=7">
+
+    <style>
+        .gdpr-consent {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .gdpr-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: #ffffff;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        .gdpr-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 3px;
+            accent-color: #ff6a00;
+            flex-shrink: 0;
+        }
+
+        .gdpr-text {
+            margin-top: 12px;
+            color: #d8d8d8;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 
 <body>
@@ -93,6 +129,19 @@
 
             </div>
 
+            <div class="gdpr-consent">
+                <label class="gdpr-label">
+                    <input type="checkbox" id="gdprConsent" required>
+                    <span>
+                        I consent to Joe’s Excellent Events & Management securely storing and processing my personal information for communication, enquiry handling, recruitment support and professional service purposes in accordance with UK GDPR and data protection legislation.
+                    </span>
+                </label>
+
+                <p class="gdpr-text">
+                    Your information will be securely handled and used only for responding to your enquiry and managing professional communication. You may request access, correction or deletion of your personal data at any time.
+                </p>
+            </div>
+
             <button type="submit" id="sendBtn" class="submit-btn">
                 Send Message
             </button>
@@ -139,7 +188,8 @@
             email: document.getElementById("contactEmail").value.trim(),
             phone: document.getElementById("contactPhone").value.trim(),
             subject: document.getElementById("contactSubject").value.trim(),
-            message: document.getElementById("contactMessage").value.trim()
+            message: document.getElementById("contactMessage").value.trim(),
+            gdprConsent: document.getElementById("gdprConsent").checked
         };
 
         try {
