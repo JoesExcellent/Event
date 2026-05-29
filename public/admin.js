@@ -1311,6 +1311,7 @@ function renderVacancies(vacancies) {
             <td>${vacancy.closingDate ? formatDate(vacancy.closingDate) : "N/A"}</td>
             <td>
                 <button onclick="editVacancy('${id}')">Edit</button>
+                <button onclick="setVacancyStatus('${id}', 'Draft')">Draft</button>
                 <button onclick="setVacancyStatus('${id}', 'Published')">Publish</button>
                 <button onclick="setVacancyStatus('${id}', 'Closed')">Close</button>
                 <button onclick="deleteVacancy('${id}')">Delete</button>
