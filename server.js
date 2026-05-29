@@ -870,6 +870,250 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
     }
 });
 
+
+function normaliseLines(value) {
+    if (Array.isArray(value)) {
+        return value.map(item => String(item || "").trim()).filter(Boolean);
+    }
+
+    return String(value || "")
+        .split(/\r?\n/)
+        .map(item => item.trim())
+        .filter(Boolean);
+}
+
+function buildVacancyData(body, existing = {}) {
+    const now = new Date().toISOString();
+
+    return {
+        title: body.title || body.vacancyTitle || existing.title || "",
+        location: body.location || body.vacancyLocation || existing.location || "",
+        type: body.type || body.vacancyType || existing.type || "",
+        category: body.category || body.vacancyCategory || existing.category || "General",
+        salaryMin: body.salaryMin || body.vacancySalaryMin || existing.salaryMin || "",
+        salaryMax: body.salaryMax || body.vacancySalaryMax || existing.salaryMax || "",
+        closingDate: body.closingDate || body.vacancyClosingDate || existing.closingDate || "",
+        status: body.status || body.vacancyStatus || existing.status || "Draft",
+        description: body.description || body.vacancyDescription || existing.description || "",
+        responsibilities: normaliseLines(body.responsibilities || body.vacancyResponsibilities || existing.responsibilities || []),
+        requirements: normaliseLines(body.requirements || body.vacancyRequirements || existing.requirements || []),
+        createdAt: existing.createdAt || now,
+        updatedAt: now
+    };
+}
+
+async function readLocalVacancies() {
+    const localFile = path.join(__dirname, "vacancies.json");
+
+    if (!fs.existsSync(localFile)) {
+        return [];
+    }
+
+    return JSON.parse(fs.readFileSync(localFile, "utf8"));
+}
+
+async function writeLocalVacancies(vacancies) {
+    const localFile = path.join(__dirname, "vacancies.json");
+    fs.writeFileSync(localFile, JSON.stringify(vacancies, null, 2));
+}
+
+app.get("/api/vacancies", async (req, res) => {
+    try {
+        let vacancies = [];
+
+        if (db) {
+            const snapshot = await db
+                .collection("vacancies")
+                .where("status", "==", "Published")
+                .get();
+
+            vacancies = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } else {
+            vacancies = (await readLocalVacancies()).filter(vacancy => vacancy.status === "Published");
+        }
+
+        vacancies.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        res.json({
+            success: true,
+            vacancies
+        });
+    } catch (error) {
+        console.error("Fetch public vacancies error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch vacancies."
+        });
+    }
+});
+
+app.get("/api/admin/vacancies", verifyToken, async (req, res) => {
+    try {
+        let vacancies = [];
+
+        if (db) {
+            const snapshot = await db.collection("vacancies").get();
+
+            vacancies = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } else {
+            vacancies = await readLocalVacancies();
+        }
+
+        vacancies.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        res.json({
+            success: true,
+            vacancies
+        });
+    } catch (error) {
+        console.error("Fetch admin vacancies error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch admin vacancies."
+        });
+    }
+});
+
+app.post("/api/admin/vacancies", verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot create vacancies."
+            });
+        }
+
+        const vacancyData = buildVacancyData(req.body);
+
+        if (!vacancyData.title) {
+            return res.status(400).json({
+                success: false,
+                message: "Vacancy title is required."
+            });
+        }
+
+        let savedId;
+
+        if (db) {
+            const docRef = await db.collection("vacancies").add(vacancyData);
+            savedId = docRef.id;
+        } else {
+            const vacancies = await readLocalVacancies();
+            savedId = Date.now().toString();
+            vacancies.push({ id: savedId, ...vacancyData });
+            await writeLocalVacancies(vacancies);
+        }
+
+        res.json({
+            success: true,
+            message: "Vacancy created successfully.",
+            id: savedId
+        });
+    } catch (error) {
+        console.error("Create vacancy error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create vacancy."
+        });
+    }
+});
+
+app.patch("/api/admin/vacancies/:id", verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot update vacancies."
+            });
+        }
+
+        const { id } = req.params;
+        let existing = {};
+
+        if (db) {
+            const doc = await db.collection("vacancies").doc(id).get();
+
+            if (!doc.exists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Vacancy not found."
+                });
+            }
+
+            existing = doc.data();
+            const updateData = buildVacancyData(req.body, existing);
+            await db.collection("vacancies").doc(id).update(updateData);
+        } else {
+            const vacancies = await readLocalVacancies();
+            const index = vacancies.findIndex(vacancy => vacancy.id === id);
+
+            if (index === -1) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Vacancy not found."
+                });
+            }
+
+            existing = vacancies[index];
+            vacancies[index] = {
+                ...existing,
+                ...buildVacancyData(req.body, existing)
+            };
+
+            await writeLocalVacancies(vacancies);
+        }
+
+        res.json({
+            success: true,
+            message: "Vacancy updated successfully."
+        });
+    } catch (error) {
+        console.error("Update vacancy error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to update vacancy."
+        });
+    }
+});
+
+app.delete("/api/admin/vacancies/:id", verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot delete vacancies."
+            });
+        }
+
+        const { id } = req.params;
+
+        if (db) {
+            await db.collection("vacancies").doc(id).delete();
+        } else {
+            let vacancies = await readLocalVacancies();
+            vacancies = vacancies.filter(vacancy => vacancy.id !== id);
+            await writeLocalVacancies(vacancies);
+        }
+
+        res.json({
+            success: true,
+            message: "Vacancy deleted successfully."
+        });
+    } catch (error) {
+        console.error("Delete vacancy error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete vacancy."
+        });
+    }
+});
+
 app.get("/", (req, res) => {
     res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
