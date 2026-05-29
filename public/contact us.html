@@ -9,6 +9,42 @@
     <link rel="stylesheet" href="style.css?v=7">
 
     <style>
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #ff6a00;
+        }
+
+        .navbar {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            background: #020b14;
+            overflow: visible;
+            white-space: normal;
+        }
+
+        .navbar a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 12px 16px;
+            border-radius: 12px;
+            transition: 0.3s ease;
+        }
+
+        .navbar a:hover,
+        .navbar a.active {
+            background: #ff6a00;
+            color: #ffffff;
+        }
+
         .gdpr-consent {
             margin-top: 20px;
             margin-bottom: 20px;
@@ -42,6 +78,18 @@
             font-size: 0.85rem;
             line-height: 1.5;
         }
+
+        @media (max-width: 900px) {
+            .navbar {
+                gap: 10px;
+                padding: 16px 14px;
+            }
+
+            .navbar a {
+                font-size: 0.88rem;
+                padding: 10px 12px;
+            }
+        }
     </style>
 </head>
 
@@ -49,20 +97,18 @@
 
 <header>
     <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="home.html">About</a>
-    <a href="our-services.html">Services</a>
-    <a href="careers.html">Careers</a>
-    <a href="jobs.html">Jobs</a>
-    <a href="executive.html">Executive</a>
-    <a href="apply.html">Apply</a>
-    <a href="contact us.html" class="active">Contact</a>
-
-    <a href="admin.html">Admin</a>
-</nav>
-
-
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="executive.html">Executive</a>
+        <a href="apply.html">Apply</a>
+        <a href="contact us.html" class="active">Contact</a>
+        <a href="admin.html">Admin</a>
+    </nav>
 </header>
+
 <section class="contact-hero">
     <div class="contact-hero-image">
         <img src="images/contact-hero.png" alt="Joe's Excellent Events and Management contact hero">
@@ -178,7 +224,6 @@
     const sendBtn = document.getElementById("sendBtn");
 
     contactForm.addEventListener("submit", async function (event) {
-
         event.preventDefault();
 
         sendBtn.disabled = true;
@@ -197,7 +242,6 @@
         };
 
         try {
-
             const response = await fetch("/api/contact", {
                 method: "POST",
                 headers: {
@@ -218,12 +262,10 @@
             contactForm.reset();
 
         } catch (error) {
-
             formMessage.style.color = "#ff6b6b";
             formMessage.textContent = error.message || "Message could not be sent.";
 
         } finally {
-
             sendBtn.disabled = false;
             sendBtn.textContent = "Send Message";
         }
