@@ -100,6 +100,56 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
+
+function buildApplicationReceivedEmail(application) {
+    const candidateName = application.fullName || "Candidate";
+    const position = application.position || "the position you applied for";
+    const subject = `Application Received - ${position}`;
+
+    const plainText = `Dear ${candidateName},
+
+Thank you for your application for the position of ${position} with Joe's Excellent Events & Management.
+
+We are pleased to confirm that your application has been received successfully and has entered our recruitment process. Our recruitment team will review your application, qualifications and experience carefully against the requirements of the role.
+
+If your application is shortlisted, we will contact you regarding the next stage of the recruitment process. Due to the volume of applications we may receive, we are unable to provide individual feedback to all applicants.
+
+We appreciate your interest in joining Joe's Excellent Events & Management and wish you every success.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`;
+
+    const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">Application Received</h1>
+
+                <p>Dear ${escapeHtml(candidateName)},</p>
+
+                <p>Thank you for your application for the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management.</p>
+
+                <p>We are pleased to confirm that your application has been received successfully and has entered our recruitment process.</p>
+
+                <p>Our recruitment team will review your application, qualifications and experience carefully against the requirements of the role.</p>
+
+                <p>If your application is shortlisted, we will contact you regarding the next stage of the recruitment process. Due to the volume of applications we may receive, we are unable to provide individual feedback to all applicants.</p>
+
+                <p>We appreciate your interest in joining Joe's Excellent Events & Management and wish you every success.</p>
+
+                <p style="margin-top:30px;">
+                    Kind regards,<br>
+                    <strong>Joe's Excellent Events & Management</strong><br>
+                    Recruitment Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, plainText, html };
+}
+
 function buildInterviewEmail(application, details) {
     const candidateName = application.fullName || "Candidate";
     const position = application.position || "the position applied for";
@@ -334,6 +384,9 @@ app.post(
                 invitationSent: false,
                 invitationSentAt: "",
                 invitationEmailId: "",
+                applicationReceivedEmailSent: false,
+                applicationReceivedEmailSentAt: "",
+                applicationReceivedEmailId: "",
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 cv: cvFile ? `/uploads/${cvFile.filename}` : "",
@@ -361,6 +414,95 @@ app.post(
                 });
 
                 fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            }
+
+            try {
+                const applicationReceivedEmail = buildApplicationReceivedEmail(applicationData);
+
+                const emailResult = await sendEmailWithResend({
+                    to: email,
+                    subject: applicationReceivedEmail.subject,
+                    html: applicationReceivedEmail.html,
+                    plainText: applicationReceivedEmail.plainText
+                });
+
+                const emailUpdateData = {
+                    applicationReceivedEmailSent: true,
+                    applicationReceivedEmailSentAt: new Date().toISOString(),
+                    applicationReceivedEmailId: emailResult.id || "",
+                    updatedAt: new Date().toISOString()
+                };
+
+                if (db) {
+                    await db.collection("applications").doc(savedId).update(emailUpdateData);
+
+                    await db.collection("candidateCommunications").add({
+                        applicationId: savedId,
+                        candidateName: fullName,
+                        candidateEmail: email,
+                        position: position || "",
+                        emailType: "Application Received",
+                        status: "Sent",
+                        resendEmailId: emailResult.id || "",
+                        sentAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString()
+                    });
+                } else {
+                    const localFile = path.join(__dirname, "applications.json");
+                    const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+                    const index = applications.findIndex(app => app.id === savedId);
+
+                    if (index !== -1) {
+                        applications[index] = {
+                            ...applications[index],
+                            ...emailUpdateData
+                        };
+
+                        fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+                    }
+
+                    const communicationsFile = path.join(__dirname, "candidateCommunications.json");
+                    let communications = [];
+
+                    if (fs.existsSync(communicationsFile)) {
+                        communications = JSON.parse(fs.readFileSync(communicationsFile, "utf8"));
+                    }
+
+                    communications.push({
+                        id: Date.now().toString(),
+                        applicationId: savedId,
+                        candidateName: fullName,
+                        candidateEmail: email,
+                        position: position || "",
+                        emailType: "Application Received",
+                        status: "Sent",
+                        resendEmailId: emailResult.id || "",
+                        sentAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString()
+                    });
+
+                    fs.writeFileSync(communicationsFile, JSON.stringify(communications, null, 2));
+                }
+            } catch (emailError) {
+                console.error("Application received email error:", emailError.message);
+
+                if (db && savedId) {
+                    try {
+                        await db.collection("candidateCommunications").add({
+                            applicationId: savedId,
+                            candidateName: fullName,
+                            candidateEmail: email,
+                            position: position || "",
+                            emailType: "Application Received",
+                            status: "Failed",
+                            errorMessage: emailError.message,
+                            sentAt: "",
+                            createdAt: new Date().toISOString()
+                        });
+                    } catch (logError) {
+                        console.error("Application received email log error:", logError.message);
+                    }
+                }
             }
 
             res.json({
