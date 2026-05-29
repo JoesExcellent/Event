@@ -210,6 +210,67 @@ Recruitment Team`;
     return { subject, plainText, html };
 }
 
+
+function buildInterviewReminderEmail(application, details) {
+    const candidateName = application.fullName || "Candidate";
+    const position = application.position || "the position applied for";
+    const interviewDate = details.interviewDate || application.interviewDate || "To be confirmed";
+    const interviewTime = details.interviewTime || application.interviewTime || "To be confirmed";
+    const interviewLocation = details.interviewLocation || application.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
+
+    const subject = "Interview Reminder - Joe's Excellent Events & Management";
+
+    const plainText = `Dear ${candidateName},
+
+This is a friendly reminder regarding your upcoming interview with Joe's Excellent Events & Management.
+
+Interview Details:
+Position: ${position}
+Date: ${interviewDate}
+Time: ${interviewTime}
+Location: ${interviewLocation}
+
+We look forward to meeting with you and discussing your application further.
+
+If you are unable to attend, please contact us as soon as possible.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`;
+
+    const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">Interview Reminder</h1>
+
+                <p>Dear ${escapeHtml(candidateName)},</p>
+
+                <p>This is a friendly reminder regarding your upcoming interview with Joe's Excellent Events & Management.</p>
+
+                <h2 style="color:#ff6a00;">Interview Details</h2>
+
+                <p><strong>Position:</strong> ${escapeHtml(position)}</p>
+                <p><strong>Date:</strong> ${escapeHtml(interviewDate)}</p>
+                <p><strong>Time:</strong> ${escapeHtml(interviewTime)}</p>
+                <p><strong>Location:</strong> ${escapeHtml(interviewLocation)}</p>
+
+                <p>We look forward to meeting with you and discussing your application further.</p>
+
+                <p>If you are unable to attend, please contact us as soon as possible.</p>
+
+                <p style="margin-top:30px;">
+                    Kind regards,<br>
+                    <strong>Joe's Excellent Events & Management</strong><br>
+                    Recruitment Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, plainText, html };
+}
+
 function buildContactEmail(contactData) {
     const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
 
@@ -1008,6 +1069,121 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message || "Failed to send interview invitation email."
+        });
+    }
+});
+
+
+app.post("/api/applications/:id/reminder", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot send interview reminders."
+            });
+        }
+
+        let application = null;
+
+        if (db) {
+            const doc = await db.collection("applications").doc(id).get();
+
+            if (!doc.exists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+
+            application = {
+                id: doc.id,
+                ...doc.data()
+            };
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+
+            if (!fs.existsSync(localFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Applications file not found."
+                });
+            }
+
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            application = applications.find(app => app.id === id);
+
+            if (!application) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+        }
+
+        if (!application.email) {
+            return res.status(400).json({
+                success: false,
+                message: "Candidate email address is missing."
+            });
+        }
+
+        const reminderDetails = {
+            interviewDate: req.body.interviewDate || application.interviewDate || "",
+            interviewTime: req.body.interviewTime || application.interviewTime || "",
+            interviewLocation: req.body.interviewLocation || application.interviewLocation || ""
+        };
+
+        const emailContent = buildInterviewReminderEmail(application, reminderDetails);
+
+        const emailResult = await sendEmailWithResend({
+            to: application.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            plainText: emailContent.plainText
+        });
+
+        const updateData = {
+            reminderSent: true,
+            reminderSentAt: new Date().toISOString(),
+            reminderEmailId: emailResult.id || "",
+            updatedAt: new Date().toISOString()
+        };
+
+        if (reminderDetails.interviewDate) updateData.interviewDate = reminderDetails.interviewDate;
+        if (reminderDetails.interviewTime) updateData.interviewTime = reminderDetails.interviewTime;
+        if (reminderDetails.interviewLocation) updateData.interviewLocation = reminderDetails.interviewLocation;
+
+        if (db) {
+            await db.collection("applications").doc(id).update(updateData);
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            const index = applications.findIndex(app => app.id === id);
+
+            if (index !== -1) {
+                applications[index] = {
+                    ...applications[index],
+                    ...updateData
+                };
+
+                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Interview reminder email sent to ${application.email}.`,
+            emailId: emailResult.id || null
+        });
+
+    } catch (error) {
+        console.error("Interview reminder email error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message || "Failed to send interview reminder email."
         });
     }
 });
