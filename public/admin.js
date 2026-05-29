@@ -552,15 +552,31 @@ function renderCandidateCommunicationTimeline(application) {
 
     if (application.invitationEmailId) {
         items.push({
-            title: "Email Delivery Reference",
+            title: "Interview Invitation Delivery Reference",
             text: `Resend Email ID: ${application.invitationEmailId}`
+        });
+    }
+
+    if (application.reminderSent) {
+        items.push({
+            title: "Interview Reminder Sent",
+            text: application.reminderSentAt
+                ? `Email sent on ${formatDateTime(application.reminderSentAt)}.`
+                : "Interview reminder email has been sent."
+        });
+    }
+
+    if (application.reminderEmailId) {
+        items.push({
+            title: "Interview Reminder Delivery Reference",
+            text: `Resend Email ID: ${application.reminderEmailId}`
         });
     }
 
     if (!items.length) {
         items.push({
             title: "No Email Activity Yet",
-            text: "No interview invitation has been recorded for this candidate yet."
+            text: "No interview invitation or interview reminder has been recorded for this candidate yet."
         });
     }
 
@@ -810,6 +826,67 @@ async function sendInvitation() {
         }
     }
 }
+
+
+async function sendReminder() {
+    if (!selectedApplicationId) {
+        showToast("Please select a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send reminders.", "error");
+        return;
+    }
+
+    const sendReminderBtn = document.getElementById("sendReminderBtn");
+
+    if (sendReminderBtn) {
+        sendReminderBtn.disabled = true;
+        sendReminderBtn.textContent = "Sending Reminder...";
+    }
+
+    try {
+        const payload = {
+            interviewDate: document.getElementById("interviewDate")?.value || "",
+            interviewTime: document.getElementById("interviewTime")?.value || "",
+            interviewLocation: document.getElementById("interviewLocation")?.value || ""
+        };
+
+        const response = await fetch(
+            `${API_BASE}/api/applications/${selectedApplicationId}/reminder`,
+            {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Reminder failed.");
+        }
+
+        showToast("Interview reminder sent successfully.", "success");
+
+        await refreshDashboard();
+
+        if (modalApplicationId === selectedApplicationId) {
+            openCandidateModal(selectedApplicationId);
+        }
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Reminder failed.", "error");
+    } finally {
+        if (sendReminderBtn) {
+            sendReminderBtn.disabled = false;
+            sendReminderBtn.textContent = "Send Reminder";
+        }
+    }
+}
+
 
 async function loadContactMessages() {
     try {
@@ -1502,6 +1579,7 @@ function logoutAdmin() {
 }
 
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
+document.getElementById("sendReminderBtn")?.addEventListener("click", sendReminder);
 document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
 document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
