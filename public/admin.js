@@ -9,6 +9,8 @@ let autoRefreshTimer = null;
 
 let allApplications = [];
 let allContactMessages = [];
+let allVacancies = [];
+let selectedVacancyId = null;
 
 const ATS_STATUSES = [
     "New",
@@ -31,6 +33,8 @@ const permissionsInfo = document.getElementById("permissionsInfo");
 const applicationsTableBody = document.getElementById("applicationsTableBody");
 const contactMessagesTableBody = document.getElementById("contactMessagesTableBody");
 const communicationTableBody = document.getElementById("communicationTableBody");
+const vacanciesTableBody = document.getElementById("vacanciesTableBody");
+const vacancyMessage = document.getElementById("vacancyMessage");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -240,6 +244,7 @@ async function loginAdmin() {
 async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
+    await loadVacancies();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -1192,6 +1197,288 @@ function exportApplicationsCSV() {
     URL.revokeObjectURL(url);
 }
 
+
+function getVacancyFormData() {
+    return {
+        title: document.getElementById("vacancyTitle")?.value.trim() || "",
+        location: document.getElementById("vacancyLocation")?.value.trim() || "",
+        type: document.getElementById("vacancyType")?.value || "",
+        category: document.getElementById("vacancyCategory")?.value || "General",
+        salaryMin: document.getElementById("vacancySalaryMin")?.value.trim() || "",
+        salaryMax: document.getElementById("vacancySalaryMax")?.value.trim() || "",
+        closingDate: document.getElementById("vacancyClosingDate")?.value || "",
+        status: document.getElementById("vacancyStatus")?.value || "Draft",
+        description: document.getElementById("vacancyDescription")?.value.trim() || "",
+        responsibilities: document.getElementById("vacancyResponsibilities")?.value || "",
+        requirements: document.getElementById("vacancyRequirements")?.value || ""
+    };
+}
+
+function setVacancyMessage(message, isError = false) {
+    if (!vacancyMessage) return;
+    vacancyMessage.textContent = message;
+    vacancyMessage.style.color = isError ? "#ff6b6b" : "#ff6a00";
+    vacancyMessage.style.fontWeight = "700";
+    vacancyMessage.style.marginTop = "14px";
+}
+
+function clearVacancyForm() {
+    selectedVacancyId = null;
+
+    [
+        "vacancyTitle",
+        "vacancyLocation",
+        "vacancySalaryMin",
+        "vacancySalaryMax",
+        "vacancyClosingDate",
+        "vacancyDescription",
+        "vacancyResponsibilities",
+        "vacancyRequirements"
+    ].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = "";
+    });
+
+    const type = document.getElementById("vacancyType");
+    const category = document.getElementById("vacancyCategory");
+    const status = document.getElementById("vacancyStatus");
+
+    if (type) type.value = "";
+    if (category) category.value = "";
+    if (status) status.value = "Draft";
+
+    setVacancyMessage("Vacancy form cleared.");
+}
+
+function salaryText(vacancy) {
+    if (vacancy.salaryMin && vacancy.salaryMax) return `${vacancy.salaryMin} – ${vacancy.salaryMax}`;
+    return vacancy.salaryMin || vacancy.salaryMax || "N/A";
+}
+
+async function loadVacancies() {
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/vacancies`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load vacancies.");
+        }
+
+        allVacancies = result.vacancies || [];
+        renderVacancies(allVacancies);
+    } catch (error) {
+        console.error(error);
+
+        if (vacanciesTableBody) {
+            vacanciesTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7">Failed to load vacancies.</td>
+                </tr>
+            `;
+        }
+
+        showToast(error.message || "Failed to load vacancies.", "error");
+    }
+}
+
+function renderVacancies(vacancies) {
+    if (!vacanciesTableBody) return;
+
+    if (!vacancies.length) {
+        vacanciesTableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No vacancies have been created yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    vacanciesTableBody.innerHTML = "";
+
+    vacancies.forEach(vacancy => {
+        const tr = document.createElement("tr");
+        const id = escapeQuotes(vacancy.id);
+
+        tr.innerHTML = `
+            <td>${escapeHtml(vacancy.title || "")}</td>
+            <td>${escapeHtml(vacancy.category || "General")}</td>
+            <td>${escapeHtml(vacancy.location || "")}</td>
+            <td>${escapeHtml(salaryText(vacancy))}</td>
+            <td>${escapeHtml(vacancy.status || "Draft")}</td>
+            <td>${vacancy.closingDate ? formatDate(vacancy.closingDate) : "N/A"}</td>
+            <td>
+                <button onclick="editVacancy('${id}')">Edit</button>
+                <button onclick="setVacancyStatus('${id}', 'Published')">Publish</button>
+                <button onclick="setVacancyStatus('${id}', 'Closed')">Close</button>
+                <button onclick="deleteVacancy('${id}')">Delete</button>
+            </td>
+        `;
+
+        vacanciesTableBody.appendChild(tr);
+    });
+}
+
+async function createVacancy() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot create vacancies.", "error");
+        return;
+    }
+
+    const payload = getVacancyFormData();
+
+    if (!payload.title) {
+        setVacancyMessage("Please enter a job title before creating a vacancy.", true);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/vacancies`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to create vacancy.");
+        }
+
+        selectedVacancyId = result.id;
+        setVacancyMessage("Vacancy created successfully.");
+        showToast("Vacancy created successfully.", "success");
+        await loadVacancies();
+    } catch (error) {
+        console.error(error);
+        setVacancyMessage(error.message || "Failed to create vacancy.", true);
+        showToast(error.message || "Failed to create vacancy.", "error");
+    }
+}
+
+function editVacancy(id) {
+    const vacancy = allVacancies.find(item => item.id === id);
+
+    if (!vacancy) {
+        showToast("Vacancy could not be found.", "error");
+        return;
+    }
+
+    selectedVacancyId = id;
+
+    document.getElementById("vacancyTitle").value = vacancy.title || "";
+    document.getElementById("vacancyLocation").value = vacancy.location || "";
+    document.getElementById("vacancyType").value = vacancy.type || "";
+    document.getElementById("vacancyCategory").value = vacancy.category || "";
+    document.getElementById("vacancySalaryMin").value = vacancy.salaryMin || "";
+    document.getElementById("vacancySalaryMax").value = vacancy.salaryMax || "";
+    document.getElementById("vacancyClosingDate").value = vacancy.closingDate || "";
+    document.getElementById("vacancyStatus").value = vacancy.status || "Draft";
+    document.getElementById("vacancyDescription").value = vacancy.description || "";
+    document.getElementById("vacancyResponsibilities").value = Array.isArray(vacancy.responsibilities) ? vacancy.responsibilities.join("\n") : vacancy.responsibilities || "";
+    document.getElementById("vacancyRequirements").value = Array.isArray(vacancy.requirements) ? vacancy.requirements.join("\n") : vacancy.requirements || "";
+
+    setVacancyMessage(`Editing vacancy: ${vacancy.title || "Selected Vacancy"}`);
+    showToast("Vacancy loaded into the form.", "info");
+}
+
+async function updateVacancy() {
+    if (!selectedVacancyId) {
+        setVacancyMessage("Please click Edit on a vacancy before updating.", true);
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot update vacancies.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/vacancies/${selectedVacancyId}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(getVacancyFormData())
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to update vacancy.");
+        }
+
+        setVacancyMessage("Vacancy updated successfully.");
+        showToast("Vacancy updated successfully.", "success");
+        await loadVacancies();
+    } catch (error) {
+        console.error(error);
+        setVacancyMessage(error.message || "Failed to update vacancy.", true);
+        showToast(error.message || "Failed to update vacancy.", "error");
+    }
+}
+
+async function setVacancyStatus(id, status) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot update vacancies.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/vacancies/${id}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ status })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to update vacancy status.");
+        }
+
+        showToast(`Vacancy status changed to ${status}.`, "success");
+        await loadVacancies();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to update vacancy status.", "error");
+    }
+}
+
+async function deleteVacancy(id) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot delete vacancies.", "error");
+        return;
+    }
+
+    if (!confirm("Delete this vacancy?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/vacancies/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to delete vacancy.");
+        }
+
+        if (selectedVacancyId === id) {
+            clearVacancyForm();
+        }
+
+        showToast("Vacancy deleted successfully.", "success");
+        await loadVacancies();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to delete vacancy.", "error");
+    }
+}
+
 function logoutAdmin() {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminRole");
@@ -1203,6 +1490,8 @@ function logoutAdmin() {
     modalApplicationId = null;
     allApplications = [];
     allContactMessages = [];
+    allVacancies = [];
+    selectedVacancyId = null;
 
     stopAutoRefresh();
     closeCandidateModal();
@@ -1215,6 +1504,9 @@ document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvi
 document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
 document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
+document.getElementById("createVacancyBtn")?.addEventListener("click", createVacancy);
+document.getElementById("updateVacancyBtn")?.addEventListener("click", updateVacancy);
+document.getElementById("clearVacancyFormBtn")?.addEventListener("click", clearVacancyForm);
 
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
@@ -1236,6 +1528,10 @@ window.quickRejectApplication = quickRejectApplication;
 window.deleteContactMessage = deleteContactMessage;
 window.markMessageRead = markMessageRead;
 window.viewContactMessage = viewContactMessage;
+window.editVacancy = editVacancy;
+window.updateVacancy = updateVacancy;
+window.setVacancyStatus = setVacancyStatus;
+window.deleteVacancy = deleteVacancy;
 
 if (authToken) {
     setDashboardVisible(true);

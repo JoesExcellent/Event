@@ -330,136 +330,11 @@
 </section>
 
 <section class="jobs-section">
-    <div class="jobs-grid">
-
+    <div class="jobs-grid" id="jobsGrid">
         <article class="job-card">
-            <h2>Customer Engagement Assistant</h2>
-
-            <div class="job-meta">
-                <span>Newcastle upon Tyne</span>
-                <span>Part-Time / Flexible</span>
-                <span>Entry-Level Friendly</span>
-                <span>£12.50 – £14.00 per hour</span>
-            </div>
-
-            <p>
-                Support customer communication, client engagement and professional service delivery while developing confidence, organisation and people-focused skills.
-            </p>
-
-            <h3>Key Responsibilities</h3>
-            <ul>
-                <li>Support positive communication with customers and clients.</li>
-                <li>Represent the organisation in a professional and respectful manner.</li>
-                <li>Assist with customer enquiries and service information.</li>
-                <li>Help maintain strong client relationships through reliable support.</li>
-            </ul>
-
-            <h3>We Are Looking For</h3>
-            <ul>
-                <li>Good communication and listening skills.</li>
-                <li>A professional, polite and positive attitude.</li>
-                <li>Reliability, confidence and willingness to learn.</li>
-            </ul>
-
-            <a href="apply.html" class="btn">Apply Now</a>
+            <h2>Loading Vacancies...</h2>
+            <p>Please wait while the latest published vacancies are loaded.</p>
         </article>
-
-        <article class="job-card">
-            <h2>Event Support Assistant</h2>
-
-            <div class="job-meta">
-                <span>Newcastle upon Tyne</span>
-                <span>Event-Based</span>
-                <span>Training Provided</span>
-                <span>£12.50 – £15.00 per hour</span>
-            </div>
-
-            <p>
-                Assist with event preparation, guest support, organisation and professional event delivery for clients, brands and community-facing projects.
-            </p>
-
-            <h3>Key Responsibilities</h3>
-            <ul>
-                <li>Support event setup, coordination and guest assistance.</li>
-                <li>Help maintain smooth communication during events.</li>
-                <li>Represent the organisation with professionalism and care.</li>
-                <li>Work as part of a team to support successful event outcomes.</li>
-            </ul>
-
-            <h3>We Are Looking For</h3>
-            <ul>
-                <li>Energy, reliability and strong teamwork.</li>
-                <li>Good organisation and attention to detail.</li>
-                <li>A helpful attitude and willingness to support others.</li>
-            </ul>
-
-            <a href="apply.html" class="btn">Apply Now</a>
-        </article>
-
-        <article class="job-card">
-            <h2>Brand Representative</h2>
-
-            <div class="job-meta">
-                <span>Newcastle upon Tyne</span>
-                <span>Flexible Opportunities</span>
-                <span>People-Focused Role</span>
-                <span>£13.00 – £16.00 per hour</span>
-            </div>
-
-            <p>
-                Help brands connect with customers through positive communication, presentation, product awareness and professional public-facing support.
-            </p>
-
-            <h3>Key Responsibilities</h3>
-            <ul>
-                <li>Represent clients and brands in a confident and respectful way.</li>
-                <li>Communicate key brand messages clearly and professionally.</li>
-                <li>Support promotional activity, engagement and customer awareness.</li>
-                <li>Build trust through positive first impressions.</li>
-            </ul>
-
-            <h3>We Are Looking For</h3>
-            <ul>
-                <li>Confidence speaking with people.</li>
-                <li>Professional presentation and positive energy.</li>
-                <li>Commitment to learning and improving.</li>
-            </ul>
-
-            <a href="apply.html" class="btn">Apply Now</a>
-        </article>
-
-        <article class="job-card">
-            <h2>Trainee Leadership Assistant</h2>
-
-            <div class="job-meta">
-                <span>Newcastle upon Tyne</span>
-                <span>Development Pathway</span>
-                <span>Leadership Training</span>
-                <span>£14.00 – £18.00 per hour</span>
-            </div>
-
-            <p>
-                A development opportunity for candidates who want to grow into leadership, team support, coordination and professional management responsibilities.
-            </p>
-
-            <h3>Key Responsibilities</h3>
-            <ul>
-                <li>Support team coordination and professional service delivery.</li>
-                <li>Develop confidence in communication and responsibility.</li>
-                <li>Assist with planning, organisation and candidate support.</li>
-                <li>Learn leadership skills through practical experience.</li>
-            </ul>
-
-            <h3>We Are Looking For</h3>
-            <ul>
-                <li>Ambition, resilience and willingness to grow.</li>
-                <li>Respectful communication and strong reliability.</li>
-                <li>Interest in leadership, management and personal development.</li>
-            </ul>
-
-            <a href="apply.html" class="btn">Apply Now</a>
-        </article>
-
     </div>
 </section>
 
@@ -497,6 +372,90 @@
     <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
     <p>All rights reserved.</p>
 </footer>
+
+
+<script>
+    const jobsGrid = document.getElementById("jobsGrid");
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function listItems(items) {
+        if (!Array.isArray(items) || !items.length) {
+            return "<li>Details will be confirmed during the recruitment process.</li>";
+        }
+
+        return items.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    function salaryText(vacancy) {
+        if (vacancy.salaryMin && vacancy.salaryMax) return `${vacancy.salaryMin} – ${vacancy.salaryMax}`;
+        return vacancy.salaryMin || vacancy.salaryMax || "Pay to be confirmed";
+    }
+
+    async function loadLiveVacancies() {
+        try {
+            const response = await fetch("/api/vacancies");
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || "Could not load vacancies.");
+            }
+
+            const vacancies = result.vacancies || [];
+
+            if (!vacancies.length) {
+                jobsGrid.innerHTML = `
+                    <article class="job-card">
+                        <h2>No Live Vacancies</h2>
+                        <p>There are currently no published vacancies. Please check again soon or submit a general application.</p>
+                        <a href="apply.html" class="btn">Submit General Application</a>
+                    </article>
+                `;
+                return;
+            }
+
+            jobsGrid.innerHTML = vacancies.map(vacancy => `
+                <article class="job-card">
+                    <h2>${escapeHtml(vacancy.title)}</h2>
+
+                    <div class="job-meta">
+                        <span>${escapeHtml(vacancy.location || "Location to be confirmed")}</span>
+                        <span>${escapeHtml(vacancy.type || "Employment type to be confirmed")}</span>
+                        <span>${escapeHtml(vacancy.category || "General Vacancy")}</span>
+                        <span>${escapeHtml(salaryText(vacancy))}</span>
+                        ${vacancy.closingDate ? `<span>Closing date: ${escapeHtml(vacancy.closingDate)}</span>` : ""}
+                    </div>
+
+                    <p>${escapeHtml(vacancy.description || "Full vacancy details will be confirmed by the recruitment team.")}</p>
+
+                    <h3>Key Responsibilities</h3>
+                    <ul>${listItems(vacancy.responsibilities)}</ul>
+
+                    <h3>We Are Looking For</h3>
+                    <ul>${listItems(vacancy.requirements)}</ul>
+
+                    <a href="apply.html?position=${encodeURIComponent(vacancy.title)}" class="btn">Apply Now</a>
+                </article>
+            `).join("");
+        } catch (error) {
+            jobsGrid.innerHTML = `
+                <article class="job-card">
+                    <h2>Vacancies Could Not Load</h2>
+                    <p>Please refresh the page or try again later.</p>
+                </article>
+            `;
+        }
+    }
+
+    loadLiveVacancies();
+</script>
 
 </body>
 </html>

@@ -449,12 +449,7 @@
                     <div class="form-group">
                         <label for="position">Position Interested In</label>
                         <select id="position" name="position" required>
-                            <option value="">Please select</option>
-                            <option value="Event Support">Event Support</option>
-                            <option value="Customer Engagement">Customer Engagement</option>
-                            <option value="Brand Representation">Brand Representation</option>
-                            <option value="Leadership Development">Leadership Development</option>
-                            <option value="General Opportunity">General Opportunity</option>
+                            <option value="">Loading live vacancies...</option>
                         </select>
                     </div>
 
@@ -575,6 +570,43 @@
     <script>
         const applicationForm = document.getElementById("applicationForm");
         const formMessage = document.getElementById("formMessage");
+
+        async function loadVacancyOptions() {
+            const positionSelect = document.getElementById("position");
+            const requestedPosition = new URLSearchParams(window.location.search).get("position") || "";
+
+            const fallbackOptions = [
+                "Event Support",
+                "Customer Engagement",
+                "Brand Representation",
+                "Leadership Development",
+                "General Opportunity"
+            ];
+
+            try {
+                const response = await fetch("/api/vacancies");
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error("Vacancies could not be loaded.");
+                }
+
+                const vacancies = result.vacancies || [];
+                const options = vacancies.length ? vacancies.map(vacancy => vacancy.title) : fallbackOptions;
+
+                positionSelect.innerHTML = '<option value="">Please select</option>' + options.map(title => {
+                    const selected = title === requestedPosition ? "selected" : "";
+                    return `<option value="${title}" ${selected}>${title}</option>`;
+                }).join("");
+            } catch (error) {
+                positionSelect.innerHTML = '<option value="">Please select</option>' + fallbackOptions.map(title => {
+                    const selected = title === requestedPosition ? "selected" : "";
+                    return `<option value="${title}" ${selected}>${title}</option>`;
+                }).join("");
+            }
+        }
+
+        loadVacancyOptions();
 
         applicationForm.addEventListener("submit", async function (event) {
             event.preventDefault();
