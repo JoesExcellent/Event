@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Event Careers | Joe's Excellent Events & Management</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #061726;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #ff6a00;
+            padding: 18px 7%;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 42px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        nav a:hover,
+        nav a.active {
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
+        }
+
+        .hero {
+            background: #020b14;
+            padding: 70px 7%;
+            border-bottom: 2px solid #ff6a00;
+            text-align: center;
+        }
+
+        .hero-box {
+            max-width: 1100px;
+            margin: auto;
+            background: #123756;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            padding: 60px 35px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .hero-box h1 {
+            font-size: clamp(2.4rem, 5vw, 4.8rem);
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .hero-box span {
+            color: #ff6a00;
+            display: block;
+        }
+
+        .hero-box p {
+            max-width: 850px;
+            margin: auto;
+            color: #f2f2f2;
+            font-size: 1.1rem;
+        }
+
+        .intro-section {
+            background: #0b2a44;
+            padding: 70px 7%;
+            text-align: center;
+        }
+
+        .intro-section h2 {
+            color: #ff6a00;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
+        .intro-section p {
+            max-width: 950px;
+            margin: auto;
+            color: #f2f2f2;
+        }
+
+        .jobs-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
+
+        .jobs-grid {
+            max-width: 1200px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .job-card {
+            background: #13283b;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 18px;
+            padding: 34px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .job-card h2 {
+            color: #ff6a00;
+            font-size: 1.75rem;
+            margin-bottom: 12px;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .job-meta span {
+            background: rgba(255, 106, 0, 0.18);
+            border: 1px solid rgba(255, 176, 0, 0.35);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .salary-badge {
+            background: #ff6a00 !important;
+            color: #ffffff !important;
+            border: 1px solid #ffb000 !important;
+        }
+
+        .job-card p {
+            color: #f2f2f2;
+            margin-bottom: 18px;
+        }
+
+        .job-card h3 {
+            color: #ff6a00;
+            margin: 22px 0 10px;
+            font-size: 1.1rem;
+        }
+
+        .job-card ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .job-card li {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 11px 13px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            color: #f2f2f2;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #ff6a00;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #ff7a1a;
+        }
+
+        .gdpr-section {
+            background: #0b2a44;
+            padding: 70px 7%;
+        }
+
+        .gdpr-box {
+            max-width: 1100px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 176, 0, 0.3);
+            border-radius: 16px;
+            padding: 40px;
+        }
+
+        .gdpr-box h2 {
+            color: #ff6a00;
+            margin-bottom: 16px;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+        }
+
+        .gdpr-box p {
+            color: #f2f2f2;
+            margin-bottom: 14px;
+        }
+
+        .cta-section {
+            background: #061726;
+            padding: 75px 7%;
+            border-bottom: 2px solid #ff6a00;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 900px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 50px;
+            border-radius: 16px;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 18px;
+        }
+
+        .cta-box span {
+            color: #ff6a00;
+        }
+
+        footer {
+            background: #020b14;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .jobs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                gap: 18px;
+            }
+
+            .hero-box,
+            .cta-box,
+            .gdpr-box {
+                padding: 34px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <nav class="navbar">
+        <a href="index.html">Home</a>
+        <a href="home.html">About</a>
+        <a href="our-services.html">Our Services</a>
+        <a href="careers.html">Careers</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="executive.html" class="active">Executive Roles</a>
+        <a href="apply.html">Apply</a>
+        <a href="contact us.html">Contact Us</a>
+        <a href="admin.html">Admin</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-box">
+        <h1>
+            Executive Event
+            <span>Career Opportunities</span>
+        </h1>
+
+        <p>
+            Explore senior and specialised event management roles designed for experienced professionals, strategic leaders, creative producers and commercial event specialists seeking high-level annual salary opportunities.
+        </p>
+    </div>
+</section>
+
+<section class="intro-section">
+    <h2>Senior Roles With Annual Salary Ranges</h2>
+
+    <p>
+        These executive and specialist roles are aimed at candidates with strong experience in event leadership, operations, production, hospitality, partnerships, marketing or strategic delivery.
+    </p>
+
+    <p style="margin-top:20px; color:#d8d8d8; font-size:0.95rem;">
+        Salary ranges are shown as annual guide ranges and may vary depending on experience, seniority, location, client portfolio, commercial responsibility and final employment terms.
+    </p>
+</section>
+
+<section class="jobs-section">
+    <div class="jobs-grid">
+
+        <article class="job-card">
+            <h2>Events Director</h2>
+
+            <div class="job-meta">
+                <span>Senior Leadership</span>
+                <span>Strategic Events Portfolio</span>
+                <span class="salary-badge">£70,000 – £120,000 per year</span>
+            </div>
+
+            <p>
+                Oversees entire event portfolios, steering budgets, international growth, client relationships and strategic event delivery.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Lead large-scale event portfolios and senior client relationships.</li>
+                <li>Oversee budgets, commercial targets and event performance.</li>
+                <li>Shape long-term events strategy and organisational growth.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Events</h2>
+
+            <div class="job-meta">
+                <span>Events Strategy</span>
+                <span>Team Leadership</span>
+                <span class="salary-badge">£60,000 – £95,000 per year</span>
+            </div>
+
+            <p>
+                Leads the overarching events strategy, manages teams and aligns the event calendar with wider organisational objectives.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Develop and manage the annual events strategy.</li>
+                <li>Lead internal event teams and external suppliers.</li>
+                <li>Ensure events support brand, commercial and operational goals.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Global Events Manager</h2>
+
+            <div class="job-meta">
+                <span>International Events</span>
+                <span>Supplier Management</span>
+                <span class="salary-badge">£55,000 – £90,000 per year</span>
+            </div>
+
+            <p>
+                Responsible for sourcing venues, managing international suppliers and delivering high-impact corporate or consumer events across markets.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Coordinate international venues, suppliers and delivery teams.</li>
+                <li>Manage global event logistics and stakeholder expectations.</li>
+                <li>Deliver high-quality experiences across multiple regions.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Event Operations</h2>
+
+            <div class="job-meta">
+                <span>Operations Leadership</span>
+                <span>Logistics and Safety</span>
+                <span class="salary-badge">£60,000 – £100,000 per year</span>
+            </div>
+
+            <p>
+                Directs logistics, health and safety, technical production and on-site operations for large-scale conferences or experiential campaigns.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Oversee event operations, logistics and production delivery.</li>
+                <li>Manage health, safety and risk planning.</li>
+                <li>Coordinate operational teams across major event sites.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Executive Producer / Creative Producer</h2>
+
+            <div class="job-meta">
+                <span>Creative Direction</span>
+                <span>Brand Experiences</span>
+                <span class="salary-badge">£65,000 – £110,000 per year</span>
+            </div>
+
+            <p>
+                Directs the artistic and experiential elements of major events, bringing brand activations, immersive campaigns and multi-media productions to life.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Lead creative concepts from idea to live delivery.</li>
+                <li>Manage production teams, agencies and creative suppliers.</li>
+                <li>Deliver memorable experiences for premium clients and audiences.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Event Marketing</h2>
+
+            <div class="job-meta">
+                <span>Marketing Strategy</span>
+                <span>Audience Growth</span>
+                <span class="salary-badge">£60,000 – £100,000 per year</span>
+            </div>
+
+            <p>
+                Manages promotional strategy, builds audience awareness, drives ticket sales and maximises event return on investment.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Create event marketing campaigns and audience growth plans.</li>
+                <li>Drive ticket sales, brand awareness and engagement.</li>
+                <li>Measure campaign performance and commercial return.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Senior Event Project Manager</h2>
+
+            <div class="job-meta">
+                <span>Complex Projects</span>
+                <span>High-Budget Delivery</span>
+                <span class="salary-badge">£50,000 – £80,000 per year</span>
+            </div>
+
+            <p>
+                Handles end-to-end management of large, complex and high-budget B2B or B2C events from concept through to post-event evaluation.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Manage complex event timelines, suppliers and budgets.</li>
+                <li>Coordinate delivery from planning through to evaluation.</li>
+                <li>Maintain high standards of communication and reporting.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Hospitality & VIP Events</h2>
+
+            <div class="job-meta">
+                <span>Luxury Hospitality</span>
+                <span>VIP Client Programmes</span>
+                <span class="salary-badge">£60,000 – £110,000 per year</span>
+            </div>
+
+            <p>
+                Curates luxury VIP experiences, manages corporate entertainment and runs high-end client programmes for premium sectors.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Design and deliver premium hospitality programmes.</li>
+                <li>Manage VIP guests, corporate clients and luxury suppliers.</li>
+                <li>Ensure exceptional standards of service and discretion.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Conference Production</h2>
+
+            <div class="job-meta">
+                <span>Conference Strategy</span>
+                <span>Speaker Management</span>
+                <span class="salary-badge">£55,000 – £90,000 per year</span>
+            </div>
+
+            <p>
+                Develops event agendas, secures high-profile speakers and leads the content strategy for conferences, summits and trade shows.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Shape conference content, agendas and speaker programmes.</li>
+                <li>Secure expert speakers and industry contributors.</li>
+                <li>Ensure event content delivers value for audiences and sponsors.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+        <article class="job-card">
+            <h2>Head of Partnerships and Sponsorships</h2>
+
+            <div class="job-meta">
+                <span>Commercial Growth</span>
+                <span>Sponsorship Sales</span>
+                <span class="salary-badge">£65,000 – £130,000 per year</span>
+            </div>
+
+            <p>
+                Leads the commercial side of event management by selling sponsorships, building stakeholder relationships and creating revenue partnerships.
+            </p>
+
+            <h3>Key Responsibilities</h3>
+            <ul>
+                <li>Develop sponsorship packages and commercial partnerships.</li>
+                <li>Build relationships with sponsors, brands and stakeholders.</li>
+                <li>Support revenue growth through strategic event partnerships.</li>
+            </ul>
+
+            <a href="apply.html" class="btn">Apply Now</a>
+        </article>
+
+    </div>
+</section>
+
+<section class="gdpr-section">
+    <div class="gdpr-box">
+        <h2>Executive Candidate Privacy and GDPR Commitment</h2>
+
+        <p>
+            Joe’s Excellent Events & Management is committed to handling senior candidate information responsibly, securely and in accordance with UK GDPR and data protection legislation.
+        </p>
+
+        <p>
+            When you apply for an executive or specialist role, your personal information may be used for recruitment, communication, interview coordination, candidate management, salary discussion and employment-related assessment purposes.
+        </p>
+
+        <p>
+            You may request access, correction or deletion of your personal data at any time.
+        </p>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-box">
+        <h2>Ready For A <span>Senior Opportunity?</span></h2>
+
+        <p>
+            If you have the experience, leadership ability and ambition to contribute at a senior level, complete the application form and select the role that best matches your expertise.
+        </p>
+
+        <a href="apply.html" class="btn">Go To Application Form</a>
+    </div>
+</section>
+
+<footer>
+    <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+    <p>All rights reserved.</p>
+</footer>
+
+</body>
+</html>
