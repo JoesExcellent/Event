@@ -444,6 +444,14 @@
             margin-bottom: 24px;
         }
 
+        .vacancy-management-note {
+            background: rgba(255, 255, 255, 0.06);
+            border-left: 4px solid #ff6a00;
+            padding: 20px;
+            border-radius: 14px;
+            margin: 24px 0;
+        }
+
         .cta-section {
             background: #0b2a44;
             padding: 75px 7%;
@@ -706,6 +714,118 @@
             </div>
 
             <div id="applications"></div>
+        </section>
+
+        <section class="application-card">
+            <h2>Live Vacancy Management System</h2>
+            <p>Create, prepare and manage vacancies ready for live publishing across the Jobs and Executive pages.</p>
+
+            <div class="vacancy-management-note">
+                <p>
+                    This is Step 1 of the Live Vacancy Management System. The visual dashboard section has been added safely first. Backend saving, editing, publishing and live website display will be connected in the next stages.
+                </p>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="vacancyTitle">Job Title</label>
+                    <input type="text" id="vacancyTitle" placeholder="Example: Event Support Assistant">
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancyLocation">Location</label>
+                    <input type="text" id="vacancyLocation" placeholder="Example: Newcastle upon Tyne">
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancyType">Employment Type</label>
+                    <select id="vacancyType">
+                        <option value="">Select employment type</option>
+                        <option value="Full Time">Full Time</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Flexible">Flexible</option>
+                        <option value="Event Based">Event Based</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Executive">Executive</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancyCategory">Vacancy Category</label>
+                    <select id="vacancyCategory">
+                        <option value="">Select category</option>
+                        <option value="General">General Vacancy</option>
+                        <option value="Executive">Executive Vacancy</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancySalaryMin">Salary / Pay Minimum</label>
+                    <input type="text" id="vacancySalaryMin" placeholder="Example: £12.50 per hour or £50,000 per year">
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancySalaryMax">Salary / Pay Maximum</label>
+                    <input type="text" id="vacancySalaryMax" placeholder="Example: £15.00 per hour or £80,000 per year">
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancyClosingDate">Closing Date</label>
+                    <input type="date" id="vacancyClosingDate">
+                </div>
+
+                <div class="form-group">
+                    <label for="vacancyStatus">Vacancy Status</label>
+                    <select id="vacancyStatus">
+                        <option value="Draft">Draft</option>
+                        <option value="Published">Published</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="vacancyDescription">Vacancy Description</label>
+                    <textarea id="vacancyDescription" placeholder="Write the main vacancy description here."></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label for="vacancyResponsibilities">Key Responsibilities</label>
+                    <textarea id="vacancyResponsibilities" placeholder="Add responsibilities here. Use one responsibility per line."></textarea>
+                </div>
+
+                <div class="form-group full">
+                    <label for="vacancyRequirements">Candidate Requirements</label>
+                    <textarea id="vacancyRequirements" placeholder="Add candidate requirements here. Use one requirement per line."></textarea>
+                </div>
+            </div>
+
+            <button id="createVacancyBtn" type="button">Create Vacancy</button>
+            <button id="updateVacancyBtn" type="button">Update Vacancy</button>
+            <button id="clearVacancyFormBtn" type="button">Clear Vacancy Form</button>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Salary / Pay</th>
+                            <th>Status</th>
+                            <th>Closing Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="vacanciesTableBody">
+                        <tr>
+                            <td colspan="7">Vacancies will appear here after the vacancy system is connected.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="vacancyMessage"></div>
         </section>
 
         <section class="application-card">
