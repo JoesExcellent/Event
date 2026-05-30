@@ -515,7 +515,12 @@ function renderCandidateTimeline(application) {
     }
 
     if (status === "Offer Made") {
-        items.push({ title: "Offer Made", text: "Candidate has reached offer stage." });
+        items.push({
+            title: "Offer Made",
+            text: application.offerSentAt
+                ? `Offer email sent on ${formatDateTime(application.offerSentAt)}.`
+                : "Candidate has reached offer stage."
+        });
     }
 
     if (status === "Hired") {
@@ -540,6 +545,22 @@ function renderCandidateCommunicationTimeline(application) {
     if (!timeline) return;
 
     const items = [];
+
+    if (application.applicationReceivedEmailSent) {
+        items.push({
+            title: "Application Received Email Sent",
+            text: application.applicationReceivedEmailSentAt
+                ? `Email sent on ${formatDateTime(application.applicationReceivedEmailSentAt)}.`
+                : "Application received email has been sent."
+        });
+    }
+
+    if (application.applicationReceivedEmailId) {
+        items.push({
+            title: "Application Received Delivery Reference",
+            text: `Resend Email ID: ${application.applicationReceivedEmailId}`
+        });
+    }
 
     if (application.invitationSent) {
         items.push({
@@ -573,10 +594,26 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
+    if (application.offerSent) {
+        items.push({
+            title: "Offer Email Sent",
+            text: application.offerSentAt
+                ? `Email sent on ${formatDateTime(application.offerSentAt)}.`
+                : "Offer email has been sent."
+        });
+    }
+
+    if (application.offerEmailId) {
+        items.push({
+            title: "Offer Delivery Reference",
+            text: `Resend Email ID: ${application.offerEmailId}`
+        });
+    }
+
     if (!items.length) {
         items.push({
             title: "No Email Activity Yet",
-            text: "No interview invitation or interview reminder has been recorded for this candidate yet."
+            text: "No candidate email activity has been recorded for this candidate yet."
         });
     }
 
@@ -885,6 +922,71 @@ async function sendReminder() {
             sendReminderBtn.textContent = "Send Reminder";
         }
     }
+}
+
+
+async function sendOffer(applicationId = selectedApplicationId) {
+    if (!applicationId) {
+        showToast("Please select a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send offer emails.", "error");
+        return;
+    }
+
+    const candidate = allApplications.find(app => app.id === applicationId);
+
+    if (!candidate) {
+        showToast("Candidate record could not be found.", "error");
+        return;
+    }
+
+    const candidateName = candidate.fullName || "this candidate";
+    const candidatePosition = candidate.position || "the position applied for";
+
+    if (!confirm(`Send a conditional offer email to ${candidateName} for ${candidatePosition}?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/api/applications/${applicationId}/offer`,
+            {
+                method: "POST",
+                headers: getAuthHeaders()
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Offer email failed.");
+        }
+
+        showToast("Offer email sent successfully.", "success");
+
+        await refreshDashboard();
+
+        if (modalApplicationId === applicationId) {
+            openCandidateModal(applicationId);
+        }
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Offer email failed.", "error");
+    }
+}
+
+async function sendOfferFromModal() {
+    if (!modalApplicationId) {
+        showToast("No candidate selected.", "error");
+        return;
+    }
+
+    selectedApplicationId = modalApplicationId;
+    await sendOffer(modalApplicationId);
 }
 
 
@@ -1200,13 +1302,21 @@ function renderCommunicationCentre() {
     if (!communicationTableBody) return;
 
     const communicationRecords = allApplications.filter(app =>
-        app.email || app.invitationSent || app.invitationEmailId
+        app.email ||
+        app.applicationReceivedEmailSent ||
+        app.applicationReceivedEmailId ||
+        app.invitationSent ||
+        app.invitationEmailId ||
+        app.reminderSent ||
+        app.reminderEmailId ||
+        app.offerSent ||
+        app.offerEmailId
     );
 
     if (!communicationRecords.length) {
         communicationTableBody.innerHTML = `
             <tr>
-                <td colspan="5">No communication records found.</td>
+                <td colspan="7">No communication records found.</td>
             </tr>
         `;
         return;
@@ -1225,8 +1335,10 @@ function renderCommunicationCentre() {
         tr.innerHTML = `
             <td>${escapeHtml(app.fullName || "Candidate")}</td>
             <td>${escapeHtml(app.email || "N/A")}</td>
+            <td>${app.applicationReceivedEmailSent ? "Yes" : "No"}</td>
             <td>${app.invitationSent ? "Yes" : "No"}</td>
-            <td>${escapeHtml(app.invitationEmailId || "N/A")}</td>
+            <td>${app.reminderSent ? "Yes" : "No"}</td>
+            <td>${app.offerSent ? "Yes" : "No"}</td>
             <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
         `;
 
@@ -1600,6 +1712,7 @@ window.closeCandidateModal = closeCandidateModal;
 window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
 window.moveModalCandidateToOffer = moveModalCandidateToOffer;
+window.sendOfferFromModal = sendOfferFromModal;
 window.moveModalCandidateToHired = moveModalCandidateToHired;
 window.moveModalCandidateToRejected = moveModalCandidateToRejected;
 window.updateApplicationStatus = updateApplicationStatus;
