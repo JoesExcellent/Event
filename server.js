@@ -271,6 +271,59 @@ Recruitment Team`;
     return { subject, plainText, html };
 }
 
+
+function buildOfferEmail(application) {
+    const candidateName = application.fullName || "Candidate";
+    const position = application.position || "the position applied for";
+
+    const subject = `Conditional Offer of Employment - ${position}`;
+
+    const plainText = `Dear ${candidateName},
+
+Following your recent interview, we are delighted to offer you the position of ${position} with Joe's Excellent Events & Management.
+
+We were impressed by your experience, skills and professionalism throughout the recruitment process and believe you will make a valuable contribution to our organisation.
+
+This offer is subject to the completion of any required pre-employment checks and the agreement of final employment terms.
+
+Please reply to this email to confirm your acceptance of this offer.
+
+We look forward to welcoming you to Joe's Excellent Events & Management.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`;
+
+    const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">Conditional Offer of Employment</h1>
+
+                <p>Dear ${escapeHtml(candidateName)},</p>
+
+                <p>Following your recent interview, we are delighted to offer you the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management.</p>
+
+                <p>We were impressed by your experience, skills and professionalism throughout the recruitment process and believe you will make a valuable contribution to our organisation.</p>
+
+                <p>This offer is subject to the completion of any required pre-employment checks and the agreement of final employment terms.</p>
+
+                <p>Please reply to this email to confirm your acceptance of this offer.</p>
+
+                <p>We look forward to welcoming you to Joe's Excellent Events & Management.</p>
+
+                <p style="margin-top:30px;">
+                    Kind regards,<br>
+                    <strong>Joe's Excellent Events & Management</strong><br>
+                    Recruitment Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, plainText, html };
+}
+
 function buildContactEmail(contactData) {
     const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
 
@@ -1184,6 +1237,112 @@ app.post("/api/applications/:id/reminder", verifyToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message || "Failed to send interview reminder email."
+        });
+    }
+});
+
+
+app.post("/api/applications/:id/offer", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot send offer emails."
+            });
+        }
+
+        let application = null;
+
+        if (db) {
+            const doc = await db.collection("applications").doc(id).get();
+
+            if (!doc.exists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+
+            application = {
+                id: doc.id,
+                ...doc.data()
+            };
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+
+            if (!fs.existsSync(localFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Applications file not found."
+                });
+            }
+
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            application = applications.find(app => app.id === id);
+
+            if (!application) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+        }
+
+        if (!application.email) {
+            return res.status(400).json({
+                success: false,
+                message: "Candidate email address is missing."
+            });
+        }
+
+        const emailContent = buildOfferEmail(application);
+
+        const emailResult = await sendEmailWithResend({
+            to: application.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            plainText: emailContent.plainText
+        });
+
+        const updateData = {
+            status: "Offer Made",
+            offerSent: true,
+            offerSentAt: new Date().toISOString(),
+            offerEmailId: emailResult.id || "",
+            updatedAt: new Date().toISOString()
+        };
+
+        if (db) {
+            await db.collection("applications").doc(id).update(updateData);
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            const index = applications.findIndex(app => app.id === id);
+
+            if (index !== -1) {
+                applications[index] = {
+                    ...applications[index],
+                    ...updateData
+                };
+
+                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Offer email sent to ${application.email}.`,
+            emailId: emailResult.id || null
+        });
+
+    } catch (error) {
+        console.error("Offer email error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message || "Failed to send offer email."
         });
     }
 });
