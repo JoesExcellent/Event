@@ -610,6 +610,22 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
+    if (application.rejectionSent) {
+        items.push({
+            title: "Rejection Email Sent",
+            text: application.rejectionSentAt
+                ? `Email sent on ${formatDateTime(application.rejectionSentAt)}.`
+                : "Rejection email has been sent."
+        });
+    }
+
+    if (application.rejectionEmailId) {
+        items.push({
+            title: "Rejection Delivery Reference",
+            text: `Resend Email ID: ${application.rejectionEmailId}`
+        });
+    }
+
     if (!items.length) {
         items.push({
             title: "No Email Activity Yet",
@@ -989,6 +1005,70 @@ async function sendOfferFromModal() {
     await sendOffer(modalApplicationId);
 }
 
+async function sendRejection(applicationId = selectedApplicationId) {
+    if (!applicationId) {
+        showToast("Please select a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send rejection emails.", "error");
+        return;
+    }
+
+    const candidate = allApplications.find(app => app.id === applicationId);
+
+    if (!candidate) {
+        showToast("Candidate record could not be found.", "error");
+        return;
+    }
+
+    const candidateName = candidate.fullName || "this candidate";
+    const candidatePosition = candidate.position || "the position applied for";
+
+    if (!confirm(`Send a rejection email to ${candidateName} for ${candidatePosition}? This will update the candidate status to Rejected.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/api/applications/${applicationId}/rejection`,
+            {
+                method: "POST",
+                headers: getAuthHeaders()
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Rejection email failed.");
+        }
+
+        showToast("Rejection email sent successfully.", "success");
+
+        await refreshDashboard();
+
+        if (modalApplicationId === applicationId) {
+            openCandidateModal(applicationId);
+        }
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Rejection email failed.", "error");
+    }
+}
+
+async function sendRejectionFromModal() {
+    if (!modalApplicationId) {
+        showToast("No candidate selected.", "error");
+        return;
+    }
+
+    selectedApplicationId = modalApplicationId;
+    await sendRejection(modalApplicationId);
+}
+
 
 async function loadContactMessages() {
     try {
@@ -1310,13 +1390,15 @@ function renderCommunicationCentre() {
         app.reminderSent ||
         app.reminderEmailId ||
         app.offerSent ||
-        app.offerEmailId
+        app.offerEmailId ||
+        app.rejectionSent ||
+        app.rejectionEmailId
     );
 
     if (!communicationRecords.length) {
         communicationTableBody.innerHTML = `
             <tr>
-                <td colspan="7">No communication records found.</td>
+                <td colspan="8">No communication records found.</td>
             </tr>
         `;
         return;
@@ -1339,6 +1421,7 @@ function renderCommunicationCentre() {
             <td>${app.invitationSent ? "Yes" : "No"}</td>
             <td>${app.reminderSent ? "Yes" : "No"}</td>
             <td>${app.offerSent ? "Yes" : "No"}</td>
+            <td>${app.rejectionSent ? "Yes" : "No"}</td>
             <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
         `;
 
@@ -1713,6 +1796,7 @@ window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
 window.moveModalCandidateToOffer = moveModalCandidateToOffer;
 window.sendOfferFromModal = sendOfferFromModal;
+window.sendRejectionFromModal = sendRejectionFromModal;
 window.moveModalCandidateToHired = moveModalCandidateToHired;
 window.moveModalCandidateToRejected = moveModalCandidateToRejected;
 window.updateApplicationStatus = updateApplicationStatus;
