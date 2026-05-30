@@ -414,6 +414,35 @@ Sent: ${contactData.createdAt}`;
     return { subject, plainText, html };
 }
 
+
+function createCommunicationHistoryEntry({ action, emailType, status = "Sent", resendEmailId = "", errorMessage = "", user = "System", timestamp = "" }) {
+    const now = timestamp || new Date().toISOString();
+
+    return {
+        action: action || emailType || "Communication",
+        emailType: emailType || action || "Communication",
+        status: status || "Sent",
+        resendEmailId: resendEmailId || "",
+        errorMessage: errorMessage || "",
+        user: user || "System",
+        sentAt: status === "Sent" ? now : "",
+        createdAt: now
+    };
+}
+
+function applyCommunicationHistory(updateData, application, entry) {
+    const existingHistory = Array.isArray(application?.communications) ? application.communications : [];
+    const communicationHistory = [...existingHistory, entry];
+
+    return {
+        ...updateData,
+        communications: communicationHistory,
+        lastCommunicationAction: entry.action,
+        lastCommunicationAt: entry.createdAt,
+        communicationCount: communicationHistory.length
+    };
+}
+
 async function sendEmailWithResend({ to, subject, html, plainText }) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error("RESEND_API_KEY is missing.");
@@ -592,12 +621,22 @@ app.post(
                     plainText: applicationReceivedEmail.plainText
                 });
 
-                const emailUpdateData = {
+                const emailSentAt = new Date().toISOString();
+                const communicationEntry = createCommunicationHistoryEntry({
+                    action: "Application Received Email Sent",
+                    emailType: "Application Received",
+                    status: "Sent",
+                    resendEmailId: emailResult.id || "",
+                    user: "System",
+                    timestamp: emailSentAt
+                });
+
+                const emailUpdateData = applyCommunicationHistory({
                     applicationReceivedEmailSent: true,
-                    applicationReceivedEmailSentAt: new Date().toISOString(),
+                    applicationReceivedEmailSentAt: emailSentAt,
                     applicationReceivedEmailId: emailResult.id || "",
-                    updatedAt: new Date().toISOString()
-                };
+                    updatedAt: emailSentAt
+                }, applicationData, communicationEntry);
 
                 if (db) {
                     await db.collection("applications").doc(savedId).update(emailUpdateData);
@@ -654,6 +693,22 @@ app.post(
 
                 if (db && savedId) {
                     try {
+                        const failedAt = new Date().toISOString();
+                        const failedCommunicationEntry = createCommunicationHistoryEntry({
+                            action: "Application Received Email Failed",
+                            emailType: "Application Received",
+                            status: "Failed",
+                            errorMessage: emailError.message,
+                            user: "System",
+                            timestamp: failedAt
+                        });
+
+                        await db.collection("applications").doc(savedId).update(applyCommunicationHistory({
+                            applicationReceivedEmailSent: false,
+                            applicationReceivedEmailError: emailError.message,
+                            updatedAt: failedAt
+                        }, applicationData, failedCommunicationEntry));
+
                         await db.collection("candidateCommunications").add({
                             applicationId: savedId,
                             candidateName: fullName,
@@ -1133,17 +1188,27 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             plainText: emailContent.plainText
         });
 
-        const updateData = {
+        const now = new Date().toISOString();
+        const communicationEntry = createCommunicationHistoryEntry({
+            action: "Interview Invitation Sent",
+            emailType: "Interview Invitation",
+            status: "Sent",
+            resendEmailId: emailResult.id || "",
+            user: req.user.email || req.user.role || "Admin",
+            timestamp: now
+        });
+
+        const updateData = applyCommunicationHistory({
             status: "Interview Invited",
             interviewDate: req.body.interviewDate || "",
             interviewTime: req.body.interviewTime || "",
             interviewLocation: req.body.interviewLocation || "",
             interviewMessage: req.body.interviewMessage || "",
             invitationSent: true,
-            invitationSentAt: new Date().toISOString(),
+            invitationSentAt: now,
             invitationEmailId: emailResult.id || "",
-            updatedAt: new Date().toISOString()
-        };
+            updatedAt: now
+        }, application, communicationEntry);
 
         if (db) {
             await db.collection("applications").doc(id).update(updateData);
@@ -1249,12 +1314,22 @@ app.post("/api/applications/:id/reminder", verifyToken, async (req, res) => {
             plainText: emailContent.plainText
         });
 
-        const updateData = {
+        const now = new Date().toISOString();
+        const communicationEntry = createCommunicationHistoryEntry({
+            action: "Interview Reminder Sent",
+            emailType: "Interview Reminder",
+            status: "Sent",
+            resendEmailId: emailResult.id || "",
+            user: req.user.email || req.user.role || "Admin",
+            timestamp: now
+        });
+
+        const updateData = applyCommunicationHistory({
             reminderSent: true,
-            reminderSentAt: new Date().toISOString(),
+            reminderSentAt: now,
             reminderEmailId: emailResult.id || "",
-            updatedAt: new Date().toISOString()
-        };
+            updatedAt: now
+        }, application, communicationEntry);
 
         if (reminderDetails.interviewDate) updateData.interviewDate = reminderDetails.interviewDate;
         if (reminderDetails.interviewTime) updateData.interviewTime = reminderDetails.interviewTime;
@@ -1358,13 +1433,23 @@ app.post("/api/applications/:id/offer", verifyToken, async (req, res) => {
             plainText: emailContent.plainText
         });
 
-        const updateData = {
+        const now = new Date().toISOString();
+        const communicationEntry = createCommunicationHistoryEntry({
+            action: "Offer Email Sent",
+            emailType: "Offer",
+            status: "Sent",
+            resendEmailId: emailResult.id || "",
+            user: req.user.email || req.user.role || "Admin",
+            timestamp: now
+        });
+
+        const updateData = applyCommunicationHistory({
             status: "Offer Made",
             offerSent: true,
-            offerSentAt: new Date().toISOString(),
+            offerSentAt: now,
             offerEmailId: emailResult.id || "",
-            updatedAt: new Date().toISOString()
-        };
+            updatedAt: now
+        }, application, communicationEntry);
 
         if (db) {
             await db.collection("applications").doc(id).update(updateData);
@@ -1466,13 +1551,22 @@ app.post("/api/applications/:id/rejection", verifyToken, async (req, res) => {
 
         const now = new Date().toISOString();
 
-        const updateData = {
+        const communicationEntry = createCommunicationHistoryEntry({
+            action: "Rejection Email Sent",
+            emailType: "Application Outcome",
+            status: "Sent",
+            resendEmailId: emailResult.id || "",
+            user: req.user.email || req.user.role || "Admin",
+            timestamp: now
+        });
+
+        const updateData = applyCommunicationHistory({
             status: "Rejected",
             rejectionSent: true,
             rejectionSentAt: now,
             rejectionEmailId: emailResult.id || "",
             updatedAt: now
-        };
+        }, application, communicationEntry);
 
         if (db) {
             await db.collection("applications").doc(id).update(updateData);
