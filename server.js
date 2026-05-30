@@ -324,6 +324,58 @@ Recruitment Team`;
     return { subject, plainText, html };
 }
 
+function buildRejectionEmail(application) {
+    const candidateName = application.fullName || "Candidate";
+    const position = application.position || "the position applied for";
+
+    const subject = `Application Outcome - ${position}`;
+
+    const plainText = `Dear ${candidateName},
+
+Thank you for your interest in the position of ${position} with Joe's Excellent Events & Management.
+
+Following careful consideration of your application and recruitment journey, we regret to inform you that your application has not been successful on this occasion.
+
+We sincerely appreciate the time, effort and professionalism you demonstrated throughout the recruitment process.
+
+We encourage you to apply for future opportunities that may match your skills and experience.
+
+We wish you every success in your future career.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`;
+
+    const html = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">Application Outcome</h1>
+
+                <p>Dear ${escapeHtml(candidateName)},</p>
+
+                <p>Thank you for your interest in the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management.</p>
+
+                <p>Following careful consideration of your application and recruitment journey, we regret to inform you that your application has not been successful on this occasion.</p>
+
+                <p>We sincerely appreciate the time, effort and professionalism you demonstrated throughout the recruitment process.</p>
+
+                <p>We encourage you to apply for future opportunities that may match your skills and experience.</p>
+
+                <p>We wish you every success in your future career.</p>
+
+                <p style="margin-top:30px;">
+                    Kind regards,<br>
+                    <strong>Joe's Excellent Events & Management</strong><br>
+                    Recruitment Team
+                </p>
+            </div>
+        </div>
+    `;
+
+    return { subject, plainText, html };
+}
+
 function buildContactEmail(contactData) {
     const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
 
@@ -1343,6 +1395,148 @@ app.post("/api/applications/:id/offer", verifyToken, async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message || "Failed to send offer email."
+        });
+    }
+});
+
+
+app.post("/api/applications/:id/rejection", verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (req.user.role === "viewer") {
+            return res.status(403).json({
+                success: false,
+                message: "Viewers cannot send rejection emails."
+            });
+        }
+
+        let application = null;
+
+        if (db) {
+            const doc = await db.collection("applications").doc(id).get();
+
+            if (!doc.exists) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+
+            application = {
+                id: doc.id,
+                ...doc.data()
+            };
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+
+            if (!fs.existsSync(localFile)) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Applications file not found."
+                });
+            }
+
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            application = applications.find(app => app.id === id);
+
+            if (!application) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Application not found."
+                });
+            }
+        }
+
+        if (!application.email) {
+            return res.status(400).json({
+                success: false,
+                message: "Candidate email address is missing."
+            });
+        }
+
+        const emailContent = buildRejectionEmail(application);
+
+        const emailResult = await sendEmailWithResend({
+            to: application.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            plainText: emailContent.plainText
+        });
+
+        const now = new Date().toISOString();
+
+        const updateData = {
+            status: "Rejected",
+            rejectionSent: true,
+            rejectionSentAt: now,
+            rejectionEmailId: emailResult.id || "",
+            updatedAt: now
+        };
+
+        if (db) {
+            await db.collection("applications").doc(id).update(updateData);
+
+            await db.collection("candidateCommunications").add({
+                applicationId: id,
+                candidateName: application.fullName || "Candidate",
+                candidateEmail: application.email || "",
+                position: application.position || "",
+                emailType: "Application Outcome",
+                status: "Sent",
+                resendEmailId: emailResult.id || "",
+                sentAt: now,
+                createdAt: now
+            });
+        } else {
+            const localFile = path.join(__dirname, "applications.json");
+            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
+            const index = applications.findIndex(app => app.id === id);
+
+            if (index !== -1) {
+                applications[index] = {
+                    ...applications[index],
+                    ...updateData
+                };
+
+                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            }
+
+            const communicationsFile = path.join(__dirname, "candidateCommunications.json");
+            let communications = [];
+
+            if (fs.existsSync(communicationsFile)) {
+                communications = JSON.parse(fs.readFileSync(communicationsFile, "utf8"));
+            }
+
+            communications.push({
+                id: Date.now().toString(),
+                applicationId: id,
+                candidateName: application.fullName || "Candidate",
+                candidateEmail: application.email || "",
+                position: application.position || "",
+                emailType: "Application Outcome",
+                status: "Sent",
+                resendEmailId: emailResult.id || "",
+                sentAt: now,
+                createdAt: now
+            });
+
+            fs.writeFileSync(communicationsFile, JSON.stringify(communications, null, 2));
+        }
+
+        res.json({
+            success: true,
+            message: `Rejection email sent to ${application.email}.`,
+            emailId: emailResult.id || null
+        });
+
+    } catch (error) {
+        console.error("Rejection email error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: error.message || "Failed to send rejection email."
         });
     }
 });
