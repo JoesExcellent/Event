@@ -11,6 +11,8 @@ let allApplications = [];
 let allContactMessages = [];
 let allVacancies = [];
 let selectedVacancyId = null;
+let emailTemplates = {};
+let emailTemplateEditorDirty = false;
 
 const ATS_STATUSES = [
     "New",
@@ -35,6 +37,10 @@ const contactMessagesTableBody = document.getElementById("contactMessagesTableBo
 const communicationTableBody = document.getElementById("communicationTableBody");
 const vacanciesTableBody = document.getElementById("vacanciesTableBody");
 const vacancyMessage = document.getElementById("vacancyMessage");
+const emailTemplateSelect = document.getElementById("emailTemplateSelect");
+const emailTemplateSubject = document.getElementById("emailTemplateSubject");
+const emailTemplateBody = document.getElementById("emailTemplateBody");
+const emailTemplateMessage = document.getElementById("emailTemplateMessage");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -245,6 +251,7 @@ async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
     await loadVacancies();
+    await loadEmailTemplates(false);
 
     updateCommandCentre();
     renderActivityFeed();
@@ -1460,6 +1467,130 @@ function renderCommunicationCentre() {
     });
 }
 
+
+function renderEmailTemplateEditor() {
+    if (!emailTemplateSelect || !emailTemplateSubject || !emailTemplateBody) return;
+
+    const selectedId = emailTemplateSelect.value || "applicationReceived";
+    const template = emailTemplates[selectedId];
+
+    if (!template) return;
+
+    emailTemplateSubject.value = template.subject || "";
+    emailTemplateBody.value = template.body || "";
+    emailTemplateEditorDirty = false;
+
+    if (emailTemplateMessage) {
+        emailTemplateMessage.innerHTML = template.isDefault
+            ? '<p style="color:#f2f2f2;">Using the default template.</p>'
+            : `<p style="color:#ffb000;">Custom template saved${template.updatedAt ? " on " + formatDateTime(template.updatedAt) : ""}.</p>`;
+    }
+}
+
+async function loadEmailTemplates(forceRender = false) {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load email templates.");
+        }
+
+        emailTemplates = result.templates || {};
+
+        if (forceRender || !emailTemplateEditorDirty) {
+            renderEmailTemplateEditor();
+        }
+    } catch (error) {
+        console.error(error);
+        if (emailTemplateMessage) {
+            emailTemplateMessage.innerHTML = `<p style="color:#ff6a00;">${escapeHtml(error.message || "Failed to load email templates.")}</p>`;
+        }
+    }
+}
+
+async function saveEmailTemplate() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot edit email templates.", "error");
+        return;
+    }
+
+    const selectedId = emailTemplateSelect?.value || "";
+    const subject = emailTemplateSubject?.value.trim() || "";
+    const body = emailTemplateBody?.value.trim() || "";
+
+    if (!selectedId || !subject || !body) {
+        showToast("Please complete the template subject and body.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates/${selectedId}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ subject, body })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to save email template.");
+        }
+
+        emailTemplates[selectedId] = result.template;
+        emailTemplateEditorDirty = false;
+        renderEmailTemplateEditor();
+        showToast("Email template saved successfully.", "success");
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save email template.", "error");
+    }
+}
+
+async function restoreEmailTemplate() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot restore email templates.", "error");
+        return;
+    }
+
+    const selectedId = emailTemplateSelect?.value || "";
+
+    if (!selectedId) {
+        showToast("Please select a template first.", "error");
+        return;
+    }
+
+    if (!confirm("Restore this email template to the default wording?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates/${selectedId}/restore`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to restore template.");
+        }
+
+        emailTemplates[selectedId] = result.template;
+        emailTemplateEditorDirty = false;
+        renderEmailTemplateEditor();
+        showToast("Default email template restored.", "success");
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to restore template.", "error");
+    }
+}
+
 function exportApplicationsCSV() {
     showToast("CSV export started.", "info");
 
@@ -1527,6 +1658,8 @@ function setVacancyMessage(message, isError = false) {
 
 function clearVacancyForm() {
     selectedVacancyId = null;
+    emailTemplates = {};
+    emailTemplateEditorDirty = false;
 
     [
         "vacancyTitle",
@@ -1796,6 +1929,8 @@ function logoutAdmin() {
     allContactMessages = [];
     allVacancies = [];
     selectedVacancyId = null;
+    emailTemplates = {};
+    emailTemplateEditorDirty = false;
 
     stopAutoRefresh();
     closeCandidateModal();
@@ -1812,6 +1947,11 @@ document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidate
 document.getElementById("createVacancyBtn")?.addEventListener("click", createVacancy);
 document.getElementById("updateVacancyBtn")?.addEventListener("click", updateVacancy);
 document.getElementById("clearVacancyFormBtn")?.addEventListener("click", clearVacancyForm);
+document.getElementById("saveEmailTemplateBtn")?.addEventListener("click", saveEmailTemplate);
+document.getElementById("restoreEmailTemplateBtn")?.addEventListener("click", restoreEmailTemplate);
+emailTemplateSelect?.addEventListener("change", renderEmailTemplateEditor);
+emailTemplateSubject?.addEventListener("input", () => { emailTemplateEditorDirty = true; });
+emailTemplateBody?.addEventListener("input", () => { emailTemplateEditorDirty = true; });
 
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
@@ -1839,6 +1979,8 @@ window.editVacancy = editVacancy;
 window.updateVacancy = updateVacancy;
 window.setVacancyStatus = setVacancyStatus;
 window.deleteVacancy = deleteVacancy;
+window.saveEmailTemplate = saveEmailTemplate;
+window.restoreEmailTemplate = restoreEmailTemplate;
 
 if (authToken) {
     setDashboardVisible(true);

@@ -969,6 +969,44 @@ Joe's Excellent Events & Management</textarea>
             </div>
         </section>
 
+
+        <section class="ats-panel">
+            <h2>Email Template Library</h2>
+            <p>Edit recruitment email templates without changing code. Use placeholders such as {{candidateName}}, {{position}}, {{interviewDate}}, {{interviewTime}} and {{interviewLocation}}.</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="emailTemplateSelect">Template Type</label>
+                    <select id="emailTemplateSelect">
+                        <option value="applicationReceived">Application Received</option>
+                        <option value="interviewInvitation">Interview Invitation</option>
+                        <option value="interviewReminder">Interview Reminder</option>
+                        <option value="offerEmail">Offer Email</option>
+                        <option value="rejectionEmail">Rejection Email</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailTemplateSubject">Email Subject</label>
+                    <input type="text" id="emailTemplateSubject" placeholder="Email subject">
+                </div>
+
+                <div class="form-group full">
+                    <label for="emailTemplateBody">Email Body</label>
+                    <textarea id="emailTemplateBody" placeholder="Write the email body here. Use placeholders like {{candidateName}} and {{position}}."></textarea>
+                </div>
+            </div>
+
+            <button id="saveEmailTemplateBtn" type="button">Save Template</button>
+            <button id="restoreEmailTemplateBtn" type="button">Restore Default</button>
+
+            <div class="vacancy-management-note">
+                <p><strong>Available placeholders:</strong> {{candidateName}}, {{position}}, {{interviewDate}}, {{interviewTime}}, {{interviewLocation}}, {{interviewMessage}}</p>
+            </div>
+
+            <div id="emailTemplateMessage"></div>
+        </section>
+
         <section class="analytics-card">
             <h2>Recruitment Analytics</h2>
             <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
@@ -1110,7 +1148,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=40"></script>
+<script src="admin.js?v=41"></script>
 
 </body>
 </html>
