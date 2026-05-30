@@ -544,6 +544,36 @@ function renderCandidateCommunicationTimeline(application) {
 
     if (!timeline) return;
 
+    const history = Array.isArray(application.communications) ? application.communications : [];
+
+    if (history.length) {
+        const sortedHistory = [...history].sort((a, b) => {
+            const aTime = new Date(a.createdAt || a.sentAt || 0).getTime();
+            const bTime = new Date(b.createdAt || b.sentAt || 0).getTime();
+            return aTime - bTime;
+        });
+
+        timeline.innerHTML = sortedHistory.map(item => {
+            const dateText = item.createdAt || item.sentAt
+                ? formatDateTime(item.createdAt || item.sentAt)
+                : "Date not recorded";
+            const statusText = item.status ? `Status: ${item.status}` : "Status: Recorded";
+            const userText = item.user ? ` | By: ${item.user}` : "";
+            const emailIdText = item.resendEmailId ? ` | Email ID: ${item.resendEmailId}` : "";
+            const errorText = item.errorMessage ? ` | Error: ${item.errorMessage}` : "";
+
+            return `
+                <li>
+                    <strong>${escapeHtml(item.action || item.emailType || "Communication")}</strong>
+                    ${escapeHtml(dateText)}<br>
+                    ${escapeHtml(statusText + userText + emailIdText + errorText)}
+                </li>
+            `;
+        }).join("");
+
+        return;
+    }
+
     const items = [];
 
     if (application.applicationReceivedEmailSent) {
@@ -552,13 +582,6 @@ function renderCandidateCommunicationTimeline(application) {
             text: application.applicationReceivedEmailSentAt
                 ? `Email sent on ${formatDateTime(application.applicationReceivedEmailSentAt)}.`
                 : "Application received email has been sent."
-        });
-    }
-
-    if (application.applicationReceivedEmailId) {
-        items.push({
-            title: "Application Received Delivery Reference",
-            text: `Resend Email ID: ${application.applicationReceivedEmailId}`
         });
     }
 
@@ -571,26 +594,12 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
-    if (application.invitationEmailId) {
-        items.push({
-            title: "Interview Invitation Delivery Reference",
-            text: `Resend Email ID: ${application.invitationEmailId}`
-        });
-    }
-
     if (application.reminderSent) {
         items.push({
             title: "Interview Reminder Sent",
             text: application.reminderSentAt
                 ? `Email sent on ${formatDateTime(application.reminderSentAt)}.`
                 : "Interview reminder email has been sent."
-        });
-    }
-
-    if (application.reminderEmailId) {
-        items.push({
-            title: "Interview Reminder Delivery Reference",
-            text: `Resend Email ID: ${application.reminderEmailId}`
         });
     }
 
@@ -603,26 +612,12 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
-    if (application.offerEmailId) {
-        items.push({
-            title: "Offer Delivery Reference",
-            text: `Resend Email ID: ${application.offerEmailId}`
-        });
-    }
-
     if (application.rejectionSent) {
         items.push({
             title: "Rejection Email Sent",
             text: application.rejectionSentAt
                 ? `Email sent on ${formatDateTime(application.rejectionSentAt)}.`
                 : "Rejection email has been sent."
-        });
-    }
-
-    if (application.rejectionEmailId) {
-        items.push({
-            title: "Rejection Delivery Reference",
-            text: `Resend Email ID: ${application.rejectionEmailId}`
         });
     }
 
@@ -1378,6 +1373,40 @@ function renderRecruiterTasks() {
     `).join("");
 }
 
+function getFallbackCommunicationCount(app) {
+    let count = 0;
+    if (app.applicationReceivedEmailSent) count += 1;
+    if (app.invitationSent) count += 1;
+    if (app.reminderSent) count += 1;
+    if (app.offerSent) count += 1;
+    if (app.rejectionSent) count += 1;
+    return count;
+}
+
+function getLastFallbackCommunication(app) {
+    const fallback = [
+        { action: "Application Received Email Sent", at: app.applicationReceivedEmailSentAt },
+        { action: "Interview Invitation Sent", at: app.invitationSentAt },
+        { action: "Interview Reminder Sent", at: app.reminderSentAt },
+        { action: "Offer Email Sent", at: app.offerSentAt },
+        { action: "Rejection Email Sent", at: app.rejectionSentAt }
+    ].filter(item => item.at);
+
+    if (Array.isArray(app.communications) && app.communications.length) {
+        const latest = [...app.communications].sort((a, b) => {
+            const aTime = new Date(a.createdAt || a.sentAt || 0).getTime();
+            const bTime = new Date(b.createdAt || b.sentAt || 0).getTime();
+            return bTime - aTime;
+        })[0];
+        return latest?.action || latest?.emailType || "Communication recorded";
+    }
+
+    if (!fallback.length) return "No communication yet";
+
+    fallback.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+    return fallback[0].action;
+}
+
 function renderCommunicationCentre() {
     if (!communicationTableBody) return;
 
@@ -1398,7 +1427,7 @@ function renderCommunicationCentre() {
     if (!communicationRecords.length) {
         communicationTableBody.innerHTML = `
             <tr>
-                <td colspan="8">No communication records found.</td>
+                <td colspan="10">No communication records found.</td>
             </tr>
         `;
         return;
@@ -1422,6 +1451,8 @@ function renderCommunicationCentre() {
             <td>${app.reminderSent ? "Yes" : "No"}</td>
             <td>${app.offerSent ? "Yes" : "No"}</td>
             <td>${app.rejectionSent ? "Yes" : "No"}</td>
+            <td>${escapeHtml(app.lastCommunicationAction || getLastFallbackCommunication(app))}</td>
+            <td>${Number(app.communicationCount || (Array.isArray(app.communications) ? app.communications.length : getFallbackCommunicationCount(app)))}</td>
             <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
         `;
 
