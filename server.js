@@ -376,6 +376,249 @@ Recruitment Team`;
     return { subject, plainText, html };
 }
 
+
+const DEFAULT_EMAIL_TEMPLATES = {
+    applicationReceived: {
+        name: "Application Received",
+        subject: "Application Received - {{position}}",
+        body: `Dear {{candidateName}},
+
+Thank you for your application for the position of {{position}} with Joe's Excellent Events & Management.
+
+We are pleased to confirm that your application has been received successfully and has entered our recruitment process. Our recruitment team will review your application, qualifications and experience carefully against the requirements of the role.
+
+If your application is shortlisted, we will contact you regarding the next stage of the recruitment process. Due to the volume of applications we may receive, we are unable to provide individual feedback to all applicants.
+
+We appreciate your interest in joining Joe's Excellent Events & Management and wish you every success.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`
+    },
+    interviewInvitation: {
+        name: "Interview Invitation",
+        subject: "Interview Invitation - Joe's Excellent Events & Management",
+        body: `Dear {{candidateName}},
+
+{{interviewMessage}}
+
+Interview Details:
+Position: {{position}}
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please reply to confirm that you are able to attend.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`
+    },
+    interviewReminder: {
+        name: "Interview Reminder",
+        subject: "Interview Reminder - Joe's Excellent Events & Management",
+        body: `Dear {{candidateName}},
+
+This is a friendly reminder regarding your upcoming interview with Joe's Excellent Events & Management.
+
+Interview Details:
+Position: {{position}}
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+We look forward to meeting with you and discussing your application further.
+
+If you are unable to attend, please contact us as soon as possible.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`
+    },
+    offerEmail: {
+        name: "Offer Email",
+        subject: "Conditional Offer of Employment - {{position}}",
+        body: `Dear {{candidateName}},
+
+Following your recent interview, we are delighted to offer you the position of {{position}} with Joe's Excellent Events & Management.
+
+We were impressed by your experience, skills and professionalism throughout the recruitment process and believe you will make a valuable contribution to our organisation.
+
+This offer is subject to the completion of any required pre-employment checks and the agreement of final employment terms.
+
+Please reply to this email to confirm your acceptance of this offer.
+
+We look forward to welcoming you to Joe's Excellent Events & Management.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`
+    },
+    rejectionEmail: {
+        name: "Rejection Email",
+        subject: "Application Outcome - {{position}}",
+        body: `Dear {{candidateName}},
+
+Thank you for your interest in the position of {{position}} with Joe's Excellent Events & Management.
+
+Following careful consideration of your application and recruitment journey, we regret to inform you that your application has not been successful on this occasion.
+
+We sincerely appreciate the time, effort and professionalism you demonstrated throughout the recruitment process.
+
+We encourage you to apply for future opportunities that may match your skills and experience.
+
+We wish you every success in your future career.
+
+Kind regards,
+
+Joe's Excellent Events & Management
+Recruitment Team`
+    }
+};
+
+const EMAIL_TEMPLATE_IDS = Object.keys(DEFAULT_EMAIL_TEMPLATES);
+const EMAIL_TEMPLATES_FILE = path.join(__dirname, "emailTemplates.json");
+
+function getTemplateContext(application = {}, details = {}) {
+    return {
+        candidateName: application.fullName || details.candidateName || "Candidate",
+        position: application.position || details.position || "the position applied for",
+        interviewDate: details.interviewDate || application.interviewDate || "To be confirmed",
+        interviewTime: details.interviewTime || application.interviewTime || "To be confirmed",
+        interviewLocation: details.interviewLocation || application.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne",
+        interviewMessage: details.interviewMessage || application.interviewMessage || "Thank you for your application.\n\nWe are pleased to invite you to attend an interview with Joe's Excellent Events & Management."
+    };
+}
+
+function renderTemplateText(text, context) {
+    return String(text || "").replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (match, key) => {
+        return Object.prototype.hasOwnProperty.call(context, key) ? String(context[key] || "") : match;
+    });
+}
+
+function buildHtmlEmailFromPlainText(title, plainText) {
+    return `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
+            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
+                <h1 style="color:#ff6a00;text-align:center;">${escapeHtml(title)}</h1>
+                <p style="white-space:pre-line;">${escapeHtml(plainText)}</p>
+            </div>
+        </div>
+    `;
+}
+
+function normaliseTemplateRecord(id, record = {}) {
+    const defaults = DEFAULT_EMAIL_TEMPLATES[id];
+    return {
+        id,
+        name: record.name || defaults.name,
+        subject: record.subject || defaults.subject,
+        body: record.body || defaults.body,
+        isDefault: !!record.isDefault,
+        updatedAt: record.updatedAt || ""
+    };
+}
+
+async function getEmailTemplates() {
+    const templates = {};
+
+    EMAIL_TEMPLATE_IDS.forEach(id => {
+        templates[id] = normaliseTemplateRecord(id, DEFAULT_EMAIL_TEMPLATES[id]);
+        templates[id].isDefault = true;
+    });
+
+    if (db) {
+        const snapshot = await db.collection("emailTemplates").get();
+        snapshot.forEach(doc => {
+            if (DEFAULT_EMAIL_TEMPLATES[doc.id]) {
+                templates[doc.id] = normaliseTemplateRecord(doc.id, doc.data());
+                templates[doc.id].isDefault = false;
+            }
+        });
+    } else if (fs.existsSync(EMAIL_TEMPLATES_FILE)) {
+        const saved = JSON.parse(fs.readFileSync(EMAIL_TEMPLATES_FILE, "utf8"));
+        Object.keys(saved || {}).forEach(id => {
+            if (DEFAULT_EMAIL_TEMPLATES[id]) {
+                templates[id] = normaliseTemplateRecord(id, saved[id]);
+                templates[id].isDefault = false;
+            }
+        });
+    }
+
+    return templates;
+}
+
+async function saveEmailTemplate(id, subject, body) {
+    if (!DEFAULT_EMAIL_TEMPLATES[id]) {
+        throw new Error("Unknown email template.");
+    }
+
+    const record = {
+        name: DEFAULT_EMAIL_TEMPLATES[id].name,
+        subject: String(subject || "").trim(),
+        body: String(body || "").trim(),
+        updatedAt: new Date().toISOString()
+    };
+
+    if (!record.subject || !record.body) {
+        throw new Error("Template subject and body are required.");
+    }
+
+    if (db) {
+        await db.collection("emailTemplates").doc(id).set(record, { merge: true });
+    } else {
+        let saved = {};
+        if (fs.existsSync(EMAIL_TEMPLATES_FILE)) {
+            saved = JSON.parse(fs.readFileSync(EMAIL_TEMPLATES_FILE, "utf8"));
+        }
+        saved[id] = record;
+        fs.writeFileSync(EMAIL_TEMPLATES_FILE, JSON.stringify(saved, null, 2));
+    }
+
+    return normaliseTemplateRecord(id, record);
+}
+
+async function restoreDefaultEmailTemplate(id) {
+    if (!DEFAULT_EMAIL_TEMPLATES[id]) {
+        throw new Error("Unknown email template.");
+    }
+
+    if (db) {
+        await db.collection("emailTemplates").doc(id).delete().catch(() => null);
+    } else if (fs.existsSync(EMAIL_TEMPLATES_FILE)) {
+        const saved = JSON.parse(fs.readFileSync(EMAIL_TEMPLATES_FILE, "utf8"));
+        delete saved[id];
+        fs.writeFileSync(EMAIL_TEMPLATES_FILE, JSON.stringify(saved, null, 2));
+    }
+
+    return normaliseTemplateRecord(id, DEFAULT_EMAIL_TEMPLATES[id]);
+}
+
+async function buildEmailFromTemplate(templateId, fallbackEmail, application = {}, details = {}) {
+    try {
+        const templates = await getEmailTemplates();
+        const template = templates[templateId];
+
+        if (!template) {
+            return fallbackEmail;
+        }
+
+        const context = getTemplateContext(application, details);
+        const subject = renderTemplateText(template.subject, context);
+        const plainText = renderTemplateText(template.body, context);
+        const html = buildHtmlEmailFromPlainText(template.name, plainText);
+
+        return { subject, plainText, html };
+    } catch (error) {
+        console.error("Email template render error:", error.message);
+        return fallbackEmail;
+    }
+}
+
 function buildContactEmail(contactData) {
     const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
 
@@ -483,6 +726,45 @@ app.get("/health", (req, res) => {
         firebaseConnected: !!db,
         resendReady: !!process.env.RESEND_API_KEY
     });
+
+});
+
+app.get("/api/admin/email-templates", verifyToken, async (req, res) => {
+    try {
+        const templates = await getEmailTemplates();
+        res.json({ success: true, templates });
+    } catch (error) {
+        console.error("Load email templates error:", error);
+        res.status(500).json({ success: false, message: "Failed to load email templates." });
+    }
+});
+
+app.patch("/api/admin/email-templates/:templateId", verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === "viewer") {
+            return res.status(403).json({ success: false, message: "Viewers cannot edit email templates." });
+        }
+
+        const template = await saveEmailTemplate(req.params.templateId, req.body.subject, req.body.body);
+        res.json({ success: true, message: "Email template saved successfully.", template });
+    } catch (error) {
+        console.error("Save email template error:", error);
+        res.status(400).json({ success: false, message: error.message || "Failed to save email template." });
+    }
+});
+
+app.post("/api/admin/email-templates/:templateId/restore", verifyToken, async (req, res) => {
+    try {
+        if (req.user.role === "viewer") {
+            return res.status(403).json({ success: false, message: "Viewers cannot restore email templates." });
+        }
+
+        const template = await restoreDefaultEmailTemplate(req.params.templateId);
+        res.json({ success: true, message: "Default email template restored.", template });
+    } catch (error) {
+        console.error("Restore email template error:", error);
+        res.status(400).json({ success: false, message: error.message || "Failed to restore email template." });
+    }
 });
 
 app.post("/admin/login", (req, res) => {
@@ -612,7 +894,7 @@ app.post(
             }
 
             try {
-                const applicationReceivedEmail = buildApplicationReceivedEmail(applicationData);
+                const applicationReceivedEmail = await buildEmailFromTemplate("applicationReceived", buildApplicationReceivedEmail(applicationData), applicationData);
 
                 const emailResult = await sendEmailWithResend({
                     to: email,
@@ -1179,7 +1461,7 @@ app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
             });
         }
 
-        const emailContent = buildInterviewEmail(application, req.body);
+        const emailContent = await buildEmailFromTemplate("interviewInvitation", buildInterviewEmail(application, req.body), application, req.body);
 
         const emailResult = await sendEmailWithResend({
             to: application.email,
@@ -1305,7 +1587,7 @@ app.post("/api/applications/:id/reminder", verifyToken, async (req, res) => {
             interviewLocation: req.body.interviewLocation || application.interviewLocation || ""
         };
 
-        const emailContent = buildInterviewReminderEmail(application, reminderDetails);
+        const emailContent = await buildEmailFromTemplate("interviewReminder", buildInterviewReminderEmail(application, reminderDetails), application, reminderDetails);
 
         const emailResult = await sendEmailWithResend({
             to: application.email,
@@ -1424,7 +1706,7 @@ app.post("/api/applications/:id/offer", verifyToken, async (req, res) => {
             });
         }
 
-        const emailContent = buildOfferEmail(application);
+        const emailContent = await buildEmailFromTemplate("offerEmail", buildOfferEmail(application), application);
 
         const emailResult = await sendEmailWithResend({
             to: application.email,
@@ -1540,7 +1822,7 @@ app.post("/api/applications/:id/rejection", verifyToken, async (req, res) => {
             });
         }
 
-        const emailContent = buildRejectionEmail(application);
+        const emailContent = await buildEmailFromTemplate("rejectionEmail", buildRejectionEmail(application), application);
 
         const emailResult = await sendEmailWithResend({
             to: application.email,
