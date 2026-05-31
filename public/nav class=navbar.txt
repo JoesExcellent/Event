@@ -1,0 +1,25 @@
+<nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="home.html">About</a>
+    <a href="our-services.html">Services</a>
+    <a href="careers.html">Careers</a>
+    <a href="jobs.html">Jobs</a>
+    <a href="executive.html">Executive</a>
+    <a href="apply.html">Apply</a>
+    <a href="contact us.html">Contact</a>
+    <a href="admin.html">Admin</a>
+</nav>
+
+
+
+
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+index.html       → <a href="index.html" class="active">Home</a>
+home.html        → <a href="home.html" class="active">About</a>
+our-services.html → <a href="our-services.html" class="active">Services</a>
+careers.html     → <a href="careers.html" class="active">Careers</a>
+jobs.html        → <a href="jobs.html" class="active">Jobs</a>
+executive.html   → <a href="executive.html" class="active">Executive</a>
+apply.html       → <a href="apply.html" class="active">Apply</a>
+contact us.html  → <a href="contact us.html" class="active">Contact</a>
+admin.html       → <a href="admin.html" class="active">Admin</a>

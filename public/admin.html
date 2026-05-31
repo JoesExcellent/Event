@@ -949,62 +949,19 @@ Joe's Excellent Events & Management</textarea>
                         <tr>
                             <th>Candidate</th>
                             <th>Email</th>
-                            <th>Application Received</th>
                             <th>Invitation Sent</th>
-                            <th>Reminder Sent</th>
-                            <th>Offer Sent</th>
-                            <th>Rejection Sent</th>
-                            <th>Last Activity</th>
-                            <th>Communication Count</th>
+                            <th>Email ID</th>
                             <th>Follow Up</th>
                         </tr>
                     </thead>
 
                     <tbody id="communicationTableBody">
                         <tr>
-                            <td colspan="10">Communication records will appear after login.</td>
+                            <td colspan="5">Communication records will appear after login.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </section>
-
-
-        <section class="ats-panel">
-            <h2>Email Template Library</h2>
-            <p>Edit recruitment email templates without changing code. Use placeholders such as {{candidateName}}, {{position}}, {{interviewDate}}, {{interviewTime}} and {{interviewLocation}}.</p>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="emailTemplateSelect">Template Type</label>
-                    <select id="emailTemplateSelect">
-                        <option value="applicationReceived">Application Received</option>
-                        <option value="interviewInvitation">Interview Invitation</option>
-                        <option value="interviewReminder">Interview Reminder</option>
-                        <option value="offerEmail">Offer Email</option>
-                        <option value="rejectionEmail">Rejection Email</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="emailTemplateSubject">Email Subject</label>
-                    <input type="text" id="emailTemplateSubject" placeholder="Email subject">
-                </div>
-
-                <div class="form-group full">
-                    <label for="emailTemplateBody">Email Body</label>
-                    <textarea id="emailTemplateBody" placeholder="Write the email body here. Use placeholders like {{candidateName}} and {{position}}."></textarea>
-                </div>
-            </div>
-
-            <button id="saveEmailTemplateBtn" type="button">Save Template</button>
-            <button id="restoreEmailTemplateBtn" type="button">Restore Default</button>
-
-            <div class="vacancy-management-note">
-                <p><strong>Available placeholders:</strong> {{candidateName}}, {{position}}, {{interviewDate}}, {{interviewTime}}, {{interviewLocation}}, {{interviewMessage}}</p>
-            </div>
-
-            <div id="emailTemplateMessage"></div>
         </section>
 
         <section class="analytics-card">

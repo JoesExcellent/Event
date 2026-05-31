@@ -11,8 +11,6 @@ let allApplications = [];
 let allContactMessages = [];
 let allVacancies = [];
 let selectedVacancyId = null;
-let emailTemplates = {};
-let emailTemplateEditorDirty = false;
 
 const ATS_STATUSES = [
     "New",
@@ -37,10 +35,6 @@ const contactMessagesTableBody = document.getElementById("contactMessagesTableBo
 const communicationTableBody = document.getElementById("communicationTableBody");
 const vacanciesTableBody = document.getElementById("vacanciesTableBody");
 const vacancyMessage = document.getElementById("vacancyMessage");
-const emailTemplateSelect = document.getElementById("emailTemplateSelect");
-const emailTemplateSubject = document.getElementById("emailTemplateSubject");
-const emailTemplateBody = document.getElementById("emailTemplateBody");
-const emailTemplateMessage = document.getElementById("emailTemplateMessage");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -251,7 +245,6 @@ async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
     await loadVacancies();
-    await loadEmailTemplates(false);
 
     updateCommandCentre();
     renderActivityFeed();
@@ -522,12 +515,7 @@ function renderCandidateTimeline(application) {
     }
 
     if (status === "Offer Made") {
-        items.push({
-            title: "Offer Made",
-            text: application.offerSentAt
-                ? `Offer email sent on ${formatDateTime(application.offerSentAt)}.`
-                : "Candidate has reached offer stage."
-        });
+        items.push({ title: "Offer Made", text: "Candidate has reached offer stage." });
     }
 
     if (status === "Hired") {
@@ -551,46 +539,7 @@ function renderCandidateCommunicationTimeline(application) {
 
     if (!timeline) return;
 
-    const history = Array.isArray(application.communications) ? application.communications : [];
-
-    if (history.length) {
-        const sortedHistory = [...history].sort((a, b) => {
-            const aTime = new Date(a.createdAt || a.sentAt || 0).getTime();
-            const bTime = new Date(b.createdAt || b.sentAt || 0).getTime();
-            return aTime - bTime;
-        });
-
-        timeline.innerHTML = sortedHistory.map(item => {
-            const dateText = item.createdAt || item.sentAt
-                ? formatDateTime(item.createdAt || item.sentAt)
-                : "Date not recorded";
-            const statusText = item.status ? `Status: ${item.status}` : "Status: Recorded";
-            const userText = item.user ? ` | By: ${item.user}` : "";
-            const emailIdText = item.resendEmailId ? ` | Email ID: ${item.resendEmailId}` : "";
-            const errorText = item.errorMessage ? ` | Error: ${item.errorMessage}` : "";
-
-            return `
-                <li>
-                    <strong>${escapeHtml(item.action || item.emailType || "Communication")}</strong>
-                    ${escapeHtml(dateText)}<br>
-                    ${escapeHtml(statusText + userText + emailIdText + errorText)}
-                </li>
-            `;
-        }).join("");
-
-        return;
-    }
-
     const items = [];
-
-    if (application.applicationReceivedEmailSent) {
-        items.push({
-            title: "Application Received Email Sent",
-            text: application.applicationReceivedEmailSentAt
-                ? `Email sent on ${formatDateTime(application.applicationReceivedEmailSentAt)}.`
-                : "Application received email has been sent."
-        });
-    }
 
     if (application.invitationSent) {
         items.push({
@@ -598,6 +547,13 @@ function renderCandidateCommunicationTimeline(application) {
             text: application.invitationSentAt
                 ? `Email sent on ${formatDateTime(application.invitationSentAt)}.`
                 : "Interview invitation email has been sent."
+        });
+    }
+
+    if (application.invitationEmailId) {
+        items.push({
+            title: "Interview Invitation Delivery Reference",
+            text: `Resend Email ID: ${application.invitationEmailId}`
         });
     }
 
@@ -610,28 +566,17 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
-    if (application.offerSent) {
+    if (application.reminderEmailId) {
         items.push({
-            title: "Offer Email Sent",
-            text: application.offerSentAt
-                ? `Email sent on ${formatDateTime(application.offerSentAt)}.`
-                : "Offer email has been sent."
-        });
-    }
-
-    if (application.rejectionSent) {
-        items.push({
-            title: "Rejection Email Sent",
-            text: application.rejectionSentAt
-                ? `Email sent on ${formatDateTime(application.rejectionSentAt)}.`
-                : "Rejection email has been sent."
+            title: "Interview Reminder Delivery Reference",
+            text: `Resend Email ID: ${application.reminderEmailId}`
         });
     }
 
     if (!items.length) {
         items.push({
             title: "No Email Activity Yet",
-            text: "No candidate email activity has been recorded for this candidate yet."
+            text: "No interview invitation or interview reminder has been recorded for this candidate yet."
         });
     }
 
@@ -729,6 +674,81 @@ async function moveModalCandidateToHired() {
 
 async function moveModalCandidateToRejected() {
     if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Rejected");
+}
+
+
+async function sendOfferFromModal() {
+    if (!modalApplicationId) {
+        showToast("Please open a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send offer emails.", "error");
+        return;
+    }
+
+    if (!confirm("Send an offer email to this candidate?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/applications/${modalApplicationId}/offer`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Offer email failed.");
+        }
+
+        showToast("Offer email sent successfully.", "success");
+        await refreshDashboard();
+        openCandidateModal(modalApplicationId);
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Offer email failed.", "error");
+    }
+}
+
+async function sendRejectionFromModal() {
+    if (!modalApplicationId) {
+        showToast("Please open a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send rejection emails.", "error");
+        return;
+    }
+
+    if (!confirm("Send a rejection email to this candidate?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/applications/${modalApplicationId}/rejection`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Rejection email failed.");
+        }
+
+        showToast("Rejection email sent successfully.", "success");
+        await refreshDashboard();
+        openCandidateModal(modalApplicationId);
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Rejection email failed.", "error");
+    }
 }
 
 async function quickRejectApplication(id) {
@@ -940,135 +960,6 @@ async function sendReminder() {
             sendReminderBtn.textContent = "Send Reminder";
         }
     }
-}
-
-
-async function sendOffer(applicationId = selectedApplicationId) {
-    if (!applicationId) {
-        showToast("Please select a candidate first.", "error");
-        return;
-    }
-
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot send offer emails.", "error");
-        return;
-    }
-
-    const candidate = allApplications.find(app => app.id === applicationId);
-
-    if (!candidate) {
-        showToast("Candidate record could not be found.", "error");
-        return;
-    }
-
-    const candidateName = candidate.fullName || "this candidate";
-    const candidatePosition = candidate.position || "the position applied for";
-
-    if (!confirm(`Send a conditional offer email to ${candidateName} for ${candidatePosition}?`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `${API_BASE}/api/applications/${applicationId}/offer`,
-            {
-                method: "POST",
-                headers: getAuthHeaders()
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Offer email failed.");
-        }
-
-        showToast("Offer email sent successfully.", "success");
-
-        await refreshDashboard();
-
-        if (modalApplicationId === applicationId) {
-            openCandidateModal(applicationId);
-        }
-
-    } catch (error) {
-        console.error(error);
-        showToast(error.message || "Offer email failed.", "error");
-    }
-}
-
-async function sendOfferFromModal() {
-    if (!modalApplicationId) {
-        showToast("No candidate selected.", "error");
-        return;
-    }
-
-    selectedApplicationId = modalApplicationId;
-    await sendOffer(modalApplicationId);
-}
-
-async function sendRejection(applicationId = selectedApplicationId) {
-    if (!applicationId) {
-        showToast("Please select a candidate first.", "error");
-        return;
-    }
-
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot send rejection emails.", "error");
-        return;
-    }
-
-    const candidate = allApplications.find(app => app.id === applicationId);
-
-    if (!candidate) {
-        showToast("Candidate record could not be found.", "error");
-        return;
-    }
-
-    const candidateName = candidate.fullName || "this candidate";
-    const candidatePosition = candidate.position || "the position applied for";
-
-    if (!confirm(`Send a rejection email to ${candidateName} for ${candidatePosition}? This will update the candidate status to Rejected.`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `${API_BASE}/api/applications/${applicationId}/rejection`,
-            {
-                method: "POST",
-                headers: getAuthHeaders()
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Rejection email failed.");
-        }
-
-        showToast("Rejection email sent successfully.", "success");
-
-        await refreshDashboard();
-
-        if (modalApplicationId === applicationId) {
-            openCandidateModal(applicationId);
-        }
-
-    } catch (error) {
-        console.error(error);
-        showToast(error.message || "Rejection email failed.", "error");
-    }
-}
-
-async function sendRejectionFromModal() {
-    if (!modalApplicationId) {
-        showToast("No candidate selected.", "error");
-        return;
-    }
-
-    selectedApplicationId = modalApplicationId;
-    await sendRejection(modalApplicationId);
 }
 
 
@@ -1380,61 +1271,17 @@ function renderRecruiterTasks() {
     `).join("");
 }
 
-function getFallbackCommunicationCount(app) {
-    let count = 0;
-    if (app.applicationReceivedEmailSent) count += 1;
-    if (app.invitationSent) count += 1;
-    if (app.reminderSent) count += 1;
-    if (app.offerSent) count += 1;
-    if (app.rejectionSent) count += 1;
-    return count;
-}
-
-function getLastFallbackCommunication(app) {
-    const fallback = [
-        { action: "Application Received Email Sent", at: app.applicationReceivedEmailSentAt },
-        { action: "Interview Invitation Sent", at: app.invitationSentAt },
-        { action: "Interview Reminder Sent", at: app.reminderSentAt },
-        { action: "Offer Email Sent", at: app.offerSentAt },
-        { action: "Rejection Email Sent", at: app.rejectionSentAt }
-    ].filter(item => item.at);
-
-    if (Array.isArray(app.communications) && app.communications.length) {
-        const latest = [...app.communications].sort((a, b) => {
-            const aTime = new Date(a.createdAt || a.sentAt || 0).getTime();
-            const bTime = new Date(b.createdAt || b.sentAt || 0).getTime();
-            return bTime - aTime;
-        })[0];
-        return latest?.action || latest?.emailType || "Communication recorded";
-    }
-
-    if (!fallback.length) return "No communication yet";
-
-    fallback.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
-    return fallback[0].action;
-}
-
 function renderCommunicationCentre() {
     if (!communicationTableBody) return;
 
     const communicationRecords = allApplications.filter(app =>
-        app.email ||
-        app.applicationReceivedEmailSent ||
-        app.applicationReceivedEmailId ||
-        app.invitationSent ||
-        app.invitationEmailId ||
-        app.reminderSent ||
-        app.reminderEmailId ||
-        app.offerSent ||
-        app.offerEmailId ||
-        app.rejectionSent ||
-        app.rejectionEmailId
+        app.email || app.invitationSent || app.invitationEmailId
     );
 
     if (!communicationRecords.length) {
         communicationTableBody.innerHTML = `
             <tr>
-                <td colspan="10">No communication records found.</td>
+                <td colspan="5">No communication records found.</td>
             </tr>
         `;
         return;
@@ -1453,142 +1300,13 @@ function renderCommunicationCentre() {
         tr.innerHTML = `
             <td>${escapeHtml(app.fullName || "Candidate")}</td>
             <td>${escapeHtml(app.email || "N/A")}</td>
-            <td>${app.applicationReceivedEmailSent ? "Yes" : "No"}</td>
             <td>${app.invitationSent ? "Yes" : "No"}</td>
-            <td>${app.reminderSent ? "Yes" : "No"}</td>
-            <td>${app.offerSent ? "Yes" : "No"}</td>
-            <td>${app.rejectionSent ? "Yes" : "No"}</td>
-            <td>${escapeHtml(app.lastCommunicationAction || getLastFallbackCommunication(app))}</td>
-            <td>${Number(app.communicationCount || (Array.isArray(app.communications) ? app.communications.length : getFallbackCommunicationCount(app)))}</td>
+            <td>${escapeHtml(app.invitationEmailId || "N/A")}</td>
             <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
         `;
 
         communicationTableBody.appendChild(tr);
     });
-}
-
-
-function renderEmailTemplateEditor() {
-    if (!emailTemplateSelect || !emailTemplateSubject || !emailTemplateBody) return;
-
-    const selectedId = emailTemplateSelect.value || "applicationReceived";
-    const template = emailTemplates[selectedId];
-
-    if (!template) return;
-
-    emailTemplateSubject.value = template.subject || "";
-    emailTemplateBody.value = template.body || "";
-    emailTemplateEditorDirty = false;
-
-    if (emailTemplateMessage) {
-        emailTemplateMessage.innerHTML = template.isDefault
-            ? '<p style="color:#f2f2f2;">Using the default template.</p>'
-            : `<p style="color:#ffb000;">Custom template saved${template.updatedAt ? " on " + formatDateTime(template.updatedAt) : ""}.</p>`;
-    }
-}
-
-async function loadEmailTemplates(forceRender = false) {
-    if (!authToken) return;
-
-    try {
-        const response = await fetch(`${API_BASE}/api/admin/email-templates`, {
-            headers: getAuthHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Failed to load email templates.");
-        }
-
-        emailTemplates = result.templates || {};
-
-        if (forceRender || !emailTemplateEditorDirty) {
-            renderEmailTemplateEditor();
-        }
-    } catch (error) {
-        console.error(error);
-        if (emailTemplateMessage) {
-            emailTemplateMessage.innerHTML = `<p style="color:#ff6a00;">${escapeHtml(error.message || "Failed to load email templates.")}</p>`;
-        }
-    }
-}
-
-async function saveEmailTemplate() {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot edit email templates.", "error");
-        return;
-    }
-
-    const selectedId = emailTemplateSelect?.value || "";
-    const subject = emailTemplateSubject?.value.trim() || "";
-    const body = emailTemplateBody?.value.trim() || "";
-
-    if (!selectedId || !subject || !body) {
-        showToast("Please complete the template subject and body.", "error");
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/api/admin/email-templates/${selectedId}`, {
-            method: "PATCH",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ subject, body })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Failed to save email template.");
-        }
-
-        emailTemplates[selectedId] = result.template;
-        emailTemplateEditorDirty = false;
-        renderEmailTemplateEditor();
-        showToast("Email template saved successfully.", "success");
-    } catch (error) {
-        console.error(error);
-        showToast(error.message || "Failed to save email template.", "error");
-    }
-}
-
-async function restoreEmailTemplate() {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot restore email templates.", "error");
-        return;
-    }
-
-    const selectedId = emailTemplateSelect?.value || "";
-
-    if (!selectedId) {
-        showToast("Please select a template first.", "error");
-        return;
-    }
-
-    if (!confirm("Restore this email template to the default wording?")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE}/api/admin/email-templates/${selectedId}/restore`, {
-            method: "POST",
-            headers: getAuthHeaders()
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.message || "Failed to restore template.");
-        }
-
-        emailTemplates[selectedId] = result.template;
-        emailTemplateEditorDirty = false;
-        renderEmailTemplateEditor();
-        showToast("Default email template restored.", "success");
-    } catch (error) {
-        console.error(error);
-        showToast(error.message || "Failed to restore template.", "error");
-    }
 }
 
 function exportApplicationsCSV() {
@@ -1658,8 +1376,6 @@ function setVacancyMessage(message, isError = false) {
 
 function clearVacancyForm() {
     selectedVacancyId = null;
-    emailTemplates = {};
-    emailTemplateEditorDirty = false;
 
     [
         "vacancyTitle",
@@ -1929,8 +1645,6 @@ function logoutAdmin() {
     allContactMessages = [];
     allVacancies = [];
     selectedVacancyId = null;
-    emailTemplates = {};
-    emailTemplateEditorDirty = false;
 
     stopAutoRefresh();
     closeCandidateModal();
@@ -1947,11 +1661,6 @@ document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidate
 document.getElementById("createVacancyBtn")?.addEventListener("click", createVacancy);
 document.getElementById("updateVacancyBtn")?.addEventListener("click", updateVacancy);
 document.getElementById("clearVacancyFormBtn")?.addEventListener("click", clearVacancyForm);
-document.getElementById("saveEmailTemplateBtn")?.addEventListener("click", saveEmailTemplate);
-document.getElementById("restoreEmailTemplateBtn")?.addEventListener("click", restoreEmailTemplate);
-emailTemplateSelect?.addEventListener("change", renderEmailTemplateEditor);
-emailTemplateSubject?.addEventListener("input", () => { emailTemplateEditorDirty = true; });
-emailTemplateBody?.addEventListener("input", () => { emailTemplateEditorDirty = true; });
 
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
@@ -1965,9 +1674,9 @@ window.openCandidateModal = openCandidateModal;
 window.closeCandidateModal = closeCandidateModal;
 window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
-window.moveModalCandidateToOffer = moveModalCandidateToOffer;
 window.sendOfferFromModal = sendOfferFromModal;
 window.sendRejectionFromModal = sendRejectionFromModal;
+window.moveModalCandidateToOffer = moveModalCandidateToOffer;
 window.moveModalCandidateToHired = moveModalCandidateToHired;
 window.moveModalCandidateToRejected = moveModalCandidateToRejected;
 window.updateApplicationStatus = updateApplicationStatus;
@@ -1979,8 +1688,6 @@ window.editVacancy = editVacancy;
 window.updateVacancy = updateVacancy;
 window.setVacancyStatus = setVacancyStatus;
 window.deleteVacancy = deleteVacancy;
-window.saveEmailTemplate = saveEmailTemplate;
-window.restoreEmailTemplate = restoreEmailTemplate;
 
 if (authToken) {
     setDashboardVisible(true);
