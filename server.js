@@ -424,7 +424,7 @@ app.get("/health", (req, res) => {
    ADMIN LOGIN
 ===================================================== */
 
-app.post("/api/admin/login", async (req, res) => {
+async function adminLoginHandler(req, res) {
     try {
         const email = clean(req.body.email).toLowerCase();
         const password = clean(req.body.password);
@@ -471,19 +471,21 @@ app.post("/api/admin/login", async (req, res) => {
         console.error(error);
         res.status(500).json({ message: "Login failed." });
     }
-});
+}
+
+app.post("/api/admin/login", adminLoginHandler);
+app.post("/admin/login", adminLoginHandler);
 
 /* =====================================================
    PUBLIC APPLICATION SUBMISSION
 ===================================================== */
 
-app.post(
-    "/apply",
-    upload.fields([
-        { name: "cv", maxCount: 1 },
-        { name: "extraFiles", maxCount: 1 }
-    ]),
-    async (req, res) => {
+const applicationUpload = upload.fields([
+    { name: "cv", maxCount: 1 },
+    { name: "extraFiles", maxCount: 1 }
+]);
+
+async function applicationSubmitHandler(req, res) {
         try {
             const cvFile = req.files?.cv?.[0] || null;
             const extraFile = req.files?.extraFiles?.[0] || null;
@@ -538,30 +540,51 @@ app.post(
             console.error(error);
             res.status(500).json({ message: "Application could not be submitted." });
         }
+}
+
+app.post("/apply", applicationUpload, applicationSubmitHandler);
+app.post("/api/apply", applicationUpload, applicationSubmitHandler);
+
+
+function normaliseApplicationForClient(doc) {
+    const data = { id: doc.id, ...doc.data() };
+
+    if (data.cv && typeof data.cv === "object") {
+        data.cvFile = data.cv;
+        data.cv = data.cv.url || data.cv.path || "";
     }
-);
+
+    if (data.extraFile && typeof data.extraFile === "object") {
+        data.extraFileUrl = data.extraFile.url || data.extraFile.path || "";
+    }
+
+    return data;
+}
+
+function normaliseVacancyForClient(doc) {
+    return { id: doc.id, ...doc.data() };
+}
 
 /* =====================================================
    ADMIN APPLICATIONS
 ===================================================== */
 
-app.get("/api/admin/applications", requireAuth, async (req, res) => {
+async function listApplicationsHandler(req, res) {
     try {
         const snapshot = await db.collection("applications").orderBy("createdAt", "desc").get();
+        const applications = snapshot.docs.map(normaliseApplicationForClient);
 
-        const applications = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        res.json(applications);
+        res.json({ applications });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load applications." });
     }
-});
+}
 
-app.patch("/api/admin/applications/:id", requireAuth, requireEditor, async (req, res) => {
+app.get("/api/admin/applications", requireAuth, listApplicationsHandler);
+app.get("/api/applications", requireAuth, listApplicationsHandler);
+
+async function updateApplicationHandler(req, res) {
     try {
         const id = req.params.id;
         const ref = db.collection("applications").doc(id);
@@ -588,9 +611,12 @@ app.patch("/api/admin/applications/:id", requireAuth, requireEditor, async (req,
         console.error(error);
         res.status(500).json({ message: "Failed to update application." });
     }
-});
+}
 
-app.delete("/api/admin/applications/:id", requireAuth, requireEditor, async (req, res) => {
+app.patch("/api/admin/applications/:id", requireAuth, requireEditor, updateApplicationHandler);
+app.patch("/api/applications/:id", requireAuth, requireEditor, updateApplicationHandler);
+
+async function deleteApplicationHandler(req, res) {
     try {
         await db.collection("applications").doc(req.params.id).delete();
 
@@ -601,7 +627,10 @@ app.delete("/api/admin/applications/:id", requireAuth, requireEditor, async (req
         console.error(error);
         res.status(500).json({ message: "Failed to delete application." });
     }
-});
+}
+
+app.delete("/api/admin/applications/:id", requireAuth, requireEditor, deleteApplicationHandler);
+app.delete("/api/applications/:id", requireAuth, requireEditor, deleteApplicationHandler);
 
 /* =====================================================
    ADMIN EMAIL ACTIONS
@@ -675,6 +704,7 @@ async function handleInterviewInvite(req, res) {
 app.post("/api/admin/applications/:id/invite", requireAuth, requireEditor, handleInterviewInvite);
 app.post("/api/admin/applications/:id/send-invite", requireAuth, requireEditor, handleInterviewInvite);
 app.post("/api/admin/applications/:id/interview-invite", requireAuth, requireEditor, handleInterviewInvite);
+app.post("/api/applications/:id/invite", requireAuth, requireEditor, handleInterviewInvite);
 
 async function handleInterviewReminder(req, res) {
     try {
@@ -706,6 +736,7 @@ async function handleInterviewReminder(req, res) {
 
 app.post("/api/admin/applications/:id/reminder", requireAuth, requireEditor, handleInterviewReminder);
 app.post("/api/admin/applications/:id/interview-reminder", requireAuth, requireEditor, handleInterviewReminder);
+app.post("/api/applications/:id/reminder", requireAuth, requireEditor, handleInterviewReminder);
 
 async function handleOfferEmail(req, res) {
     try {
@@ -743,6 +774,7 @@ async function handleOfferEmail(req, res) {
 
 app.post("/api/admin/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
 app.post("/api/admin/applications/:id/send-offer", requireAuth, requireEditor, handleOfferEmail);
+app.post("/api/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
 
 async function handleRejectionEmail(req, res) {
     try {
@@ -780,6 +812,8 @@ async function handleRejectionEmail(req, res) {
 
 app.post("/api/admin/applications/:id/reject", requireAuth, requireEditor, handleRejectionEmail);
 app.post("/api/admin/applications/:id/rejection", requireAuth, requireEditor, handleRejectionEmail);
+app.post("/api/applications/:id/rejection", requireAuth, requireEditor, handleRejectionEmail);
+app.post("/api/applications/:id/reject", requireAuth, requireEditor, handleRejectionEmail);
 
 /* =====================================================
    VACANCIES
@@ -809,11 +843,9 @@ function vacancyPayload(body) {
 app.get("/api/admin/vacancies", requireAuth, async (req, res) => {
     try {
         const snapshot = await db.collection("vacancies").orderBy("createdAt", "desc").get();
+        const vacancies = snapshot.docs.map(normaliseVacancyForClient);
 
-        res.json(snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })));
+        res.json({ vacancies });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load vacancies." });
@@ -831,7 +863,7 @@ app.get("/api/vacancies", async (req, res) => {
 
         vacancies.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
-        res.json(vacancies);
+        res.json({ vacancies });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load live vacancies." });
@@ -849,7 +881,7 @@ app.get("/api/public/vacancies", async (req, res) => {
 
         vacancies.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
-        res.json(vacancies);
+        res.json({ vacancies });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load live vacancies." });
@@ -881,7 +913,7 @@ app.post("/api/admin/vacancies", requireAuth, requireEditor, async (req, res) =>
 
 app.patch("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        const payload = vacancyPayload(req.body);
+        const payload = vacancyPayload(req.body, true);
 
         await db.collection("vacancies").doc(req.params.id).update(payload);
 
@@ -934,19 +966,49 @@ app.post("/api/contact", async (req, res) => {
     }
 });
 
-app.get("/api/admin/contact-messages", requireAuth, async (req, res) => {
+async function listContactMessagesHandler(req, res) {
     try {
         const snapshot = await db.collection("contactMessages").orderBy("createdAt", "desc").get();
+        const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        res.json(snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        })));
+        res.json({ messages });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load contact messages." });
     }
-});
+}
+
+async function updateContactMessageHandler(req, res) {
+    try {
+        await db.collection("contactMessages").doc(req.params.id).update({
+            ...req.body,
+            updatedAt: nowIso()
+        });
+
+        res.json({ message: "Contact message updated successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update contact message." });
+    }
+}
+
+async function deleteContactMessageHandler(req, res) {
+    try {
+        await db.collection("contactMessages").doc(req.params.id).delete();
+
+        res.json({ message: "Contact message deleted successfully." });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to delete contact message." });
+    }
+}
+
+app.get("/api/admin/contact-messages", requireAuth, listContactMessagesHandler);
+app.get("/api/contact-messages", requireAuth, listContactMessagesHandler);
+app.patch("/api/contact-messages/:id", requireAuth, requireEditor, updateContactMessageHandler);
+app.delete("/api/contact-messages/:id", requireAuth, requireEditor, deleteContactMessageHandler);
+app.patch("/api/admin/contact-messages/:id", requireAuth, requireEditor, updateContactMessageHandler);
+app.delete("/api/admin/contact-messages/:id", requireAuth, requireEditor, deleteContactMessageHandler);
 
 /* =====================================================
    FALLBACK
