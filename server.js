@@ -1,3 +1,10 @@
+/* =====================================================
+   JOE'S EXCELLENT EVENTS & MANAGEMENT
+   FULL WORKING SERVER.JS
+===================================================== */
+
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
@@ -5,90 +12,173 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const admin = require("firebase-admin");
-require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-const PUBLIC_DIR = path.join(__dirname, "public");
-const UPLOADS_DIR = path.join(__dirname, "uploads");
+/* =====================================================
+   BASIC SETUP
+===================================================== */
 
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use(cors());
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
+app.use(express.static(path.join(__dirname, "public")));
+
+const uploadsDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-app.use(cors({
-    origin: true,
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use("/uploads", express.static(uploadsDir));
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(PUBLIC_DIR));
-app.use("/uploads", express.static(UPLOADS_DIR));
+/* =====================================================
+   FIREBASE SETUP
+===================================================== */
 
-let db = null;
+function initialiseFirebase() {
+    if (admin.apps.length) return;
 
-try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-        if (!admin.apps.length) {
-            admin.initializeApp({
-                credential: admin.credential.cert(serviceAccount)
-            });
-        }
-
-        db = admin.firestore();
-        console.log("Firebase connected successfully.");
-    } else {
-        console.warn("FIREBASE_SERVICE_ACCOUNT is missing.");
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        return;
     }
-} catch (error) {
-    console.error("Firebase setup failed:", error.message);
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+        const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8");
+        const serviceAccount = JSON.parse(json);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        return;
+    }
+
+    admin.initializeApp({
+        credential: admin.credential.applicationDefault()
+    });
 }
 
+initialiseFirebase();
+
+const db = admin.firestore();
+
+/* =====================================================
+   MULTER FILE UPLOADS
+===================================================== */
+
 const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, UPLOADS_DIR);
+    destination: function (req, file, cb) {
+        cb(null, uploadsDir);
     },
-    filename(req, file, cb) {
+    filename: function (req, file, cb) {
         const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-        cb(null, Date.now() + "-" + safeName);
+        cb(null, `${Date.now()}-${safeName}`);
     }
 });
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }
+    limits: {
+        fileSize: 10 * 1024 * 1024
+    }
 });
+
+/* =====================================================
+   AUTH
+===================================================== */
 
 const JWT_SECRET = process.env.JWT_SECRET || "change-this-secret";
 
 function createToken(user) {
-    return jwt.sign(user, JWT_SECRET, { expiresIn: "8h" });
+    return jwt.sign(
+        {
+            email: user.email,
+            role: user.role
+        },
+        JWT_SECRET,
+        { expiresIn: "12h" }
+    );
 }
 
-function verifyToken(req, res, next) {
-    const authHeader = req.headers.authorization;
+function requireAuth(req, res, next) {
+    const header = req.headers.authorization || "";
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-            success: false,
-            message: "No valid login token provided."
-        });
+    if (!header.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Unauthorised." });
     }
 
     try {
-        req.user = jwt.verify(authHeader.split(" ")[1], JWT_SECRET);
+        req.user = jwt.verify(header.replace("Bearer ", ""), JWT_SECRET);
         next();
-    } catch {
-        return res.status(401).json({
-            success: false,
-            message: "Login expired. Please log in again."
-        });
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid or expired login." });
     }
+}
+
+function requireEditor(req, res, next) {
+    if (!req.user || req.user.role === "viewer") {
+        return res.status(403).json({ message: "Viewer accounts cannot make changes." });
+    }
+
+    next();
+}
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function nowIso() {
+    return new Date().toISOString();
+}
+
+function clean(value) {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function bool(value) {
+    return value === true || value === "true";
+}
+
+function publicUrl(req, filePath) {
+    if (!filePath) return "";
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const host = req.headers["x-forwarded-host"] || req.get("host");
+    return `${protocol}://${host}${filePath}`;
+}
+
+function fileInfo(req, file) {
+    if (!file) return null;
+
+    const urlPath = `/uploads/${file.filename}`;
+
+    return {
+        originalName: file.originalname,
+        filename: file.filename,
+        path: urlPath,
+        url: publicUrl(req, urlPath),
+        mimetype: file.mimetype,
+        size: file.size
+    };
+}
+
+function replaceTemplateVars(text, data) {
+    if (!text) return "";
+
+    return String(text).replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, function (_, key) {
+        return data[key] !== undefined && data[key] !== null ? String(data[key]) : "";
+    });
+}
+
+function plainToHtml(text) {
+    return String(text || "")
+        .split(/\n+/)
+        .filter(line => line.trim())
+        .map(line => `<p>${escapeHtml(line.trim())}</p>`)
+        .join("");
 }
 
 function escapeHtml(value) {
@@ -100,226 +190,117 @@ function escapeHtml(value) {
         .replace(/'/g, "&#039;");
 }
 
+function bodyAlreadyHasGreeting(body) {
+    return /^Dear\s+.+?,?/i.test(String(body || "").trim());
+}
 
-function buildApplicationReceivedEmail(application) {
-    const candidateName = application.fullName || "Candidate";
-    const position = application.position || "the position you applied for";
-    const subject = `Application Received - ${position}`;
+function buildEmailHtml(title, candidateName, bodyText) {
+    const safeTitle = escapeHtml(title || "Application Update");
+    const safeCandidateName = escapeHtml(candidateName || "Candidate");
 
-    const plainText = `Dear ${candidateName},
+    const renderedBody = String(bodyText || "").trim();
 
-Thank you for your application for the position of ${position} with Joe's Excellent Events & Management.
+    const greetingHtml = bodyAlreadyHasGreeting(renderedBody)
+        ? ""
+        : `<p>Dear ${safeCandidateName},</p>`;
 
-We are pleased to confirm that your application has been received successfully and has entered our recruitment process. Our recruitment team will review your application, qualifications and experience carefully against the requirements of the role.
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${safeTitle}</title>
+</head>
+<body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <div style="max-width:900px;margin:0 auto;padding:48px 24px;background:#061421;">
+        <div style="background:#132f44;border:2px solid #ff6a00;border-radius:28px;padding:56px 52px;color:#ffffff;">
+            <h1 style="margin:0 0 42px 0;text-align:center;color:#ff6a00;font-size:42px;line-height:1.2;">
+                ${safeTitle}
+            </h1>
 
-If your application is shortlisted, we will contact you regarding the next stage of the recruitment process. Due to the volume of applications we may receive, we are unable to provide individual feedback to all applicants.
+            <div style="font-size:21px;line-height:1.75;color:#ffffff;">
+                ${greetingHtml}
+                ${plainToHtml(renderedBody)}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+`;
+}
 
-We appreciate your interest in joining Joe's Excellent Events & Management and wish you every success.
+/* =====================================================
+   EMAIL TEMPLATES
+===================================================== */
+
+const defaultTemplates = {
+    applicationReceived: {
+        name: "Application Received",
+        subject: "Application Received - {{position}}",
+        body: `Dear {{candidateName}},
+
+Thank you for your application for the position of {{position}} with Joe's Excellent Events & Management.
+
+We are pleased to confirm that your application has been received successfully and has been added to our recruitment system for review.
+
+Our recruitment team will carefully assess your application, qualifications and experience against the requirements of the role.
+
+If your application is shortlisted, we will contact you regarding the next stage of the recruitment process.
 
 Kind regards,
 
-Joe's Excellent Events & Management
-Recruitment Team`;
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
 
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">Application Received</h1>
+    interviewInvitation: {
+        name: "Interview Invitation",
+        subject: "Interview Invitation - {{position}}",
+        body: `Thank you for your application to Joe's Excellent Events & Management.
 
-                <p>Dear ${escapeHtml(candidateName)},</p>
+We are pleased to invite you to attend an interview for the position of {{position}}.
 
-                <p>Thank you for your application for the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management.</p>
+Interview Details
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
 
-                <p>We are pleased to confirm that your application has been received successfully and has entered our recruitment process.</p>
+Please arrive promptly and contact us if you require any adjustments or need to rearrange.
 
-                <p>Our recruitment team will review your application, qualifications and experience carefully against the requirements of the role.</p>
-
-                <p>If your application is shortlisted, we will contact you regarding the next stage of the recruitment process. Due to the volume of applications we may receive, we are unable to provide individual feedback to all applicants.</p>
-
-                <p>We appreciate your interest in joining Joe's Excellent Events & Management and wish you every success.</p>
-
-                <p style="margin-top:30px;">
-                    Kind regards,<br>
-                    <strong>Joe's Excellent Events & Management</strong><br>
-                    Recruitment Team
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
-}
-
-function buildInterviewEmail(application, details) {
-    const candidateName = application.fullName || "Candidate";
-    const position = application.position || "the position applied for";
-    const interviewDate = details.interviewDate || "To be confirmed";
-    const interviewTime = details.interviewTime || "To be confirmed";
-    const interviewLocation = details.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
-
-    const message = details.interviewMessage || `Thank you for your application.
-
-We are pleased to invite you to attend an interview with Joe's Excellent Events & Management.`;
-
-    const subject = "Interview Invitation - Joe's Excellent Events & Management";
-
-    const plainText = `Dear ${candidateName},
-
-${message}
-
-Interview Details:
-Position: ${position}
-Date: ${interviewDate}
-Time: ${interviewTime}
-Location: ${interviewLocation}
-
-Please reply to confirm that you are able to attend.
+We look forward to meeting you and discussing your experience and suitability for the role.
 
 Kind regards,
 
-Joe's Excellent Events & Management
-Recruitment Team`;
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
 
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">Interview Invitation</h1>
+    interviewReminder: {
+        name: "Interview Reminder",
+        subject: "Interview Reminder - {{position}}",
+        body: `This is a friendly reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is approaching.
 
-                <p>Dear ${escapeHtml(candidateName)},</p>
+Interview Details
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
 
-                <p style="white-space:pre-line;">${escapeHtml(message)}</p>
+Please arrive 10-15 minutes early and bring any requested documents.
 
-                <h2 style="color:#ff6a00;">Interview Details</h2>
-
-                <p><strong>Position:</strong> ${escapeHtml(position)}</p>
-                <p><strong>Date:</strong> ${escapeHtml(interviewDate)}</p>
-                <p><strong>Time:</strong> ${escapeHtml(interviewTime)}</p>
-                <p><strong>Location:</strong> ${escapeHtml(interviewLocation)}</p>
-
-                <p>Please reply to confirm that you are able to attend.</p>
-
-                <p style="margin-top:30px;">
-                    Kind regards,<br>
-                    <strong>Joe's Excellent Events & Management</strong><br>
-                    Recruitment Team
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
-}
-
-
-function buildInterviewReminderEmail(application, details) {
-    const candidateName = application.fullName || "Candidate";
-    const position = application.position || "the position applied for";
-    const interviewDate = details.interviewDate || application.interviewDate || "To be confirmed";
-    const interviewTime = details.interviewTime || application.interviewTime || "To be confirmed";
-    const interviewLocation = details.interviewLocation || application.interviewLocation || "Joe's Excellent Events & Management, Newcastle upon Tyne";
-
-    const subject = "Interview Reminder - Joe's Excellent Events & Management";
-
-    const plainText = `Dear ${candidateName},
-
-This is a friendly reminder regarding your upcoming interview with Joe's Excellent Events & Management.
-
-Interview Details:
-Position: ${position}
-Date: ${interviewDate}
-Time: ${interviewTime}
-Location: ${interviewLocation}
-
-We look forward to meeting with you and discussing your application further.
-
-If you are unable to attend, please contact us as soon as possible.
+If you are unable to attend or need adjustments, please contact us as soon as possible.
 
 Kind regards,
 
-Joe's Excellent Events & Management
-Recruitment Team`;
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
 
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">Interview Reminder</h1>
+    offerEmail: {
+        name: "Offer Made",
+        subject: "Conditional Offer of Employment - {{position}}",
+        body: `Following your recent interview, we are delighted to offer you the position of {{position}} with Joe's Excellent Events & Management.
 
-                <p>Dear ${escapeHtml(candidateName)},</p>
-
-                <p>This is a friendly reminder regarding your upcoming interview with Joe's Excellent Events & Management.</p>
-
-                <h2 style="color:#ff6a00;">Interview Details</h2>
-
-                <p><strong>Position:</strong> ${escapeHtml(position)}</p>
-                <p><strong>Date:</strong> ${escapeHtml(interviewDate)}</p>
-                <p><strong>Time:</strong> ${escapeHtml(interviewTime)}</p>
-                <p><strong>Location:</strong> ${escapeHtml(interviewLocation)}</p>
-
-                <p>We look forward to meeting with you and discussing your application further.</p>
-
-                <p>If you are unable to attend, please contact us as soon as possible.</p>
-
-                <p style="margin-top:30px;">
-                    Kind regards,<br>
-                    <strong>Joe's Excellent Events & Management</strong><br>
-                    Recruitment Team
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
-}
-
-function buildContactEmail(contactData) {
-    const subject = `New Contact Message - ${contactData.subject || "Website Enquiry"}`;
-
-    const plainText = `New Contact Us Message
-
-Name: ${contactData.name}
-Email: ${contactData.email}
-Phone: ${contactData.phone}
-Subject: ${contactData.subject}
-
-Message:
-${contactData.message}
-
-Sent: ${contactData.createdAt}`;
-
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">New Contact Us Message</h1>
-
-                <p><strong>Name:</strong> ${escapeHtml(contactData.name)}</p>
-                <p><strong>Email:</strong> ${escapeHtml(contactData.email)}</p>
-                <p><strong>Phone:</strong> ${escapeHtml(contactData.phone)}</p>
-                <p><strong>Subject:</strong> ${escapeHtml(contactData.subject)}</p>
-
-                <h2 style="color:#ff6a00;">Message</h2>
-                <p style="white-space:pre-line;">${escapeHtml(contactData.message)}</p>
-
-                <p style="margin-top:30px;">
-                    <strong>Sent:</strong> ${escapeHtml(contactData.createdAt)}
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
-}
-
-
-function buildOfferEmail(application) {
-    const candidateName = application.fullName || "Candidate";
-    const position = application.position || "the position you applied for";
-    const subject = `Offer Made - ${position}`;
-
-    const plainText = `Dear ${candidateName},
-
-Following your recent application and recruitment process, we are delighted to offer you the position of ${position} with Joe's Excellent Events & Management.
-
-We were impressed by your experience, skills and professionalism and believe you will make a valuable contribution to our organisation.
+We were impressed by your experience, skills and professionalism throughout the recruitment process and believe you will make a valuable contribution to our organisation.
 
 This offer is subject to the completion of any required pre-employment checks and the agreement of final employment terms.
 
@@ -327,94 +308,52 @@ Please reply to this email to confirm your acceptance of this offer.
 
 Kind regards,
 
-Joe's Excellent Events & Management
-Recruitment Team`;
+Joe's Excellent Events & Management Recruitment Team`
+    },
 
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">Offer Made</h1>
+    rejectionEmail: {
+        name: "Rejection Email",
+        subject: "Application Outcome - {{position}}",
+        body: `Thank you for taking the time to apply for the position of {{position}} with Joe's Excellent Events & Management.
 
-                <p>Dear ${escapeHtml(candidateName)},</p>
+After careful consideration, we regret to inform you that we will not be progressing your application further on this occasion.
 
-                <p>Following your recent application and recruitment process, we are delighted to offer you the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management.</p>
+This decision was not easy due to the quality of applications received.
 
-                <p>We were impressed by your experience, skills and professionalism and believe you will make a valuable contribution to our organisation.</p>
-
-                <p>This offer is subject to the completion of any required pre-employment checks and the agreement of final employment terms.</p>
-
-                <p>Please reply to this email to confirm your acceptance of this offer.</p>
-
-                <p style="margin-top:30px;">
-                    Kind regards,<br>
-                    <strong>Joe's Excellent Events & Management</strong><br>
-                    Recruitment Team
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
-}
-
-function buildRejectionEmail(application) {
-    const candidateName = application.fullName || "Candidate";
-    const position = application.position || "the position you applied for";
-    const subject = `Application Update - ${position}`;
-
-    const plainText = `Dear ${candidateName},
-
-Thank you for your interest in the position of ${position} with Joe's Excellent Events & Management and for taking the time to apply.
-
-After careful consideration, we regret to inform you that you have not been selected to progress further in the recruitment process on this occasion.
-
-This decision was not easy due to the high standard of applications received.
-
-We appreciate the effort you invested in your application and encourage you to apply for future opportunities that match your skills and experience.
+We sincerely appreciate your interest in joining our organisation and encourage you to apply for future opportunities that match your skills and experience.
 
 We wish you every success in your future career.
 
 Kind regards,
 
-Joe's Excellent Events & Management
-Recruitment Team`;
+Recruitment Team
+Joe's Excellent Events & Management`
+    }
+};
 
-    const html = `
-        <div style="font-family:Arial,Helvetica,sans-serif;background:#061726;color:#ffffff;padding:30px;">
-            <div style="max-width:700px;margin:auto;background:#13283b;border:1px solid #ff6a00;border-radius:18px;padding:30px;">
-                <h1 style="color:#ff6a00;text-align:center;">Application Update</h1>
+async function getTemplate(templateId) {
+    try {
+        const doc = await db.collection("emailTemplates").doc(templateId).get();
 
-                <p>Dear ${escapeHtml(candidateName)},</p>
+        if (doc.exists) {
+            return {
+                ...defaultTemplates[templateId],
+                ...doc.data()
+            };
+        }
+    } catch (error) {
+        console.error("Template load error:", error);
+    }
 
-                <p>Thank you for your interest in the position of <strong>${escapeHtml(position)}</strong> with Joe's Excellent Events & Management and for taking the time to apply.</p>
-
-                <p>After careful consideration, we regret to inform you that you have not been selected to progress further in the recruitment process on this occasion.</p>
-
-                <p>This decision was not easy due to the high standard of applications received.</p>
-
-                <p>We appreciate the effort you invested in your application and encourage you to apply for future opportunities that match your skills and experience.</p>
-
-                <p>We wish you every success in your future career.</p>
-
-                <p style="margin-top:30px;">
-                    Kind regards,<br>
-                    <strong>Joe's Excellent Events & Management</strong><br>
-                    Recruitment Team
-                </p>
-            </div>
-        </div>
-    `;
-
-    return { subject, plainText, html };
+    return defaultTemplates[templateId];
 }
 
-async function sendEmailWithResend({ to, subject, html, plainText }) {
+async function sendEmail({ to, subject, html }) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error("RESEND_API_KEY is missing.");
     }
 
-    const fromAddress = process.env.EMAIL_FROM || "Joe's Excellent Events & Management <onboarding@resend.dev>";
-    const replyTo = process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
+    const fromEmail = process.env.FROM_EMAIL || "Joe's Excellent Events & Management <onboarding@resend.dev>";
 
     const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -423,1290 +362,609 @@ async function sendEmailWithResend({ to, subject, html, plainText }) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            from: fromAddress,
+            from: fromEmail,
             to,
             subject,
-            html,
-            text: plainText,
-            reply_to: replyTo
+            html
         })
     });
 
     const result = await response.json();
 
     if (!response.ok) {
-        throw new Error(result.message || "Resend email failed.");
+        console.error("Resend error:", result);
+        throw new Error(result.message || "Email failed to send.");
     }
 
     return result;
 }
 
+async function sendTemplateEmail(templateId, application, extraData = {}) {
+    const template = await getTemplate(templateId);
+
+    const data = {
+        candidateName: application.fullName || application.name || "Candidate",
+        position: application.position || "the position",
+        email: application.email || "",
+        phone: application.phone || "",
+        address: application.address || "",
+        availability: application.availability || "",
+        message: application.message || "",
+        interviewDate: extraData.interviewDate || application.interviewDate || "",
+        interviewTime: extraData.interviewTime || application.interviewTime || "",
+        interviewLocation: extraData.interviewLocation || application.interviewLocation || "",
+        ...extraData
+    };
+
+    const subject = replaceTemplateVars(template.subject || template.name || "Application Update", data);
+    const body = replaceTemplateVars(template.body || "", data);
+
+    const html = buildEmailHtml(template.name || subject, data.candidateName, body);
+
+    return sendEmail({
+        to: application.email,
+        subject,
+        html
+    });
+}
+
+/* =====================================================
+   HEALTH CHECK
+===================================================== */
+
 app.get("/health", (req, res) => {
     res.json({
-        success: true,
-        message: "Server is running",
-        firebaseConnected: !!db,
-        resendReady: !!process.env.RESEND_API_KEY
+        ok: true,
+        service: "Joe's Excellent Events & Management Recruitment System",
+        time: nowIso()
     });
 });
 
-app.post("/admin/login", (req, res) => {
-    const { email, password } = req.body;
+/* =====================================================
+   ADMIN LOGIN
+===================================================== */
 
-    const users = [
-        {
-            role: "admin",
-            email: process.env.ADMIN_EMAIL,
-            password: process.env.ADMIN_PASSWORD
-        },
-        {
-            role: "recruiter",
-            email: process.env.RECRUITER_EMAIL,
-            password: process.env.RECRUITER_PASSWORD
-        },
-        {
-            role: "viewer",
-            email: process.env.VIEWER_EMAIL,
-            password: process.env.VIEWER_PASSWORD
+app.post("/api/admin/login", async (req, res) => {
+    try {
+        const email = clean(req.body.email).toLowerCase();
+        const password = clean(req.body.password);
+
+        const defaultEmail = (process.env.ADMIN_EMAIL || "admin@example.com").toLowerCase();
+        const defaultPassword = process.env.ADMIN_PASSWORD || "admin123";
+
+        let user = null;
+
+        const adminSnapshot = await db.collection("admins").where("email", "==", email).limit(1).get();
+
+        if (!adminSnapshot.empty) {
+            const adminDoc = adminSnapshot.docs[0];
+            const adminData = adminDoc.data();
+
+            if (adminData.password === password) {
+                user = {
+                    id: adminDoc.id,
+                    email: adminData.email,
+                    role: adminData.role || "owner"
+                };
+            }
         }
-    ];
 
-    const user = users.find(u =>
-        u.email &&
-        u.password &&
-        u.email === email &&
-        u.password === password
-    );
+        if (!user && email === defaultEmail && password === defaultPassword) {
+            user = {
+                id: "default-admin",
+                email: defaultEmail,
+                role: "owner"
+            };
+        }
 
-    if (!user) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid email or password."
+        if (!user) {
+            return res.status(401).json({ message: "Invalid login details." });
+        }
+
+        res.json({
+            message: "Login successful.",
+            token: createToken(user),
+            role: user.role,
+            email: user.email
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Login failed." });
     }
-
-    const token = createToken({
-        email: user.email,
-        role: user.role
-    });
-
-    res.json({
-        success: true,
-        message: "Login successful.",
-        token,
-        role: user.role
-    });
 });
+
+/* =====================================================
+   PUBLIC APPLICATION SUBMISSION
+===================================================== */
 
 app.post(
-    "/api/apply",
+    "/apply",
     upload.fields([
         { name: "cv", maxCount: 1 },
-        { name: "extraFiles", maxCount: 5 }
+        { name: "extraFiles", maxCount: 1 }
     ]),
     async (req, res) => {
         try {
-            const {
-                fullName,
-                email,
-                phone,
-                address,
-                position,
-                availability,
-                message
-            } = req.body;
-
-            if (!fullName || !email) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Full name and email are required."
-                });
-            }
-
             const cvFile = req.files?.cv?.[0] || null;
-            const extraFiles = req.files?.extraFiles || [];
+            const extraFile = req.files?.extraFiles?.[0] || null;
 
-            const applicationData = {
-                fullName,
-                email,
-                phone: phone || "",
-                address: address || "",
-                position: position || "",
-                availability: availability || "",
-                message: message || "",
+            const application = {
+                fullName: clean(req.body.fullName),
+                name: clean(req.body.fullName),
+                email: clean(req.body.email),
+                phone: clean(req.body.phone),
+                address: clean(req.body.address),
+                position: clean(req.body.position),
+                availability: clean(req.body.availability),
+                message: clean(req.body.message),
                 status: "New",
                 rating: 0,
                 notes: "",
-                interviewDate: "",
-                interviewTime: "",
-                interviewLocation: "",
-                interviewMessage: "",
+                shortlisted: false,
                 invitationSent: false,
-                invitationSentAt: "",
-                invitationEmailId: "",
-                applicationReceivedEmailSent: false,
-                applicationReceivedEmailSentAt: "",
-                applicationReceivedEmailId: "",
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                cv: cvFile ? `/uploads/${cvFile.filename}` : "",
-                extraFiles: extraFiles.map(file => `/uploads/${file.filename}`)
+                reminderSent: false,
+                offerSent: false,
+                rejectionSent: false,
+                cv: fileInfo(req, cvFile),
+                extraFile: fileInfo(req, extraFile),
+                createdAt: nowIso(),
+                updatedAt: nowIso()
             };
 
-            let savedId;
-
-            if (db) {
-                const docRef = await db.collection("applications").add(applicationData);
-                savedId = docRef.id;
-            } else {
-                const localFile = path.join(__dirname, "applications.json");
-                let applications = [];
-
-                if (fs.existsSync(localFile)) {
-                    applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-                }
-
-                savedId = Date.now().toString();
-
-                applications.push({
-                    id: savedId,
-                    ...applicationData
-                });
-
-                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
+            if (!application.fullName || !application.email || !application.position) {
+                return res.status(400).json({ message: "Please complete all required fields." });
             }
 
+            const docRef = await db.collection("applications").add(application);
+
             try {
-                const applicationReceivedEmail = buildApplicationReceivedEmail(applicationData);
+                const emailResult = await sendTemplateEmail("applicationReceived", application);
 
-                const emailResult = await sendEmailWithResend({
-                    to: email,
-                    subject: applicationReceivedEmail.subject,
-                    html: applicationReceivedEmail.html,
-                    plainText: applicationReceivedEmail.plainText
-                });
-
-                const emailUpdateData = {
-                    applicationReceivedEmailSent: true,
-                    applicationReceivedEmailSentAt: new Date().toISOString(),
+                await docRef.update({
+                    applicationReceivedSent: true,
                     applicationReceivedEmailId: emailResult.id || "",
-                    updatedAt: new Date().toISOString()
-                };
-
-                if (db) {
-                    await db.collection("applications").doc(savedId).update(emailUpdateData);
-
-                    await db.collection("candidateCommunications").add({
-                        applicationId: savedId,
-                        candidateName: fullName,
-                        candidateEmail: email,
-                        position: position || "",
-                        emailType: "Application Received",
-                        status: "Sent",
-                        resendEmailId: emailResult.id || "",
-                        sentAt: new Date().toISOString(),
-                        createdAt: new Date().toISOString()
-                    });
-                } else {
-                    const localFile = path.join(__dirname, "applications.json");
-                    const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-                    const index = applications.findIndex(app => app.id === savedId);
-
-                    if (index !== -1) {
-                        applications[index] = {
-                            ...applications[index],
-                            ...emailUpdateData
-                        };
-
-                        fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-                    }
-
-                    const communicationsFile = path.join(__dirname, "candidateCommunications.json");
-                    let communications = [];
-
-                    if (fs.existsSync(communicationsFile)) {
-                        communications = JSON.parse(fs.readFileSync(communicationsFile, "utf8"));
-                    }
-
-                    communications.push({
-                        id: Date.now().toString(),
-                        applicationId: savedId,
-                        candidateName: fullName,
-                        candidateEmail: email,
-                        position: position || "",
-                        emailType: "Application Received",
-                        status: "Sent",
-                        resendEmailId: emailResult.id || "",
-                        sentAt: new Date().toISOString(),
-                        createdAt: new Date().toISOString()
-                    });
-
-                    fs.writeFileSync(communicationsFile, JSON.stringify(communications, null, 2));
-                }
+                    lastCommunicationAction: "Application Received Email Sent",
+                    lastCommunicationAt: nowIso()
+                });
             } catch (emailError) {
-                console.error("Application received email error:", emailError.message);
-
-                if (db && savedId) {
-                    try {
-                        await db.collection("candidateCommunications").add({
-                            applicationId: savedId,
-                            candidateName: fullName,
-                            candidateEmail: email,
-                            position: position || "",
-                            emailType: "Application Received",
-                            status: "Failed",
-                            errorMessage: emailError.message,
-                            sentAt: "",
-                            createdAt: new Date().toISOString()
-                        });
-                    } catch (logError) {
-                        console.error("Application received email log error:", logError.message);
-                    }
-                }
+                console.error("Application received email failed:", emailError);
             }
 
             res.json({
-                success: true,
                 message: "Application submitted successfully.",
-                id: savedId
+                id: docRef.id
             });
-
         } catch (error) {
-            console.error("Application submission error:", error);
-
-            res.status(500).json({
-                success: false,
-                message: "Application was not submitted."
-            });
+            console.error(error);
+            res.status(500).json({ message: "Application could not be submitted." });
         }
     }
 );
 
-app.post("/api/contact", async (req, res) => {
+/* =====================================================
+   ADMIN APPLICATIONS
+===================================================== */
+
+app.get("/api/admin/applications", requireAuth, async (req, res) => {
     try {
-        const {
-            name,
-            fullName,
-            email,
-            phone,
-            subject,
-            message
-        } = req.body;
+        const snapshot = await db.collection("applications").orderBy("createdAt", "desc").get();
 
-        const contactName = name || fullName || "";
-        const contactEmail = email || "";
-        const contactPhone = phone || "";
-        const contactSubject = subject || "Website Enquiry";
-        const contactMessage = message || "";
+        const applications = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-        if (!contactName || !contactEmail || !contactMessage) {
-            return res.status(400).json({
-                success: false,
-                message: "Name, email and message are required."
-            });
-        }
-
-        const contactData = {
-            name: contactName,
-            email: contactEmail,
-            phone: contactPhone,
-            subject: contactSubject,
-            message: contactMessage,
-            status: "New",
-            read: false,
-            emailSent: false,
-            resendEmailId: "",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        let savedId;
-
-        if (db) {
-            const docRef = await db.collection("contactMessages").add(contactData);
-            savedId = docRef.id;
-        } else {
-            const localFile = path.join(__dirname, "contactMessages.json");
-            let contactMessages = [];
-
-            if (fs.existsSync(localFile)) {
-                contactMessages = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            }
-
-            savedId = Date.now().toString();
-
-            contactMessages.push({
-                id: savedId,
-                ...contactData
-            });
-
-            fs.writeFileSync(localFile, JSON.stringify(contactMessages, null, 2));
-        }
-
-        try {
-            const contactEmailContent = buildContactEmail(contactData);
-            const emailTo = process.env.CONTACT_EMAIL_TO || process.env.EMAIL_REPLY_TO || "joseph.eldridge1964@gmail.com";
-
-            const emailResult = await sendEmailWithResend({
-                to: emailTo,
-                subject: contactEmailContent.subject,
-                html: contactEmailContent.html,
-                plainText: contactEmailContent.plainText
-            });
-
-            if (db) {
-                await db.collection("contactMessages").doc(savedId).update({
-                    emailSent: true,
-                    resendEmailId: emailResult.id || "",
-                    updatedAt: new Date().toISOString()
-                });
-            } else {
-                const localFile = path.join(__dirname, "contactMessages.json");
-                const contactMessages = JSON.parse(fs.readFileSync(localFile, "utf8"));
-                const index = contactMessages.findIndex(item => item.id === savedId);
-
-                if (index !== -1) {
-                    contactMessages[index].emailSent = true;
-                    contactMessages[index].resendEmailId = emailResult.id || "";
-                    contactMessages[index].updatedAt = new Date().toISOString();
-                    fs.writeFileSync(localFile, JSON.stringify(contactMessages, null, 2));
-                }
-            }
-
-        } catch (emailError) {
-            console.error("Contact notification email error:", emailError.message);
-        }
-
-        res.json({
-            success: true,
-            message: "Your message has been sent successfully.",
-            id: savedId
-        });
-
+        res.json(applications);
     } catch (error) {
-        console.error("Contact form error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Your message could not be sent."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to load applications." });
     }
 });
 
-app.get("/api/applications", verifyToken, async (req, res) => {
+app.patch("/api/admin/applications/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        let applications = [];
+        const id = req.params.id;
+        const ref = db.collection("applications").doc(id);
+        const doc = await ref.get();
 
-        if (db) {
-            const snapshot = await db
-                .collection("applications")
-                .orderBy("createdAt", "desc")
-                .get();
-
-            applications = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (fs.existsSync(localFile)) {
-                applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            }
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Application not found." });
         }
-
-        res.json({
-            success: true,
-            applications
-        });
-
-    } catch (error) {
-        console.error("Fetch applications error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch applications."
-        });
-    }
-});
-
-app.get("/api/contact-messages", verifyToken, async (req, res) => {
-    try {
-        let messages = [];
-
-        if (db) {
-            const snapshot = await db
-                .collection("contactMessages")
-                .orderBy("createdAt", "desc")
-                .get();
-
-            messages = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } else {
-            const localFile = path.join(__dirname, "contactMessages.json");
-
-            if (fs.existsSync(localFile)) {
-                messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            }
-        }
-
-        res.json({
-            success: true,
-            messages
-        });
-
-    } catch (error) {
-        console.error("Fetch contact messages error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch contact messages."
-        });
-    }
-});
-
-app.patch("/api/applications/:id", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
 
         const updateData = {
             ...req.body,
-            updatedAt: new Date().toISOString()
+            updatedAt: nowIso()
         };
 
-        if (db) {
-            await db.collection("applications").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
+        delete updateData.id;
 
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = applications.findIndex(app => app.id === id);
-
-            if (index === -1) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-
-            applications[index] = {
-                ...applications[index],
-                ...updateData
-            };
-
-            fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-        }
+        await ref.update(updateData);
 
         res.json({
-            success: true,
-            message: "Application updated successfully."
+            message: "Application updated successfully.",
+            id
         });
-
     } catch (error) {
-        console.error("Update application error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to update application."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to update application." });
     }
 });
 
-app.patch("/api/contact-messages/:id", verifyToken, async (req, res) => {
+app.delete("/api/admin/applications/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        const { id } = req.params;
-
-        const updateData = {
-            ...req.body,
-            updatedAt: new Date().toISOString()
-        };
-
-        if (db) {
-            await db.collection("contactMessages").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "contactMessages.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Contact messages file not found."
-                });
-            }
-
-            const messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = messages.findIndex(item => item.id === id);
-
-            if (index === -1) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Contact message not found."
-                });
-            }
-
-            messages[index] = {
-                ...messages[index],
-                ...updateData
-            };
-
-            fs.writeFileSync(localFile, JSON.stringify(messages, null, 2));
-        }
+        await db.collection("applications").doc(req.params.id).delete();
 
         res.json({
-            success: true,
-            message: "Contact message updated successfully."
-        });
-
-    } catch (error) {
-        console.error("Update contact message error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to update contact message."
-        });
-    }
-});
-
-app.delete("/api/applications/:id", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot delete applications."
-            });
-        }
-
-        if (db) {
-            await db.collection("applications").doc(id).delete();
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            let applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            applications = applications.filter(app => app.id !== id);
-
-            fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-        }
-
-        res.json({
-            success: true,
             message: "Application deleted successfully."
         });
-
     } catch (error) {
-        console.error("Delete application error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete application."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to delete application." });
     }
 });
 
-app.delete("/api/contact-messages/:id", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
+/* =====================================================
+   ADMIN EMAIL ACTIONS
+===================================================== */
 
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot delete contact messages."
-            });
-        }
+async function getApplicationOr404(id, res) {
+    const ref = db.collection("applications").doc(id);
+    const doc = await ref.get();
 
-        if (db) {
-            await db.collection("contactMessages").doc(id).delete();
-        } else {
-            const localFile = path.join(__dirname, "contactMessages.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Contact messages file not found."
-                });
-            }
-
-            let messages = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            messages = messages.filter(item => item.id !== id);
-
-            fs.writeFileSync(localFile, JSON.stringify(messages, null, 2));
-        }
-
-        res.json({
-            success: true,
-            message: "Contact message deleted successfully."
-        });
-
-    } catch (error) {
-        console.error("Delete contact message error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete contact message."
-        });
+    if (!doc.exists) {
+        res.status(404).json({ message: "Application not found." });
+        return null;
     }
-});
-
-app.post("/api/applications/:id/invite", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot send interview invitations."
-            });
-        }
-
-        let application = null;
-
-        if (db) {
-            const doc = await db.collection("applications").doc(id).get();
-
-            if (!doc.exists) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-
-            application = {
-                id: doc.id,
-                ...doc.data()
-            };
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            application = applications.find(app => app.id === id);
-
-            if (!application) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-        }
-
-        if (!application.email) {
-            return res.status(400).json({
-                success: false,
-                message: "Candidate email address is missing."
-            });
-        }
-
-        const emailContent = buildInterviewEmail(application, req.body);
-
-        const emailResult = await sendEmailWithResend({
-            to: application.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-            plainText: emailContent.plainText
-        });
-
-        const updateData = {
-            status: "Interview Invited",
-            interviewDate: req.body.interviewDate || "",
-            interviewTime: req.body.interviewTime || "",
-            interviewLocation: req.body.interviewLocation || "",
-            interviewMessage: req.body.interviewMessage || "",
-            invitationSent: true,
-            invitationSentAt: new Date().toISOString(),
-            invitationEmailId: emailResult.id || "",
-            updatedAt: new Date().toISOString()
-        };
-
-        if (db) {
-            await db.collection("applications").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = applications.findIndex(app => app.id === id);
-
-            if (index !== -1) {
-                applications[index] = {
-                    ...applications[index],
-                    ...updateData
-                };
-
-                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-            }
-        }
-
-        res.json({
-            success: true,
-            message: `Interview invitation email sent to ${application.email}.`,
-            emailId: emailResult.id || null
-        });
-
-    } catch (error) {
-        console.error("Interview invitation email error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: error.message || "Failed to send interview invitation email."
-        });
-    }
-});
-
-
-app.post("/api/applications/:id/reminder", verifyToken, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot send interview reminders."
-            });
-        }
-
-        let application = null;
-
-        if (db) {
-            const doc = await db.collection("applications").doc(id).get();
-
-            if (!doc.exists) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-
-            application = {
-                id: doc.id,
-                ...doc.data()
-            };
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-
-            if (!fs.existsSync(localFile)) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Applications file not found."
-                });
-            }
-
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            application = applications.find(app => app.id === id);
-
-            if (!application) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Application not found."
-                });
-            }
-        }
-
-        if (!application.email) {
-            return res.status(400).json({
-                success: false,
-                message: "Candidate email address is missing."
-            });
-        }
-
-        const reminderDetails = {
-            interviewDate: req.body.interviewDate || application.interviewDate || "",
-            interviewTime: req.body.interviewTime || application.interviewTime || "",
-            interviewLocation: req.body.interviewLocation || application.interviewLocation || ""
-        };
-
-        const emailContent = buildInterviewReminderEmail(application, reminderDetails);
-
-        const emailResult = await sendEmailWithResend({
-            to: application.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-            plainText: emailContent.plainText
-        });
-
-        const updateData = {
-            reminderSent: true,
-            reminderSentAt: new Date().toISOString(),
-            reminderEmailId: emailResult.id || "",
-            updatedAt: new Date().toISOString()
-        };
-
-        if (reminderDetails.interviewDate) updateData.interviewDate = reminderDetails.interviewDate;
-        if (reminderDetails.interviewTime) updateData.interviewTime = reminderDetails.interviewTime;
-        if (reminderDetails.interviewLocation) updateData.interviewLocation = reminderDetails.interviewLocation;
-
-        if (db) {
-            await db.collection("applications").doc(id).update(updateData);
-        } else {
-            const localFile = path.join(__dirname, "applications.json");
-            const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-            const index = applications.findIndex(app => app.id === id);
-
-            if (index !== -1) {
-                applications[index] = {
-                    ...applications[index],
-                    ...updateData
-                };
-
-                fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-            }
-        }
-
-        res.json({
-            success: true,
-            message: `Interview reminder email sent to ${application.email}.`,
-            emailId: emailResult.id || null
-        });
-
-    } catch (error) {
-        console.error("Interview reminder email error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: error.message || "Failed to send interview reminder email."
-        });
-    }
-});
-
-
-function normaliseLines(value) {
-    if (Array.isArray(value)) {
-        return value.map(item => String(item || "").trim()).filter(Boolean);
-    }
-
-    return String(value || "")
-        .split(/\r?\n/)
-        .map(item => item.trim())
-        .filter(Boolean);
-}
-
-function buildVacancyData(body, existing = {}) {
-    const now = new Date().toISOString();
 
     return {
-        title: body.title || body.vacancyTitle || existing.title || "",
-        location: body.location || body.vacancyLocation || existing.location || "",
-        type: body.type || body.vacancyType || existing.type || "",
-        category: body.category || body.vacancyCategory || existing.category || "General",
-        salaryMin: body.salaryMin || body.vacancySalaryMin || existing.salaryMin || "",
-        salaryMax: body.salaryMax || body.vacancySalaryMax || existing.salaryMax || "",
-        closingDate: body.closingDate || body.vacancyClosingDate || existing.closingDate || "",
-        status: body.status || body.vacancyStatus || existing.status || "Draft",
-        description: body.description || body.vacancyDescription || existing.description || "",
-        responsibilities: normaliseLines(body.responsibilities || body.vacancyResponsibilities || existing.responsibilities || []),
-        requirements: normaliseLines(body.requirements || body.vacancyRequirements || existing.requirements || []),
-        createdAt: existing.createdAt || now,
-        updatedAt: now
+        ref,
+        application: {
+            id: doc.id,
+            ...doc.data()
+        }
     };
 }
 
-async function readLocalVacancies() {
-    const localFile = path.join(__dirname, "vacancies.json");
+async function handleInterviewInvite(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
 
-    if (!fs.existsSync(localFile)) {
-        return [];
+        const { ref, application } = found;
+
+        const interviewDate = clean(req.body.interviewDate);
+        const interviewTime = clean(req.body.interviewTime);
+        const interviewLocation = clean(req.body.interviewLocation);
+        const interviewMessage = clean(req.body.interviewMessage);
+
+        const updatedApplication = {
+            ...application,
+            interviewDate,
+            interviewTime,
+            interviewLocation,
+            interviewMessage,
+            status: "Interview Invited"
+        };
+
+        const emailResult = await sendTemplateEmail("interviewInvitation", updatedApplication);
+
+        await ref.update({
+            interviewDate,
+            interviewTime,
+            interviewLocation,
+            interviewMessage,
+            status: "Interview Invited",
+            invitationSent: true,
+            invitationSentAt: nowIso(),
+            invitationEmailId: emailResult.id || "",
+            lastCommunicationAction: "Interview Invitation Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: "Interview invitation sent successfully.",
+            emailId: emailResult.id || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send interview invitation." });
     }
-
-    return JSON.parse(fs.readFileSync(localFile, "utf8"));
 }
 
-async function writeLocalVacancies(vacancies) {
-    const localFile = path.join(__dirname, "vacancies.json");
-    fs.writeFileSync(localFile, JSON.stringify(vacancies, null, 2));
+app.post("/api/admin/applications/:id/invite", requireAuth, requireEditor, handleInterviewInvite);
+app.post("/api/admin/applications/:id/send-invite", requireAuth, requireEditor, handleInterviewInvite);
+app.post("/api/admin/applications/:id/interview-invite", requireAuth, requireEditor, handleInterviewInvite);
+
+async function handleInterviewReminder(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const emailResult = await sendTemplateEmail("interviewReminder", application);
+
+        await ref.update({
+            reminderSent: true,
+            reminderSentAt: nowIso(),
+            reminderEmailId: emailResult.id || "",
+            lastCommunicationAction: "Interview Reminder Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: "Interview reminder sent successfully.",
+            emailId: emailResult.id || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send interview reminder." });
+    }
 }
+
+app.post("/api/admin/applications/:id/reminder", requireAuth, requireEditor, handleInterviewReminder);
+app.post("/api/admin/applications/:id/interview-reminder", requireAuth, requireEditor, handleInterviewReminder);
+
+async function handleOfferEmail(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const updatedApplication = {
+            ...application,
+            status: "Offer Made"
+        };
+
+        const emailResult = await sendTemplateEmail("offerEmail", updatedApplication);
+
+        await ref.update({
+            status: "Offer Made",
+            offerSent: true,
+            offerSentAt: nowIso(),
+            offerEmailId: emailResult.id || "",
+            lastCommunicationAction: "Offer Email Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: "Offer email sent successfully.",
+            emailId: emailResult.id || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send offer email." });
+    }
+}
+
+app.post("/api/admin/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
+app.post("/api/admin/applications/:id/send-offer", requireAuth, requireEditor, handleOfferEmail);
+
+async function handleRejectionEmail(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const updatedApplication = {
+            ...application,
+            status: "Rejected"
+        };
+
+        const emailResult = await sendTemplateEmail("rejectionEmail", updatedApplication);
+
+        await ref.update({
+            status: "Rejected",
+            rejectionSent: true,
+            rejectionSentAt: nowIso(),
+            rejectionEmailId: emailResult.id || "",
+            lastCommunicationAction: "Rejection Email Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: "Rejection email sent successfully.",
+            emailId: emailResult.id || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send rejection email." });
+    }
+}
+
+app.post("/api/admin/applications/:id/reject", requireAuth, requireEditor, handleRejectionEmail);
+app.post("/api/admin/applications/:id/rejection", requireAuth, requireEditor, handleRejectionEmail);
+
+/* =====================================================
+   VACANCIES
+===================================================== */
+
+function vacancyPayload(body) {
+    return {
+        title: clean(body.title),
+        location: clean(body.location),
+        type: clean(body.type),
+        category: clean(body.category) || "General",
+        salaryMin: clean(body.salaryMin),
+        salaryMax: clean(body.salaryMax),
+        closingDate: clean(body.closingDate),
+        status: clean(body.status) || "Draft",
+        description: clean(body.description),
+        responsibilities: Array.isArray(body.responsibilities)
+            ? body.responsibilities
+            : clean(body.responsibilities).split(/\n+/).map(item => item.trim()).filter(Boolean),
+        requirements: Array.isArray(body.requirements)
+            ? body.requirements
+            : clean(body.requirements).split(/\n+/).map(item => item.trim()).filter(Boolean),
+        updatedAt: nowIso()
+    };
+}
+
+app.get("/api/admin/vacancies", requireAuth, async (req, res) => {
+    try {
+        const snapshot = await db.collection("vacancies").orderBy("createdAt", "desc").get();
+
+        res.json(snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load vacancies." });
+    }
+});
 
 app.get("/api/vacancies", async (req, res) => {
     try {
-        let vacancies = [];
+        const snapshot = await db.collection("vacancies").where("status", "==", "Published").get();
 
-        if (db) {
-            const snapshot = await db
-                .collection("vacancies")
-                .where("status", "==", "Published")
-                .get();
+        const vacancies = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-            vacancies = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } else {
-            vacancies = (await readLocalVacancies()).filter(vacancy => vacancy.status === "Published");
-        }
+        vacancies.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
-        vacancies.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-        res.json({
-            success: true,
-            vacancies
-        });
+        res.json(vacancies);
     } catch (error) {
-        console.error("Fetch public vacancies error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch vacancies."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to load live vacancies." });
     }
 });
 
-app.get("/api/admin/vacancies", verifyToken, async (req, res) => {
+app.get("/api/public/vacancies", async (req, res) => {
     try {
-        let vacancies = [];
+        const snapshot = await db.collection("vacancies").where("status", "==", "Published").get();
 
-        if (db) {
-            const snapshot = await db.collection("vacancies").get();
+        const vacancies = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
 
-            vacancies = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } else {
-            vacancies = await readLocalVacancies();
-        }
+        vacancies.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
 
-        vacancies.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
-        res.json({
-            success: true,
-            vacancies
-        });
+        res.json(vacancies);
     } catch (error) {
-        console.error("Fetch admin vacancies error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch admin vacancies."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to load live vacancies." });
     }
 });
 
-app.post("/api/admin/vacancies", verifyToken, async (req, res) => {
+app.post("/api/admin/vacancies", requireAuth, requireEditor, async (req, res) => {
     try {
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot create vacancies."
-            });
+        const payload = vacancyPayload(req.body);
+
+        if (!payload.title) {
+            return res.status(400).json({ message: "Job title is required." });
         }
 
-        const vacancyData = buildVacancyData(req.body);
-
-        if (!vacancyData.title) {
-            return res.status(400).json({
-                success: false,
-                message: "Vacancy title is required."
-            });
-        }
-
-        let savedId;
-
-        if (db) {
-            const docRef = await db.collection("vacancies").add(vacancyData);
-            savedId = docRef.id;
-        } else {
-            const vacancies = await readLocalVacancies();
-            savedId = Date.now().toString();
-            vacancies.push({ id: savedId, ...vacancyData });
-            await writeLocalVacancies(vacancies);
-        }
+        const docRef = await db.collection("vacancies").add({
+            ...payload,
+            createdAt: nowIso()
+        });
 
         res.json({
-            success: true,
             message: "Vacancy created successfully.",
-            id: savedId
+            id: docRef.id
         });
     } catch (error) {
-        console.error("Create vacancy error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to create vacancy."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to create vacancy." });
     }
 });
 
-app.patch("/api/admin/vacancies/:id", verifyToken, async (req, res) => {
+app.patch("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot update vacancies."
-            });
-        }
+        const payload = vacancyPayload(req.body);
 
-        const { id } = req.params;
-        let existing = {};
-
-        if (db) {
-            const doc = await db.collection("vacancies").doc(id).get();
-
-            if (!doc.exists) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Vacancy not found."
-                });
-            }
-
-            existing = doc.data();
-            const updateData = buildVacancyData(req.body, existing);
-            await db.collection("vacancies").doc(id).update(updateData);
-        } else {
-            const vacancies = await readLocalVacancies();
-            const index = vacancies.findIndex(vacancy => vacancy.id === id);
-
-            if (index === -1) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Vacancy not found."
-                });
-            }
-
-            existing = vacancies[index];
-            vacancies[index] = {
-                ...existing,
-                ...buildVacancyData(req.body, existing)
-            };
-
-            await writeLocalVacancies(vacancies);
-        }
+        await db.collection("vacancies").doc(req.params.id).update(payload);
 
         res.json({
-            success: true,
-            message: "Vacancy updated successfully."
+            message: "Vacancy updated successfully.",
+            id: req.params.id
         });
     } catch (error) {
-        console.error("Update vacancy error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to update vacancy."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to update vacancy." });
     }
 });
 
-app.delete("/api/admin/vacancies/:id", verifyToken, async (req, res) => {
+app.delete("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        if (req.user.role === "viewer") {
-            return res.status(403).json({
-                success: false,
-                message: "Viewers cannot delete vacancies."
-            });
-        }
-
-        const { id } = req.params;
-
-        if (db) {
-            await db.collection("vacancies").doc(id).delete();
-        } else {
-            let vacancies = await readLocalVacancies();
-            vacancies = vacancies.filter(vacancy => vacancy.id !== id);
-            await writeLocalVacancies(vacancies);
-        }
+        await db.collection("vacancies").doc(req.params.id).delete();
 
         res.json({
-            success: true,
             message: "Vacancy deleted successfully."
         });
     } catch (error) {
-        console.error("Delete vacancy error:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to delete vacancy."
-        });
+        console.error(error);
+        res.status(500).json({ message: "Failed to delete vacancy." });
     }
 });
 
+/* =====================================================
+   CONTACT MESSAGES
+===================================================== */
 
-async function getApplicationRecord(id) {
-    if (db) {
-        const doc = await db.collection("applications").doc(id).get();
-        if (!doc.exists) return null;
-        return { id: doc.id, ...doc.data() };
-    }
-
-    const localFile = path.join(__dirname, "applications.json");
-    if (!fs.existsSync(localFile)) return null;
-    const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-    return applications.find(app => app.id === id) || null;
-}
-
-async function updateApplicationRecord(id, updateData) {
-    if (db) {
-        await db.collection("applications").doc(id).update(updateData);
-        return;
-    }
-
-    const localFile = path.join(__dirname, "applications.json");
-    if (!fs.existsSync(localFile)) return;
-    const applications = JSON.parse(fs.readFileSync(localFile, "utf8"));
-    const index = applications.findIndex(app => app.id === id);
-
-    if (index !== -1) {
-        applications[index] = { ...applications[index], ...updateData };
-        fs.writeFileSync(localFile, JSON.stringify(applications, null, 2));
-    }
-}
-
-async function recordCandidateCommunication(application, emailType, emailResult) {
-    if (!db) return;
-
-    await db.collection("candidateCommunications").add({
-        applicationId: application.id || "",
-        candidateName: application.fullName || "Candidate",
-        candidateEmail: application.email || "",
-        position: application.position || "",
-        emailType,
-        resendEmailId: emailResult.id || "",
-        createdAt: new Date().toISOString()
-    });
-}
-
-app.post("/api/applications/:id/offer", verifyToken, async (req, res) => {
+app.post("/api/contact", async (req, res) => {
     try {
-        const { id } = req.params;
-
-        if (req.user.role === "viewer") {
-            return res.status(403).json({ success: false, message: "Viewers cannot send offer emails." });
-        }
-
-        const application = await getApplicationRecord(id);
-
-        if (!application) {
-            return res.status(404).json({ success: false, message: "Application not found." });
-        }
-
-        if (!application.email) {
-            return res.status(400).json({ success: false, message: "Candidate email address is missing." });
-        }
-
-        const emailContent = buildOfferEmail(application);
-        const emailResult = await sendEmailWithResend({
-            to: application.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-            plainText: emailContent.plainText
-        });
-
-        const now = new Date().toISOString();
-        const updateData = {
-            status: "Offer Made",
-            offerSent: true,
-            offerSentAt: now,
-            offerEmailId: emailResult.id || "",
-            lastCommunicationAction: "Offer Email Sent",
-            lastCommunicationAt: now,
-            updatedAt: now
+        const message = {
+            name: clean(req.body.name),
+            email: clean(req.body.email),
+            phone: clean(req.body.phone),
+            subject: clean(req.body.subject),
+            message: clean(req.body.message),
+            createdAt: nowIso()
         };
 
-        await updateApplicationRecord(id, updateData);
-        await recordCandidateCommunication({ ...application, id }, "Offer Email", emailResult);
+        await db.collection("contactMessages").add(message);
 
         res.json({
-            success: true,
-            message: `Offer email sent to ${application.email}.`,
-            emailId: emailResult.id || null
+            message: "Message sent successfully."
         });
-
     } catch (error) {
-        console.error("Offer email error:", error);
-        res.status(500).json({ success: false, message: error.message || "Failed to send offer email." });
+        console.error(error);
+        res.status(500).json({ message: "Failed to send message." });
     }
 });
 
-app.post("/api/applications/:id/rejection", verifyToken, async (req, res) => {
+app.get("/api/admin/contact-messages", requireAuth, async (req, res) => {
     try {
-        const { id } = req.params;
+        const snapshot = await db.collection("contactMessages").orderBy("createdAt", "desc").get();
 
-        if (req.user.role === "viewer") {
-            return res.status(403).json({ success: false, message: "Viewers cannot send rejection emails." });
-        }
-
-        const application = await getApplicationRecord(id);
-
-        if (!application) {
-            return res.status(404).json({ success: false, message: "Application not found." });
-        }
-
-        if (!application.email) {
-            return res.status(400).json({ success: false, message: "Candidate email address is missing." });
-        }
-
-        const emailContent = buildRejectionEmail(application);
-        const emailResult = await sendEmailWithResend({
-            to: application.email,
-            subject: emailContent.subject,
-            html: emailContent.html,
-            plainText: emailContent.plainText
-        });
-
-        const now = new Date().toISOString();
-        const updateData = {
-            status: "Rejected",
-            rejectionSent: true,
-            rejectionSentAt: now,
-            rejectionEmailId: emailResult.id || "",
-            lastCommunicationAction: "Rejection Email Sent",
-            lastCommunicationAt: now,
-            updatedAt: now
-        };
-
-        await updateApplicationRecord(id, updateData);
-        await recordCandidateCommunication({ ...application, id }, "Rejection Email", emailResult);
-
-        res.json({
-            success: true,
-            message: `Rejection email sent to ${application.email}.`,
-            emailId: emailResult.id || null
-        });
-
+        res.json(snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })));
     } catch (error) {
-        console.error("Rejection email error:", error);
-        res.status(500).json({ success: false, message: error.message || "Failed to send rejection email." });
+        console.error(error);
+        res.status(500).json({ message: "Failed to load contact messages." });
     }
 });
+
+/* =====================================================
+   FALLBACK
+===================================================== */
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "index.html"));
-});
-
-app.get("/admin", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
-});
-
-app.get("/careers", (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, "careers.html"));
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.use((req, res) => {
     res.status(404).json({
-        success: false,
         message: "Route not found."
     });
 });
 
-app.use((error, req, res, next) => {
-    console.error("Server error:", error.message);
-
-    res.status(500).json({
-        success: false,
-        message: error.message || "Internal server error."
-    });
-});
+/* =====================================================
+   START SERVER
+===================================================== */
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
