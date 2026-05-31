@@ -379,6 +379,61 @@ async function sendEmail({ to, subject, html }) {
     return result;
 }
 
+
+function formatInterviewDate(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+
+    const date = new Date(`${raw}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return raw;
+
+    return date.toLocaleDateString("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+}
+
+function formatInterviewTime(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+
+    const time = new Date(`2000-01-01T${raw}`);
+    if (Number.isNaN(time.getTime())) return raw;
+
+    return time.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+    }).replace("am", "AM").replace("pm", "PM");
+}
+
+function formatInterviewLocation(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+
+    const normalised = raw.toLowerCase().trim();
+
+    if (normalised === "teams" || normalised === "microsoft teams") {
+        return "Microsoft Teams";
+    }
+
+    if (normalised === "zoom") {
+        return "Zoom Meeting";
+    }
+
+    if (normalised === "telephone" || normalised === "phone") {
+        return "Telephone Interview";
+    }
+
+    if (normalised === "in person" || normalised === "in-person") {
+        return "In-person Interview";
+    }
+
+    return raw;
+}
+
 async function sendTemplateEmail(templateId, application, extraData = {}) {
     const template = await getTemplate(templateId);
 
@@ -390,10 +445,16 @@ async function sendTemplateEmail(templateId, application, extraData = {}) {
         address: application.address || "",
         availability: application.availability || "",
         message: application.message || "",
-        interviewDate: extraData.interviewDate || application.interviewDate || "",
-        interviewTime: extraData.interviewTime || application.interviewTime || "",
-        interviewLocation: extraData.interviewLocation || application.interviewLocation || "",
-        ...extraData
+        interviewDate: formatInterviewDate(extraData.interviewDate || application.interviewDate || ""),
+        interviewTime: formatInterviewTime(extraData.interviewTime || application.interviewTime || ""),
+        interviewLocation: formatInterviewLocation(extraData.interviewLocation || application.interviewLocation || ""),
+        rawInterviewDate: extraData.interviewDate || application.interviewDate || "",
+        rawInterviewTime: extraData.interviewTime || application.interviewTime || "",
+        rawInterviewLocation: extraData.interviewLocation || application.interviewLocation || "",
+        ...extraData,
+        interviewDate: formatInterviewDate(extraData.interviewDate || application.interviewDate || ""),
+        interviewTime: formatInterviewTime(extraData.interviewTime || application.interviewTime || ""),
+        interviewLocation: formatInterviewLocation(extraData.interviewLocation || application.interviewLocation || "")
     };
 
     const subject = replaceTemplateVars(template.subject || template.name || "Application Update", data);
