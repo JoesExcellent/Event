@@ -408,7 +408,12 @@
                 throw new Error(result.message || "Could not load vacancies.");
             }
 
-            const vacancies = result.vacancies || [];
+            const vacancies = (result.vacancies || []).filter(vacancy =>
+                vacancy.status === "Published" &&
+                String(vacancy.category || "")
+                    .toLowerCase()
+                    .includes("general")
+            );
 
             if (!vacancies.length) {
                 jobsGrid.innerHTML = `
