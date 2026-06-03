@@ -1654,7 +1654,9 @@ function logoutAdmin() {
 }
 
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
-document.getElementById("sendReminderBtn")?.addEventListener("click", sendReminder);
+document.getElementById("send7DayReminderBtn")?.addEventListener("click", sendReminder);
+document.getElementById("send24HourReminderBtn")?.addEventListener("click", sendReminder);
+document.getElementById("sendSameDayReminderBtn")?.addEventListener("click", sendReminder);
 document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
 document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
