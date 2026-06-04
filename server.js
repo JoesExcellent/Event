@@ -1090,7 +1090,19 @@ app.post("/api/admin/vacancies", requireAuth, requireEditor, async (req, res) =>
 
 app.patch("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, res) => {
     try {
-        const payload = vacancyPayload(req.body, true);
+        const body = req.body || {};
+        const bodyKeys = Object.keys(body);
+
+        let payload;
+
+        if (bodyKeys.length === 1 && Object.prototype.hasOwnProperty.call(body, "status")) {
+            payload = {
+                status: clean(body.status) || "Draft",
+                updatedAt: nowIso()
+            };
+        } else {
+            payload = vacancyPayload(body, true);
+        }
 
         await db.collection("vacancies").doc(req.params.id).update(payload);
 
