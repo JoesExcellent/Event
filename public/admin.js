@@ -411,6 +411,7 @@ function renderApplications(applications) {
             <td>
                 <button onclick="selectCandidate('${id}', '${fullName}')">Interview</button>
                 <button onclick="openCandidateModal('${id}')">View</button>
+                <button onclick="sendOfferEmail('${id}')">Offer Job</button>
                 <button onclick="quickRejectApplication('${id}')">Reject</button>
                 <button onclick="deleteApplication('${id}')">Delete</button>
             </td>
