@@ -412,6 +412,7 @@ function renderApplications(applications) {
                 <button onclick="selectCandidate('${id}', '${fullName}')">Interview</button>
                 <button onclick="openCandidateModal('${id}')">View</button>
                 <button onclick="sendOfferEmail('${id}')">Offer Job</button>
+                <button onclick="markCandidateHired('${id}')">Mark Hired</button>
                 <button onclick="quickRejectApplication('${id}')">Reject</button>
                 <button onclick="deleteApplication('${id}')">Delete</button>
             </td>
@@ -670,8 +671,14 @@ async function moveModalCandidateToOffer() {
 }
 
 async function moveModalCandidateToHired() {
-    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Hired");
+    if (!modalApplicationId) {
+        showToast("Please open a candidate first.", "error");
+        return;
+    }
+
+    await markCandidateHired(modalApplicationId);
 }
+
 
 async function moveModalCandidateToRejected() {
     if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Rejected");
@@ -715,6 +722,56 @@ async function sendOfferFromModal() {
     }
 }
 
+
+async function markCandidateHired(id) {
+    if (!id) {
+        showToast("Candidate could not be found.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot mark candidates as hired.", "error");
+        return;
+    }
+
+    const application = allApplications.find(app => app.id === id);
+    const candidateName = application?.fullName || "this candidate";
+
+    if (!confirm(`Mark ${candidateName} as hired?`)) {
+        return;
+    }
+
+    const now = new Date().toISOString();
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/applications/${id}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                status: "Hired",
+                hiredAt: now,
+                lastCommunicationAction: "Marked Hired",
+                lastCommunicationAt: now
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to mark candidate as hired.");
+        }
+
+        showToast(`${candidateName} marked as Hired.`, "success");
+        await refreshDashboard();
+
+        if (modalApplicationId === id) {
+            openCandidateModal(id);
+        }
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to mark candidate as hired.", "error");
+    }
+}
 
 async function sendOfferEmail(id) {
     if (!id) {
@@ -1817,6 +1874,7 @@ window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
 window.sendOfferFromModal = sendOfferFromModal;
 window.sendOfferEmail = sendOfferEmail;
+window.markCandidateHired = markCandidateHired;
 window.sendRejectionFromModal = sendRejectionFromModal;
 window.moveModalCandidateToOffer = moveModalCandidateToOffer;
 window.moveModalCandidateToHired = moveModalCandidateToHired;
