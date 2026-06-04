@@ -295,6 +295,65 @@ Recruitment Team
 Joe's Excellent Events & Management`
     },
 
+    interviewReminder7Day: {
+        name: "7 Day Interview Reminder",
+        subject: "Interview Reminder - 7 Days Remaining",
+        body: `This is a friendly reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place in 7 days.
+
+Interview Details
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please contact us if you require any adjustments, have any questions, or need to rearrange.
+
+We look forward to meeting you.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
+    interviewReminder24Hour: {
+        name: "24 Hour Interview Reminder",
+        subject: "Interview Reminder - Tomorrow",
+        body: `This is a reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place tomorrow.
+
+Interview Details
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please arrive promptly and bring any documents or information requested during the recruitment process.
+
+If you need assistance or need to contact us before your interview, please do so as soon as possible.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
+    interviewReminderSameDay: {
+        name: "Same Day Interview Reminder",
+        subject: "Interview Reminder - Today",
+        body: `This is a reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place today.
+
+Interview Details
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please aim to arrive 10-15 minutes early where possible.
+
+We wish you every success and look forward to meeting you.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
     offerEmail: {
         name: "Offer Made",
         subject: "Conditional Offer of Employment - {{position}}",
@@ -774,19 +833,76 @@ async function handleInterviewReminder(req, res) {
 
         const { ref, application } = found;
 
-        const emailResult = await sendTemplateEmail("interviewReminder", application);
+        const reminderType = String(req.body?.reminderType || "general").toLowerCase();
 
-        await ref.update({
+        const reminderMap = {
+            "7day": {
+                templateId: "interviewReminder7Day",
+                action: "7 Day Interview Reminder Sent",
+                responseMessage: "7 Day reminder sent successfully.",
+                sentField: "sevenDayReminderSent",
+                sentAtField: "sevenDayReminderSentAt",
+                emailIdField: "sevenDayReminderEmailId"
+            },
+            "24hour": {
+                templateId: "interviewReminder24Hour",
+                action: "24 Hour Interview Reminder Sent",
+                responseMessage: "24 Hour reminder sent successfully.",
+                sentField: "twentyFourHourReminderSent",
+                sentAtField: "twentyFourHourReminderSentAt",
+                emailIdField: "twentyFourHourReminderEmailId"
+            },
+            "sameday": {
+                templateId: "interviewReminderSameDay",
+                action: "Same Day Interview Reminder Sent",
+                responseMessage: "Same Day reminder sent successfully.",
+                sentField: "sameDayReminderSent",
+                sentAtField: "sameDayReminderSentAt",
+                emailIdField: "sameDayReminderEmailId"
+            },
+            "general": {
+                templateId: "interviewReminder",
+                action: "Interview Reminder Sent",
+                responseMessage: "Interview reminder sent successfully.",
+                sentField: "reminderSent",
+                sentAtField: "reminderSentAt",
+                emailIdField: "reminderEmailId"
+            }
+        };
+
+        const selectedReminder = reminderMap[reminderType] || reminderMap.general;
+
+        const reminderData = {
+            interviewDate: req.body?.interviewDate || application.interviewDate || "",
+            interviewTime: req.body?.interviewTime || application.interviewTime || "",
+            interviewLocation: req.body?.interviewLocation || application.interviewLocation || ""
+        };
+
+        const emailResult = await sendTemplateEmail(
+            selectedReminder.templateId,
+            application,
+            reminderData
+        );
+
+        const updateData = {
             reminderSent: true,
             reminderSentAt: nowIso(),
             reminderEmailId: emailResult.id || "",
-            lastCommunicationAction: "Interview Reminder Sent",
+            reminderType,
+            lastCommunicationAction: selectedReminder.action,
             lastCommunicationAt: nowIso(),
             updatedAt: nowIso()
-        });
+        };
+
+        updateData[selectedReminder.sentField] = true;
+        updateData[selectedReminder.sentAtField] = nowIso();
+        updateData[selectedReminder.emailIdField] = emailResult.id || "";
+
+        await ref.update(updateData);
 
         res.json({
-            message: "Interview reminder sent successfully.",
+            message: selectedReminder.responseMessage,
+            reminderType,
             emailId: emailResult.id || ""
         });
     } catch (error) {
