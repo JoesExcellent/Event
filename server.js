@@ -370,6 +370,21 @@ Kind regards,
 Joe's Excellent Events & Management Recruitment Team`
     },
 
+    hiredEmail: {
+        name: "Employment Confirmation",
+        subject: "Employment Confirmation - {{position}}",
+        body: `We are delighted to confirm that you have been marked as hired for the position of {{position}} with Joe's Excellent Events & Management.
+
+Our recruitment team will contact you with the next steps, onboarding information and any employment documents required.
+
+We are very pleased to welcome you to the team and look forward to working with you.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
     rejectionEmail: {
         name: "Rejection Email",
         subject: "Application Outcome - {{position}}",
@@ -952,6 +967,45 @@ async function handleOfferEmail(req, res) {
 app.post("/api/admin/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
 app.post("/api/admin/applications/:id/send-offer", requireAuth, requireEditor, handleOfferEmail);
 app.post("/api/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
+
+async function handleHireEmail(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const updatedApplication = {
+            ...application,
+            status: "Hired"
+        };
+
+        const emailResult = await sendTemplateEmail("hiredEmail", updatedApplication);
+
+        await ref.update({
+            status: "Hired",
+            hiredAt: nowIso(),
+            hiredEmailSent: true,
+            hiredEmailSentAt: nowIso(),
+            hiredEmailId: emailResult.id || "",
+            lastCommunicationAction: "Employment Confirmation Email Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: "Candidate marked as hired and employment confirmation email sent.",
+            emailId: emailResult.id || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to mark candidate as hired." });
+    }
+}
+
+app.post("/api/admin/applications/:id/hire", requireAuth, requireEditor, handleHireEmail);
+app.post("/api/admin/applications/:id/hired", requireAuth, requireEditor, handleHireEmail);
+app.post("/api/applications/:id/hire", requireAuth, requireEditor, handleHireEmail);
 
 async function handleRejectionEmail(req, res) {
     try {
