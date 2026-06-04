@@ -714,6 +714,49 @@ async function sendOfferFromModal() {
     }
 }
 
+
+async function sendOfferEmail(id) {
+    if (!id) {
+        showToast("Candidate could not be found.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send offer emails.", "error");
+        return;
+    }
+
+    const application = allApplications.find(app => app.id === id);
+    const candidateName = application?.fullName || "this candidate";
+
+    if (!confirm(`Send an offer email to ${candidateName}?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/applications/${id}/offer`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Offer email failed.");
+        }
+
+        showToast("Offer email sent successfully.", "success");
+        await refreshDashboard();
+
+        if (modalApplicationId === id) {
+            openCandidateModal(id);
+        }
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Offer email failed.", "error");
+    }
+}
+
 async function sendRejectionFromModal() {
     if (!modalApplicationId) {
         showToast("Please open a candidate first.", "error");
@@ -1772,6 +1815,7 @@ window.closeCandidateModal = closeCandidateModal;
 window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
 window.sendOfferFromModal = sendOfferFromModal;
+window.sendOfferEmail = sendOfferEmail;
 window.sendRejectionFromModal = sendRejectionFromModal;
 window.moveModalCandidateToOffer = moveModalCandidateToOffer;
 window.moveModalCandidateToHired = moveModalCandidateToHired;
