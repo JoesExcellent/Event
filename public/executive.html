@@ -54,36 +54,21 @@
             background: #020b14;
             padding: 70px 7%;
             border-bottom: 2px solid #ff6a00;
-            text-align: center;
         }
 
-        .hero-box {
+        .hero-image-box {
             max-width: 1100px;
             margin: auto;
-            background: #123756;
             border: 1px solid #ffb000;
             border-radius: 18px;
-            padding: 60px 35px;
+            overflow: hidden;
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
-        .hero-box h1 {
-            font-size: clamp(2.4rem, 5vw, 4.8rem);
-            line-height: 1.1;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-        }
-
-        .hero-box span {
-            color: #ff6a00;
+        .hero-image-box img {
+            width: 100%;
             display: block;
-        }
-
-        .hero-box p {
-            max-width: 850px;
-            margin: auto;
-            color: #f2f2f2;
-            font-size: 1.1rem;
+            border-radius: 18px;
         }
 
         .intro-section {
@@ -258,10 +243,10 @@
                 gap: 18px;
             }
 
-            .hero-box,
+            .hero-image-box,
             .cta-box,
             .gdpr-box {
-                padding: 34px 24px;
+                padding: 0;
             }
         }
     </style>
@@ -279,19 +264,12 @@
         <a href="executive.html" class="active">Executive</a>
         <a href="apply.html">Apply</a>
         <a href="contact us.html">Contact</a>
-            </nav>
+    </nav>
 </header>
 
 <section class="hero">
-    <div class="hero-box">
-        <h1>
-            Executive Event
-            <span>Career Opportunities</span>
-        </h1>
-
-        <p>
-            Explore senior and specialised event management roles designed for experienced professionals, strategic leaders, creative producers and commercial event specialists seeking high-level annual salary opportunities.
-        </p>
+    <div class="hero-image-box">
+        <img src="jets.png" alt="Executive career opportunities at Joe's Excellent Events & Management">
     </div>
 </section>
 
@@ -350,7 +328,6 @@
     <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
     <p>All rights reserved.</p>
 </footer>
-
 
 <script>
     const executiveJobsGrid = document.getElementById("executiveJobsGrid");
