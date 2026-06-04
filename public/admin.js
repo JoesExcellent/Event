@@ -903,7 +903,81 @@ async function sendInvitation() {
 }
 
 
-async function sendReminder() {
+const reminderTemplates = {
+    "7day": {
+        buttonText: "7 Day Reminder",
+        sendingText: "Sending 7 Day Reminder...",
+        successText: "7 Day reminder sent successfully.",
+        message: `Dear {{candidateName}},
+
+This is a friendly reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place in 7 days.
+
+Interview Details
+
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please contact us if you require any adjustments, have any questions, or need to rearrange.
+
+We look forward to meeting you.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
+    "24hour": {
+        buttonText: "24 Hour Reminder",
+        sendingText: "Sending 24 Hour Reminder...",
+        successText: "24 Hour reminder sent successfully.",
+        message: `Dear {{candidateName}},
+
+This is a reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place tomorrow.
+
+Interview Details
+
+Date: {{interviewDate}}
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please arrive promptly and bring any documents or information requested during the recruitment process.
+
+If you need assistance or need to contact us before your interview, please do so as soon as possible.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    },
+
+    "sameday": {
+        buttonText: "Same Day Reminder",
+        sendingText: "Sending Same Day Reminder...",
+        successText: "Same Day reminder sent successfully.",
+        message: `Dear {{candidateName}},
+
+This is a reminder that your interview for the position of {{position}} with Joe's Excellent Events & Management is scheduled to take place today.
+
+Interview Details
+
+Time: {{interviewTime}}
+Location: {{interviewLocation}}
+
+Please aim to arrive 10-15 minutes early where possible.
+
+We wish you every success and look forward to meeting you.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`
+    }
+};
+
+
+async function sendReminder(reminderType = "7day", reminderButton = null) {
     if (!selectedApplicationId) {
         showToast("Please select a candidate first.", "error");
         return;
@@ -914,18 +988,31 @@ async function sendReminder() {
         return;
     }
 
-    const sendReminderBtn = document.getElementById("sendReminderBtn");
+    const reminderConfig = reminderTemplates[reminderType];
 
-    if (sendReminderBtn) {
-        sendReminderBtn.disabled = true;
-        sendReminderBtn.textContent = "Sending Reminder...";
+    if (!reminderConfig) {
+        showToast("Unknown reminder type selected.", "error");
+        return;
+    }
+
+    const interviewMessageField = document.getElementById("interviewMessage");
+
+    if (interviewMessageField) {
+        interviewMessageField.value = reminderConfig.message;
+    }
+
+    if (reminderButton) {
+        reminderButton.disabled = true;
+        reminderButton.textContent = reminderConfig.sendingText;
     }
 
     try {
         const payload = {
+            reminderType,
             interviewDate: document.getElementById("interviewDate")?.value || "",
             interviewTime: document.getElementById("interviewTime")?.value || "",
-            interviewLocation: document.getElementById("interviewLocation")?.value || ""
+            interviewLocation: document.getElementById("interviewLocation")?.value || "",
+            interviewMessage: interviewMessageField?.value || reminderConfig.message
         };
 
         const response = await fetch(
@@ -943,7 +1030,7 @@ async function sendReminder() {
             throw new Error(result.message || "Reminder failed.");
         }
 
-        showToast("Interview reminder sent successfully.", "success");
+        showToast(result.message || reminderConfig.successText, "success");
 
         await refreshDashboard();
 
@@ -955,9 +1042,9 @@ async function sendReminder() {
         console.error(error);
         showToast(error.message || "Reminder failed.", "error");
     } finally {
-        if (sendReminderBtn) {
-            sendReminderBtn.disabled = false;
-            sendReminderBtn.textContent = "Send Reminder";
+        if (reminderButton) {
+            reminderButton.disabled = false;
+            reminderButton.textContent = reminderConfig.buttonText;
         }
     }
 }
@@ -1654,9 +1741,17 @@ function logoutAdmin() {
 }
 
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
-document.getElementById("send7DayReminderBtn")?.addEventListener("click", sendReminder);
-document.getElementById("send24HourReminderBtn")?.addEventListener("click", sendReminder);
-document.getElementById("sendSameDayReminderBtn")?.addEventListener("click", sendReminder);
+document.getElementById("send7DayReminderBtn")?.addEventListener("click", function () {
+    sendReminder("7day", this);
+});
+
+document.getElementById("send24HourReminderBtn")?.addEventListener("click", function () {
+    sendReminder("24hour", this);
+});
+
+document.getElementById("sendSameDayReminderBtn")?.addEventListener("click", function () {
+    sendReminder("sameday", this);
+});
 document.getElementById("logoutBtn")?.addEventListener("click", logoutAdmin);
 document.getElementById("exportCsvBtn")?.addEventListener("click", exportApplicationsCSV);
 document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidateNotes);
