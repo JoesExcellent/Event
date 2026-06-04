@@ -737,22 +737,14 @@ async function markCandidateHired(id) {
     const application = allApplications.find(app => app.id === id);
     const candidateName = application?.fullName || "this candidate";
 
-    if (!confirm(`Mark ${candidateName} as hired?`)) {
+    if (!confirm(`Mark ${candidateName} as hired and send employment confirmation email?`)) {
         return;
     }
 
-    const now = new Date().toISOString();
-
     try {
-        const response = await fetch(`${API_BASE}/api/admin/applications/${id}`, {
-            method: "PATCH",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-                status: "Hired",
-                hiredAt: now,
-                lastCommunicationAction: "Marked Hired",
-                lastCommunicationAt: now
-            })
+        const response = await fetch(`${API_BASE}/api/admin/applications/${id}/hire`, {
+            method: "POST",
+            headers: getAuthHeaders()
         });
 
         const result = await response.json();
@@ -761,7 +753,7 @@ async function markCandidateHired(id) {
             throw new Error(result.message || "Failed to mark candidate as hired.");
         }
 
-        showToast(`${candidateName} marked as Hired.`, "success");
+        showToast("Candidate marked as Hired and employment confirmation email sent.", "success");
         await refreshDashboard();
 
         if (modalApplicationId === id) {
