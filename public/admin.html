@@ -146,6 +146,44 @@
             margin-bottom: 30px;
         }
 
+
+        .dashboard-tabs {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 16px;
+            padding: 18px;
+            margin: 0 0 35px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .dashboard-tab-btn {
+            background: #0b2a44;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 999px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .dashboard-tab-btn:hover,
+        .dashboard-tab-btn.active {
+            background: #ff6a00;
+            color: #ffffff;
+            border-color: #ffb000;
+        }
+
+        .dashboard-tab-content {
+            display: none;
+        }
+
+        .dashboard-tab-content.active {
+            display: block;
+        }
+
         .stats-grid,
         .ats-mini-grid {
             display: grid;
@@ -564,7 +602,18 @@
         <div id="permissionsInfo" class="permission-box"></div>
         <p id="lastRefreshInfo" class="ats-refresh-line">Dashboard waiting for login.</p>
 
-        <section class="admin-card">
+        <div class="dashboard-tabs" aria-label="Admin dashboard sections">
+            <button type="button" class="dashboard-tab-btn active" data-admin-tab="overview">Overview</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="candidates">Candidates</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="vacancies">Vacancies</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="interviews">Interviews</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="messages">Messages</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="notes">Notes</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="analytics">Analytics</button>
+        </div>
+
+        <div id="tab-overview" class="dashboard-tab-content active">
+<section class="admin-card">
             <h2>Dashboard Overview</h2>
 
             <div class="stats-grid">
@@ -596,7 +645,7 @@
             <div id="stats"></div>
         </section>
 
-        <section class="ats-panel">
+<section class="ats-panel">
             <h2>ATS Command Centre</h2>
             <p>Monitor live recruitment activity, urgent tasks, interview reminders and communication status.</p>
 
@@ -648,8 +697,10 @@
                 </div>
             </div>
         </section>
+        </div>
 
-        <section class="application-card">
+        <div id="tab-candidates" class="dashboard-tab-content">
+<section class="application-card">
             <h2>Candidate Applications</h2>
             <p>Search, filter, review and manage candidates through the recruitment pipeline.</p>
 
@@ -706,8 +757,10 @@
 
             <div id="applications"></div>
         </section>
+        </div>
 
-        <section class="application-card">
+        <div id="tab-vacancies" class="dashboard-tab-content">
+<section class="application-card">
             <h2>Live Vacancy Management System</h2>
             <p>Create, prepare and manage vacancies ready for live publishing across the Jobs and Executive pages.</p>
 
@@ -818,37 +871,10 @@
 
             <div id="vacancyMessage"></div>
         </section>
+        </div>
 
-        <section class="application-card">
-            <h2>Contact Messages</h2>
-            <p>View and manage messages submitted through the Contact Us page.</p>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Subject</th>
-                            <th>Date Sent</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="contactMessagesTableBody">
-                        <tr>
-                            <td colspan="7">Contact messages will appear here after login.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="contactMessages"></div>
-        </section>
-
-        <section class="invite-card">
+        <div id="tab-interviews" class="dashboard-tab-content">
+<section class="invite-card">
             <h2>Interview Invitation</h2>
             <p>
                 Select a candidate using the Interview button, then complete the interview details below.
@@ -904,8 +930,66 @@ Joe's Excellent Events & Management</textarea>
 <button id="send24HourReminderBtn" type="button">24 Hour Reminder</button>
 <button id="sendSameDayReminderBtn" type="button">Same Day Reminder</button>
         </section>
+        </div>
 
-        <section class="notes-card">
+        <div id="tab-messages" class="dashboard-tab-content">
+<section class="application-card">
+            <h2>Contact Messages</h2>
+            <p>View and manage messages submitted through the Contact Us page.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Subject</th>
+                            <th>Date Sent</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="contactMessagesTableBody">
+                        <tr>
+                            <td colspan="7">Contact messages will appear here after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="contactMessages"></div>
+        </section>
+
+<section class="ats-panel">
+            <h2>Candidate Communication Centre</h2>
+            <p>Track email delivery, communication status and candidate follow-up requirements.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Email</th>
+                            <th>Invitation Sent</th>
+                            <th>Email ID</th>
+                            <th>Follow Up</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="communicationTableBody">
+                        <tr>
+                            <td colspan="5">Communication records will appear after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+
+        <div id="tab-notes" class="dashboard-tab-content">
+<section class="notes-card">
             <h2>Admin Notes</h2>
             <p>Add internal notes, rating and candidate updates for recruitment management.</p>
 
@@ -935,33 +1019,10 @@ Joe's Excellent Events & Management</textarea>
 
             <button id="saveNotesBtn" type="button">Save Notes</button>
         </section>
+        </div>
 
-        <section class="ats-panel">
-            <h2>Candidate Communication Centre</h2>
-            <p>Track email delivery, communication status and candidate follow-up requirements.</p>
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Candidate</th>
-                            <th>Email</th>
-                            <th>Invitation Sent</th>
-                            <th>Email ID</th>
-                            <th>Follow Up</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="communicationTableBody">
-                        <tr>
-                            <td colspan="5">Communication records will appear after login.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="analytics-card">
+        <div id="tab-analytics" class="dashboard-tab-content">
+<section class="analytics-card">
             <h2>Recruitment Analytics</h2>
             <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
 
@@ -995,6 +1056,8 @@ Joe's Excellent Events & Management</textarea>
                 <canvas id="applicationsChart"></canvas>
             </div>
         </section>
+        </div>
+
 
     </section>
 
@@ -1102,6 +1165,36 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=54"></script>
+<script src="admin.js?v=58"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const tabButtons = document.querySelectorAll(".dashboard-tab-btn");
+        const tabPanels = document.querySelectorAll(".dashboard-tab-content");
+
+        tabButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                const targetTab = button.getAttribute("data-admin-tab");
+
+                tabButtons.forEach(function (tabButton) {
+                    tabButton.classList.remove("active");
+                });
+
+                tabPanels.forEach(function (panel) {
+                    panel.classList.remove("active");
+                });
+
+                button.classList.add("active");
+
+                const activePanel = document.getElementById("tab-" + targetTab);
+                if (activePanel) {
+                    activePanel.classList.add("active");
+                    window.scrollTo({ top: document.querySelector(".dashboard").offsetTop, behavior: "smooth" });
+                }
+            });
+        });
+    });
+</script>
+
 </body>
 </html>
