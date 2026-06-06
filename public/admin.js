@@ -11,7 +11,9 @@ let allApplications = [];
 let allContactMessages = [];
 let allCommunications = [];
 let allVacancies = [];
+let allEmailTemplates = [];
 let selectedVacancyId = null;
+let selectedEmailTemplateId = null;
 
 const ATS_STATUSES = [
     "New",
@@ -36,6 +38,17 @@ const contactMessagesTableBody = document.getElementById("contactMessagesTableBo
 const communicationTableBody = document.getElementById("communicationTableBody");
 const vacanciesTableBody = document.getElementById("vacanciesTableBody");
 const vacancyMessage = document.getElementById("vacancyMessage");
+
+const emailTemplatesTableBody = document.getElementById("emailTemplatesTableBody");
+const templateIdInput = document.getElementById("templateId");
+const templateNameInput = document.getElementById("templateName");
+const templateCategoryInput = document.getElementById("templateCategory");
+const templateSubjectInput = document.getElementById("templateSubject");
+const templateBodyInput = document.getElementById("templateBody");
+const templateMessage = document.getElementById("templateMessage");
+const templatePreviewBox = document.getElementById("templatePreviewBox");
+const templatePreviewSubject = document.getElementById("templatePreviewSubject");
+const templatePreviewBody = document.getElementById("templatePreviewBody");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -246,6 +259,7 @@ async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
     await loadCommunications();
+    await loadEmailTemplates();
     await loadVacancies();
 
     updateCommandCentre();
@@ -1585,6 +1599,254 @@ function renderCommunicationCentre() {
     });
 }
 
+
+function getTemplateSampleData() {
+    return {
+        candidateName: "Gary Linekar",
+        position: "Head of BBC Sport",
+        interviewDate: "Monday, 15 June 2026",
+        interviewTime: "10:00 AM",
+        interviewLocation: "Microsoft Teams",
+        salary: "£230,000 - £250,000",
+        startDate: "Monday, 1 July 2026",
+        companyName: "Joe's Excellent Events & Management"
+    };
+}
+
+function renderTemplateContent(content, data = getTemplateSampleData()) {
+    return String(content || "").replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, function (_, key) {
+        return data[key] !== undefined && data[key] !== null ? String(data[key]) : "";
+    });
+}
+
+function setTemplateMessage(message, isError = false) {
+    if (!templateMessage) return;
+    templateMessage.textContent = message || "";
+    templateMessage.style.color = isError ? "#ff6a00" : "#ffffff";
+    templateMessage.style.fontWeight = "700";
+    templateMessage.style.marginTop = "14px";
+}
+
+async function loadEmailTemplates() {
+    if (!emailTemplatesTableBody) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load email templates.");
+        }
+
+        allEmailTemplates = result.templates || [];
+        renderEmailTemplates();
+    } catch (error) {
+        console.error(error);
+        emailTemplatesTableBody.innerHTML = `
+            <tr>
+                <td colspan="5">${escapeHtml(error.message || "Failed to load email templates.")}</td>
+            </tr>
+        `;
+    }
+}
+
+function renderEmailTemplates() {
+    if (!emailTemplatesTableBody) return;
+
+    if (!allEmailTemplates.length) {
+        emailTemplatesTableBody.innerHTML = `
+            <tr>
+                <td colspan="5">No email templates available yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    emailTemplatesTableBody.innerHTML = allEmailTemplates.map(template => `
+        <tr>
+            <td>${escapeHtml(template.name || "Template")}</td>
+            <td>${escapeHtml(template.category || "General")}</td>
+            <td>${escapeHtml(template.subject || "")}</td>
+            <td>${escapeHtml(formatDateTime(template.updatedAt || template.createdAt || ""))}</td>
+            <td>
+                <button type="button" onclick="editEmailTemplate('${escapeQuotes(template.id)}')">Edit</button>
+                <button type="button" onclick="previewEmailTemplate('${escapeQuotes(template.id)}')">Preview</button>
+                <button type="button" onclick="restoreEmailTemplate('${escapeQuotes(template.id)}')">Restore Default</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function clearEmailTemplateEditor() {
+    selectedEmailTemplateId = null;
+
+    if (templateIdInput) templateIdInput.value = "";
+    if (templateNameInput) templateNameInput.value = "";
+    if (templateCategoryInput) templateCategoryInput.value = "";
+    if (templateSubjectInput) templateSubjectInput.value = "";
+    if (templateBodyInput) templateBodyInput.value = "";
+    if (templatePreviewBox) templatePreviewBox.style.display = "none";
+
+    setTemplateMessage("");
+}
+
+function editEmailTemplate(id) {
+    const template = allEmailTemplates.find(item => item.id === id);
+
+    if (!template) {
+        showToast("Template could not be found.", "error");
+        return;
+    }
+
+    selectedEmailTemplateId = id;
+
+    if (templateIdInput) templateIdInput.value = template.id || "";
+    if (templateNameInput) templateNameInput.value = template.name || "";
+    if (templateCategoryInput) templateCategoryInput.value = template.category || "";
+    if (templateSubjectInput) templateSubjectInput.value = template.subject || "";
+    if (templateBodyInput) templateBodyInput.value = template.body || "";
+    if (templatePreviewBox) templatePreviewBox.style.display = "none";
+
+    setTemplateMessage(`Editing ${template.name || "template"}.`);
+}
+
+function previewEmailTemplate(id = "") {
+    let template = null;
+
+    if (id) {
+        template = allEmailTemplates.find(item => item.id === id);
+        if (template) {
+            selectedEmailTemplateId = id;
+        }
+    }
+
+    const subject = template
+        ? template.subject
+        : templateSubjectInput?.value || "";
+
+    const body = template
+        ? template.body
+        : templateBodyInput?.value || "";
+
+    if (!subject && !body) {
+        showToast("Select a template or enter template text before previewing.", "error");
+        return;
+    }
+
+    const renderedSubject = renderTemplateContent(subject);
+    const renderedBody = renderTemplateContent(body);
+
+    if (templatePreviewSubject) {
+        templatePreviewSubject.textContent = renderedSubject || "No subject";
+    }
+
+    if (templatePreviewBody) {
+        templatePreviewBody.innerHTML = renderedBody
+            .split(/\n+/)
+            .filter(line => line.trim())
+            .map(line => `<p>${escapeHtml(line)}</p>`)
+            .join("");
+    }
+
+    if (templatePreviewBox) {
+        templatePreviewBox.style.display = "block";
+    }
+
+    if (template && templateIdInput) {
+        editEmailTemplate(template.id);
+    }
+}
+
+async function saveEmailTemplate() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot edit templates.", "error");
+        return;
+    }
+
+    const id = selectedEmailTemplateId || templateIdInput?.value || "";
+
+    if (!id) {
+        showToast("Select a template to edit first.", "error");
+        return;
+    }
+
+    const payload = {
+        subject: templateSubjectInput?.value || "",
+        body: templateBodyInput?.value || ""
+    };
+
+    if (!payload.subject.trim() || !payload.body.trim()) {
+        showToast("Template subject and body are required.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates/${encodeURIComponent(id)}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to save template.");
+        }
+
+        showToast("Template saved successfully.", "success");
+        setTemplateMessage("Template saved successfully.");
+        await loadEmailTemplates();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save template.", "error");
+        setTemplateMessage(error.message || "Failed to save template.", true);
+    }
+}
+
+async function restoreEmailTemplate(id = "") {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot restore templates.", "error");
+        return;
+    }
+
+    const templateId = id || selectedEmailTemplateId || templateIdInput?.value || "";
+
+    if (!templateId) {
+        showToast("Select a template to restore first.", "error");
+        return;
+    }
+
+    if (!confirm("Restore this template to the approved default version?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/email-templates/${encodeURIComponent(templateId)}/restore`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to restore template.");
+        }
+
+        showToast("Template restored successfully.", "success");
+        setTemplateMessage("Template restored successfully.");
+        await loadEmailTemplates();
+        editEmailTemplate(templateId);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to restore template.", "error");
+        setTemplateMessage(error.message || "Failed to restore template.", true);
+    }
+}
+
+
 function exportApplicationsCSV() {
     showToast("CSV export started.", "info");
 
@@ -1920,7 +2182,9 @@ function logoutAdmin() {
     allApplications = [];
     allContactMessages = [];
     allVacancies = [];
+    allEmailTemplates = [];
     selectedVacancyId = null;
+    selectedEmailTemplateId = null;
 
     stopAutoRefresh();
     closeCandidateModal();
@@ -1947,6 +2211,14 @@ document.getElementById("saveNotesBtn")?.addEventListener("click", saveCandidate
 document.getElementById("createVacancyBtn")?.addEventListener("click", createVacancy);
 document.getElementById("updateVacancyBtn")?.addEventListener("click", updateVacancy);
 document.getElementById("clearVacancyFormBtn")?.addEventListener("click", clearVacancyForm);
+document.getElementById("saveTemplateBtn")?.addEventListener("click", saveEmailTemplate);
+document.getElementById("previewTemplateBtn")?.addEventListener("click", function () {
+    previewEmailTemplate();
+});
+document.getElementById("restoreTemplateBtn")?.addEventListener("click", function () {
+    restoreEmailTemplate();
+});
+document.getElementById("clearTemplateEditorBtn")?.addEventListener("click", clearEmailTemplateEditor);
 
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
@@ -1977,6 +2249,11 @@ window.editVacancy = editVacancy;
 window.updateVacancy = updateVacancy;
 window.setVacancyStatus = setVacancyStatus;
 window.deleteVacancy = deleteVacancy;
+window.editEmailTemplate = editEmailTemplate;
+window.previewEmailTemplate = previewEmailTemplate;
+window.saveEmailTemplate = saveEmailTemplate;
+window.restoreEmailTemplate = restoreEmailTemplate;
+window.clearEmailTemplateEditor = clearEmailTemplateEditor;
 
 if (authToken) {
     setDashboardVisible(true);
