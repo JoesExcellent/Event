@@ -1103,6 +1103,95 @@ Joe's Excellent Events & Management</textarea>
         </section>
 
 
+        <section class="ats-panel">
+            <h2>Phase 4A UI — Offer Response & Start Date Tracking</h2>
+            <p>Track offer responses, planned start dates and onboarding preparation for candidates who reach the offer stage.</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="offerCandidateName">Candidate Name</label>
+                    <input type="text" id="offerCandidateName" placeholder="Selected candidate name">
+                </div>
+
+                <div class="form-group">
+                    <label for="offerCandidatePosition">Position</label>
+                    <input type="text" id="offerCandidatePosition" placeholder="Candidate position">
+                </div>
+
+                <div class="form-group">
+                    <label for="offerResponseStatus">Offer Response</label>
+                    <select id="offerResponseStatus">
+                        <option value="">Select offer response</option>
+                        <option value="Offer Pending">Offer Pending</option>
+                        <option value="Offer Accepted">Offer Accepted</option>
+                        <option value="Offer Declined">Offer Declined</option>
+                        <option value="Offer Withdrawn">Offer Withdrawn</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="candidateStartDate">Start Date</label>
+                    <input type="date" id="candidateStartDate">
+                </div>
+
+                <div class="form-group">
+                    <label for="contractStatus">Contract Status</label>
+                    <select id="contractStatus">
+                        <option value="">Select contract status</option>
+                        <option value="Not Sent">Not Sent</option>
+                        <option value="Sent">Sent</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="onboardingStatus">Onboarding Status</label>
+                    <select id="onboardingStatus">
+                        <option value="">Select onboarding status</option>
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Ready For Start">Ready For Start</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="offerOnboardingNotes">Offer / Onboarding Notes</label>
+                    <textarea id="offerOnboardingNotes" placeholder="Add offer response, start date or onboarding preparation notes here."></textarea>
+                </div>
+            </div>
+
+            <div class="admin-actions" style="text-align:left; margin-bottom:18px;">
+                <button id="saveOfferTrackingBtn" type="button">Save Offer Tracking</button>
+                <button id="clearOfferTrackingBtn" type="button">Clear Offer Tracking</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Position</th>
+                            <th>Offer Response</th>
+                            <th>Start Date</th>
+                            <th>Contract Status</th>
+                            <th>Onboarding Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="offerTrackingTableBody">
+                        <tr>
+                            <td colspan="6">Offer response and start date records will appear here after Phase 4A logic is connected.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="offerTrackingMessage"></div>
+        </section>
+
+
         </div>
 
         <div id="tab-notes" class="dashboard-tab-content">
