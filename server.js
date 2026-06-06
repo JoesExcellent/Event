@@ -422,6 +422,125 @@ async function getTemplate(templateId) {
     return defaultTemplates[templateId];
 }
 
+function getTemplateCategory(templateId) {
+    const categoryMap = {
+        applicationReceived: "Application",
+        interviewInvitation: "Interview",
+        interviewReminder: "Interview",
+        interviewReminder7Day: "Interview",
+        interviewReminder24Hour: "Interview",
+        interviewReminderSameDay: "Interview",
+        offerEmail: "Offer",
+        hiredEmail: "Hiring",
+        rejectionEmail: "Rejection"
+    };
+
+    return categoryMap[templateId] || "General";
+}
+
+function normaliseTemplateForClient(templateId, template, source = "default") {
+    return {
+        id: templateId,
+        name: template?.name || templateId,
+        category: template?.category || getTemplateCategory(templateId),
+        subject: template?.subject || "",
+        body: template?.body || "",
+        source,
+        createdAt: template?.createdAt || "",
+        updatedAt: template?.updatedAt || ""
+    };
+}
+
+async function listEmailTemplatesHandler(req, res) {
+    try {
+        const templates = [];
+
+        for (const templateId of Object.keys(defaultTemplates)) {
+            const doc = await db.collection("emailTemplates").doc(templateId).get();
+            const savedData = doc.exists ? doc.data() : {};
+            const template = {
+                ...defaultTemplates[templateId],
+                ...savedData
+            };
+
+            templates.push(normaliseTemplateForClient(
+                templateId,
+                template,
+                doc.exists ? "custom" : "default"
+            ));
+        }
+
+        res.json({ templates });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load email templates." });
+    }
+}
+
+async function updateEmailTemplateHandler(req, res) {
+    try {
+        const templateId = clean(req.params.id);
+
+        if (!defaultTemplates[templateId]) {
+            return res.status(404).json({ message: "Template not found." });
+        }
+
+        const subject = clean(req.body.subject);
+        const body = clean(req.body.body);
+
+        if (!subject || !body) {
+            return res.status(400).json({ message: "Template subject and body are required." });
+        }
+
+        const payload = {
+            name: defaultTemplates[templateId].name,
+            category: getTemplateCategory(templateId),
+            subject,
+            body,
+            updatedAt: nowIso(),
+            updatedBy: req.user?.email || "system"
+        };
+
+        await db.collection("emailTemplates").doc(templateId).set(payload, { merge: true });
+
+        res.json({
+            message: "Email template saved successfully.",
+            template: normaliseTemplateForClient(templateId, payload, "custom")
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to save email template." });
+    }
+}
+
+async function restoreEmailTemplateHandler(req, res) {
+    try {
+        const templateId = clean(req.params.id);
+
+        if (!defaultTemplates[templateId]) {
+            return res.status(404).json({ message: "Template not found." });
+        }
+
+        await db.collection("emailTemplates").doc(templateId).delete();
+
+        res.json({
+            message: "Email template restored successfully.",
+            template: normaliseTemplateForClient(templateId, defaultTemplates[templateId], "default")
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to restore email template." });
+    }
+}
+
+app.get("/api/admin/email-templates", requireAuth, listEmailTemplatesHandler);
+app.get("/api/email-templates", requireAuth, listEmailTemplatesHandler);
+app.patch("/api/admin/email-templates/:id", requireAuth, requireEditor, updateEmailTemplateHandler);
+app.patch("/api/email-templates/:id", requireAuth, requireEditor, updateEmailTemplateHandler);
+app.post("/api/admin/email-templates/:id/restore", requireAuth, requireEditor, restoreEmailTemplateHandler);
+app.post("/api/email-templates/:id/restore", requireAuth, requireEditor, restoreEmailTemplateHandler);
+
+
 async function sendEmail({ to, subject, html }) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error("RESEND_API_KEY is missing.");
