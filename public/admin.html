@@ -1197,7 +1197,31 @@ Joe's Excellent Events & Management</textarea>
 
         </div>
 
-        <div id="tab-notes" class="dashboard-tab-content">
+        
+<section class="ats-panel">
+<h2>Phase 4D — Candidate Onboarding Centre</h2>
+<p>Track onboarding progress from offer acceptance through readiness to start employment.</p>
+<div class="form-grid">
+<div class="form-group"><label for="onboardingCandidateName">Candidate Name</label><input type="text" id="onboardingCandidateName"></div>
+<div class="form-group"><label for="onboardingPosition">Position</label><input type="text" id="onboardingPosition"></div>
+<div class="form-group"><label for="welcomePackStatus">Welcome Pack</label><select id="welcomePackStatus"><option>Not Sent</option><option>Sent</option></select></div>
+<div class="form-group"><label for="handbookStatus">Employee Handbook</label><select id="handbookStatus"><option>Not Sent</option><option>Sent</option></select></div>
+<div class="form-group"><label for="rtwStatus">Right To Work</label><select id="rtwStatus"><option>Pending</option><option>Verified</option></select></div>
+<div class="form-group"><label for="dbsStatus">DBS Status</label><select id="dbsStatus"><option>Not Required</option><option>Pending</option><option>Completed</option></select></div>
+<div class="form-group"><label for="trainingStatus">Training Status</label><select id="trainingStatus"><option>Not Started</option><option>In Progress</option><option>Completed</option></select></div>
+<div class="form-group"><label for="inductionDate">Induction Date</label><input type="date" id="inductionDate"></div>
+<div class="form-group"><label for="inductionStatus">Induction Status</label><select id="inductionStatus"><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option></select></div>
+<div class="form-group"><label for="readyToStart">Ready To Start</label><select id="readyToStart"><option>No</option><option>Yes</option></select></div>
+<div class="form-group full"><label for="onboardingNotes">Onboarding Notes</label><textarea id="onboardingNotes"></textarea></div>
+</div>
+<div class="admin-actions" style="text-align:left;">
+<button type="button" id="saveOnboardingBtn">Save Onboarding Record</button>
+<button type="button" id="markReadyToStartBtn">Mark Ready To Start</button>
+<button type="button" id="clearOnboardingBtn">Clear Onboarding Form</button>
+</div>
+</section>
+
+<div id="tab-notes" class="dashboard-tab-content">
 <section class="notes-card">
             <h2>Admin Notes</h2>
             <p>Add internal notes, rating and candidate updates for recruitment management.</p>
@@ -1374,7 +1398,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=77"></script>
+<script src="admin.js?v=78"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
