@@ -1429,6 +1429,328 @@ app.delete("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, r
     }
 });
 
+
+/* =====================================================
+   AUTOMATED REMINDER SCHEDULING
+===================================================== */
+
+const scheduledReminderConfig = {
+    "7day": {
+        templateId: "interviewReminder7Day",
+        label: "7 Day Interview Reminder",
+        action: "7 Day Interview Reminder Sent",
+        sentField: "sevenDayReminderSent",
+        sentAtField: "sevenDayReminderSentAt",
+        emailIdField: "sevenDayReminderEmailId",
+        daysBefore: 7
+    },
+    "24hour": {
+        templateId: "interviewReminder24Hour",
+        label: "24 Hour Interview Reminder",
+        action: "24 Hour Interview Reminder Sent",
+        sentField: "twentyFourHourReminderSent",
+        sentAtField: "twentyFourHourReminderSentAt",
+        emailIdField: "twentyFourHourReminderEmailId",
+        daysBefore: 1
+    },
+    "sameday": {
+        templateId: "interviewReminderSameDay",
+        label: "Same Day Interview Reminder",
+        action: "Same Day Interview Reminder Sent",
+        sentField: "sameDayReminderSent",
+        sentAtField: "sameDayReminderSentAt",
+        emailIdField: "sameDayReminderEmailId",
+        daysBefore: 0
+    }
+};
+
+function buildInterviewDateTime(interviewDate, interviewTime) {
+    const date = clean(interviewDate);
+    const time = clean(interviewTime) || "09:00";
+
+    if (!date) return null;
+
+    const candidateDate = new Date(`${date}T${time.length === 5 ? `${time}:00` : time}`);
+
+    if (Number.isNaN(candidateDate.getTime())) {
+        return null;
+    }
+
+    return candidateDate;
+}
+
+function calculateReminderDueAt(interviewDate, interviewTime, reminderType) {
+    const interviewDateTime = buildInterviewDateTime(interviewDate, interviewTime);
+    const config = scheduledReminderConfig[reminderType];
+
+    if (!interviewDateTime || !config) return "";
+
+    const dueDate = new Date(interviewDateTime.getTime());
+    dueDate.setDate(dueDate.getDate() - config.daysBefore);
+
+    return dueDate.toISOString();
+}
+
+function normaliseReminderForClient(doc) {
+    return { id: doc.id, ...doc.data() };
+}
+
+async function upsertReminderSchedule(application, reminderType, details, recruiterEmail) {
+    const config = scheduledReminderConfig[reminderType];
+    const dueAt = calculateReminderDueAt(details.interviewDate, details.interviewTime, reminderType);
+
+    if (!config || !dueAt) return null;
+
+    const applicationId = application.id || "";
+    const existingSnapshot = await db.collection("reminderQueue")
+        .where("applicationId", "==", applicationId)
+        .where("reminderType", "==", reminderType)
+        .limit(1)
+        .get();
+
+    const now = nowIso();
+    const payload = {
+        applicationId,
+        candidateId: applicationId,
+        candidateName: application.fullName || application.name || "Candidate",
+        email: application.email || "",
+        position: application.position || "",
+        reminderType,
+        reminderLabel: config.label,
+        templateId: config.templateId,
+        action: config.action,
+        dueAt,
+        scheduledFor: dueAt,
+        status: "Scheduled",
+        interviewDate: details.interviewDate || application.interviewDate || "",
+        interviewTime: details.interviewTime || application.interviewTime || "",
+        interviewLocation: details.interviewLocation || application.interviewLocation || "",
+        recruiterEmail: recruiterEmail || "system",
+        updatedAt: now
+    };
+
+    if (existingSnapshot.empty) {
+        payload.createdAt = now;
+        const ref = await db.collection("reminderQueue").add(payload);
+        return { id: ref.id, ...payload };
+    }
+
+    const existingDoc = existingSnapshot.docs[0];
+    const existingData = existingDoc.data();
+
+    if (String(existingData.status || "").toLowerCase() === "sent") {
+        return { id: existingDoc.id, ...existingData, skipped: true };
+    }
+
+    await existingDoc.ref.set(payload, { merge: true });
+    return { id: existingDoc.id, ...existingData, ...payload };
+}
+
+async function scheduleInterviewRemindersHandler(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const details = {
+            interviewDate: clean(req.body?.interviewDate) || application.interviewDate || "",
+            interviewTime: clean(req.body?.interviewTime) || application.interviewTime || "",
+            interviewLocation: clean(req.body?.interviewLocation) || application.interviewLocation || ""
+        };
+
+        if (!details.interviewDate) {
+            return res.status(400).json({ message: "Interview date is required before reminders can be scheduled." });
+        }
+
+        const scheduled = [];
+
+        for (const reminderType of ["7day", "24hour", "sameday"]) {
+            const reminder = await upsertReminderSchedule(application, reminderType, details, req.user?.email || "system");
+            if (reminder) scheduled.push(reminder);
+        }
+
+        await ref.update({
+            interviewDate: details.interviewDate,
+            interviewTime: details.interviewTime,
+            interviewLocation: details.interviewLocation,
+            reminderScheduleCreated: true,
+            reminderScheduleCreatedAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        res.json({
+            message: `${scheduled.length} interview reminders scheduled successfully.`,
+            reminders: scheduled
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to schedule interview reminders." });
+    }
+}
+
+async function listReminderQueueHandler(req, res) {
+    try {
+        const snapshot = await db.collection("reminderQueue")
+            .orderBy("dueAt", "asc")
+            .limit(500)
+            .get();
+
+        res.json({ reminders: snapshot.docs.map(normaliseReminderForClient) });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load reminder queue." });
+    }
+}
+
+async function sendReminderQueueItem(reminderId, recruiterEmail = "system") {
+    const reminderRef = db.collection("reminderQueue").doc(reminderId);
+    const reminderDoc = await reminderRef.get();
+
+    if (!reminderDoc.exists) {
+        throw new Error("Reminder record not found.");
+    }
+
+    const reminder = { id: reminderDoc.id, ...reminderDoc.data() };
+
+    if (String(reminder.status || "").toLowerCase() === "sent") {
+        return { reminder, alreadySent: true };
+    }
+
+    const found = await getApplicationOr404(reminder.applicationId, {
+        status: () => ({ json: () => null })
+    });
+
+    if (!found) {
+        throw new Error("Application linked to reminder was not found.");
+    }
+
+    const { ref, application } = found;
+    const config = scheduledReminderConfig[reminder.reminderType] || scheduledReminderConfig["7day"];
+
+    const reminderData = {
+        interviewDate: reminder.interviewDate || application.interviewDate || "",
+        interviewTime: reminder.interviewTime || application.interviewTime || "",
+        interviewLocation: reminder.interviewLocation || application.interviewLocation || ""
+    };
+
+    try {
+        await reminderRef.update({
+            status: "Sending",
+            processingAt: nowIso(),
+            updatedAt: nowIso()
+        });
+
+        const emailResult = await sendTemplateEmail(config.templateId, application, reminderData);
+        const sentAt = nowIso();
+
+        const applicationUpdate = {
+            reminderSent: true,
+            reminderSentAt: sentAt,
+            reminderEmailId: emailResult.id || "",
+            reminderType: reminder.reminderType,
+            lastCommunicationAction: config.action,
+            lastCommunicationAt: sentAt,
+            updatedAt: sentAt
+        };
+
+        applicationUpdate[config.sentField] = true;
+        applicationUpdate[config.sentAtField] = sentAt;
+        applicationUpdate[config.emailIdField] = emailResult.id || "";
+
+        await ref.update(applicationUpdate);
+
+        await reminderRef.update({
+            status: "Sent",
+            sentAt,
+            emailId: emailResult.id || "",
+            updatedAt: sentAt
+        });
+
+        await logCommunication({
+            applicationId: application.id,
+            application,
+            communicationType: config.label,
+            action: config.action,
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail }
+        });
+
+        return { reminder: { ...reminder, status: "Sent", sentAt }, emailId: emailResult.id || "" };
+    } catch (error) {
+        await reminderRef.update({
+            status: "Failed",
+            errorMessage: error.message || "Reminder send failed.",
+            updatedAt: nowIso()
+        });
+
+        throw error;
+    }
+}
+
+async function sendReminderQueueItemHandler(req, res) {
+    try {
+        const result = await sendReminderQueueItem(req.params.id, req.user?.email || "system");
+
+        res.json({
+            message: result.alreadySent ? "Reminder had already been sent." : "Scheduled reminder sent successfully.",
+            emailId: result.emailId || "",
+            reminder: result.reminder
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send scheduled reminder." });
+    }
+}
+
+async function processDueRemindersHandler(req, res) {
+    try {
+        const now = nowIso();
+        const snapshot = await db.collection("reminderQueue")
+            .orderBy("dueAt", "asc")
+            .limit(100)
+            .get();
+
+        const dueDocs = snapshot.docs.filter(doc => {
+            const data = doc.data();
+            const status = String(data.status || "Scheduled").toLowerCase();
+            return status !== "sent" && status !== "cancelled" && String(data.dueAt || "") <= now;
+        }).slice(0, 25);
+
+        let sent = 0;
+        let failed = 0;
+
+        for (const doc of dueDocs) {
+            try {
+                await sendReminderQueueItem(doc.id, req.user?.email || "system");
+                sent += 1;
+            } catch (error) {
+                console.error("Due reminder failed:", error);
+                failed += 1;
+            }
+        }
+
+        res.json({
+            message: `${sent} due reminders sent. ${failed} failed.`,
+            sent,
+            failed
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to process due reminders." });
+    }
+}
+
+app.get("/api/admin/reminder-queue", requireAuth, listReminderQueueHandler);
+app.get("/api/reminder-queue", requireAuth, listReminderQueueHandler);
+app.post("/api/admin/applications/:id/schedule-reminders", requireAuth, requireEditor, scheduleInterviewRemindersHandler);
+app.post("/api/applications/:id/schedule-reminders", requireAuth, requireEditor, scheduleInterviewRemindersHandler);
+app.post("/api/admin/reminder-queue/:id/send", requireAuth, requireEditor, sendReminderQueueItemHandler);
+app.post("/api/reminder-queue/:id/send", requireAuth, requireEditor, sendReminderQueueItemHandler);
+app.post("/api/admin/reminders/process-due", requireAuth, requireEditor, processDueRemindersHandler);
+app.post("/api/reminders/process-due", requireAuth, requireEditor, processDueRemindersHandler);
+
 /* =====================================================
    CONTACT MESSAGES
 ===================================================== */
