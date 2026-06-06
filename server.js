@@ -1704,38 +1704,54 @@ async function sendReminderQueueItemHandler(req, res) {
     }
 }
 
+async function processDueRemindersCore(recruiterEmail = "system", options = {}) {
+    const now = nowIso();
+    const batchLimit = Number(options.batchLimit || 25);
+
+    const snapshot = await db.collection("reminderQueue")
+        .orderBy("dueAt", "asc")
+        .limit(100)
+        .get();
+
+    const dueDocs = snapshot.docs.filter(doc => {
+        const data = doc.data();
+        const status = String(data.status || "Scheduled").toLowerCase();
+        return status !== "sent" &&
+               status !== "cancelled" &&
+               status !== "failed" &&
+               String(data.dueAt || "") <= now;
+    }).slice(0, batchLimit);
+
+    let sent = 0;
+    let failed = 0;
+    const results = [];
+
+    for (const doc of dueDocs) {
+        try {
+            const result = await sendReminderQueueItem(doc.id, recruiterEmail);
+            sent += result.alreadySent ? 0 : 1;
+            results.push({ id: doc.id, status: result.alreadySent ? "Already Sent" : "Sent" });
+        } catch (error) {
+            console.error("Due reminder failed:", error);
+            failed += 1;
+            results.push({ id: doc.id, status: "Failed", message: error.message || "Reminder failed." });
+        }
+    }
+
+    return {
+        message: `${sent} due reminders sent. ${failed} failed.`,
+        checkedAt: now,
+        dueCount: dueDocs.length,
+        sent,
+        failed,
+        results
+    };
+}
+
 async function processDueRemindersHandler(req, res) {
     try {
-        const now = nowIso();
-        const snapshot = await db.collection("reminderQueue")
-            .orderBy("dueAt", "asc")
-            .limit(100)
-            .get();
-
-        const dueDocs = snapshot.docs.filter(doc => {
-            const data = doc.data();
-            const status = String(data.status || "Scheduled").toLowerCase();
-            return status !== "sent" && status !== "cancelled" && String(data.dueAt || "") <= now;
-        }).slice(0, 25);
-
-        let sent = 0;
-        let failed = 0;
-
-        for (const doc of dueDocs) {
-            try {
-                await sendReminderQueueItem(doc.id, req.user?.email || "system");
-                sent += 1;
-            } catch (error) {
-                console.error("Due reminder failed:", error);
-                failed += 1;
-            }
-        }
-
-        res.json({
-            message: `${sent} due reminders sent. ${failed} failed.`,
-            sent,
-            failed
-        });
+        const result = await processDueRemindersCore(req.user?.email || "system");
+        res.json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message || "Failed to process due reminders." });
@@ -1834,6 +1850,40 @@ app.use((req, res) => {
         message: "Route not found."
     });
 });
+
+
+/* =====================================================
+   AUTOMATIC REMINDER PROCESSOR
+===================================================== */
+
+let automaticReminderProcessorRunning = false;
+
+async function runAutomaticReminderProcessor() {
+    if (automaticReminderProcessorRunning) return;
+
+    automaticReminderProcessorRunning = true;
+
+    try {
+        const result = await processDueRemindersCore("automatic-reminder-processor", { batchLimit: 25 });
+
+        if (result.dueCount > 0 || result.failed > 0) {
+            console.log(`[Reminder Processor] ${result.message}`);
+        }
+    } catch (error) {
+        console.error("Automatic reminder processor failed:", error);
+    } finally {
+        automaticReminderProcessorRunning = false;
+    }
+}
+
+const automaticReminderProcessorEnabled = String(process.env.AUTO_REMINDER_PROCESSOR_ENABLED || "true").toLowerCase() !== "false";
+const automaticReminderProcessorMinutes = Math.max(1, Number(process.env.AUTO_REMINDER_PROCESSOR_MINUTES || 5));
+
+if (automaticReminderProcessorEnabled) {
+    setInterval(runAutomaticReminderProcessor, automaticReminderProcessorMinutes * 60 * 1000);
+    setTimeout(runAutomaticReminderProcessor, 15000);
+    console.log(`Automatic reminder processor active every ${automaticReminderProcessorMinutes} minute(s).`);
+}
 
 /* =====================================================
    START SERVER
