@@ -925,6 +925,11 @@ async function updateApplicationHandler(req, res) {
             return res.status(404).json({ message: "Application not found." });
         }
 
+        const application = {
+            id: doc.id,
+            ...doc.data()
+        };
+
         const updateData = {
             ...req.body,
             updatedAt: nowIso()
@@ -934,15 +939,20 @@ async function updateApplicationHandler(req, res) {
 
         await ref.update(updateData);
 
-        await logCommunication({
-            applicationId: application.id,
-            application,
-            communicationType: selectedReminder.action.replace(" Sent", ""),
-            action: selectedReminder.action,
-            status: "Sent",
-            emailId: emailResult.id || "",
-            extra: { recruiterEmail: req.user?.email || "system" }
-        });
+        if (updateData.status && updateData.status !== application.status) {
+            await logCommunication({
+                applicationId: id,
+                application: {
+                    ...application,
+                    ...updateData
+                },
+                communicationType: "Candidate Status",
+                action: `Status Updated To ${updateData.status}`,
+                status: "Recorded",
+                emailId: "",
+                extra: { recruiterEmail: req.user?.email || "system" }
+            });
+        }
 
         res.json({
             message: "Application updated successfully.",
@@ -1165,6 +1175,10 @@ async function handleOfferEmail(req, res) {
             offerSent: true,
             offerSentAt: nowIso(),
             offerEmailId: emailResult.id || "",
+            offerResponseStatus: application.offerResponseStatus || "Offer Pending",
+            contractStatus: application.contractStatus || "Sent",
+            onboardingStatus: application.onboardingStatus || "Not Started",
+            offerTrackingCreatedAt: application.offerTrackingCreatedAt || nowIso(),
             lastCommunicationAction: "Offer Email Sent",
             lastCommunicationAt: nowIso(),
             updatedAt: nowIso()
@@ -1194,6 +1208,80 @@ app.post("/api/admin/applications/:id/offer", requireAuth, requireEditor, handle
 app.post("/api/admin/applications/:id/send-offer", requireAuth, requireEditor, handleOfferEmail);
 app.post("/api/applications/:id/offer", requireAuth, requireEditor, handleOfferEmail);
 
+async function handleOfferTrackingUpdate(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const offerResponseStatus = clean(req.body.offerResponseStatus) || application.offerResponseStatus || "Offer Pending";
+        const candidateStartDate = clean(req.body.candidateStartDate) || "";
+        const contractStatus = clean(req.body.contractStatus) || "";
+        const onboardingStatus = clean(req.body.onboardingStatus) || "";
+        const offerOnboardingNotes = clean(req.body.offerOnboardingNotes) || "";
+
+        const updateData = {
+            offerResponseStatus,
+            candidateStartDate,
+            contractStatus,
+            onboardingStatus,
+            offerOnboardingNotes,
+            offerTrackingUpdatedAt: nowIso(),
+            lastCommunicationAction: `Offer Tracking Updated - ${offerResponseStatus}`,
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        };
+
+        if (!application.offerTrackingCreatedAt) {
+            updateData.offerTrackingCreatedAt = nowIso();
+        }
+
+        if (offerResponseStatus === "Offer Accepted" && !onboardingStatus) {
+            updateData.onboardingStatus = "In Progress";
+        }
+
+        if (offerResponseStatus === "Offer Declined") {
+            updateData.onboardingStatus = onboardingStatus || "Not Started";
+        }
+
+        await ref.update(updateData);
+
+        await logCommunication({
+            applicationId: application.id,
+            application: {
+                ...application,
+                ...updateData
+            },
+            communicationType: "Offer Tracking",
+            action: `Offer Tracking Updated - ${offerResponseStatus}`,
+            status: "Recorded",
+            emailId: "",
+            extra: {
+                recruiterEmail: req.user?.email || "system",
+                candidateStartDate,
+                contractStatus: updateData.contractStatus,
+                onboardingStatus: updateData.onboardingStatus
+            }
+        });
+
+        res.json({
+            message: "Offer tracking updated successfully.",
+            applicationId: application.id,
+            offerResponseStatus,
+            candidateStartDate,
+            contractStatus: updateData.contractStatus,
+            onboardingStatus: updateData.onboardingStatus
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to update offer tracking." });
+    }
+}
+
+app.patch("/api/admin/applications/:id/offer-tracking", requireAuth, requireEditor, handleOfferTrackingUpdate);
+app.patch("/api/applications/:id/offer-tracking", requireAuth, requireEditor, handleOfferTrackingUpdate);
+
 async function handleHireEmail(req, res) {
     try {
         const found = await getApplicationOr404(req.params.id, res);
@@ -1214,6 +1302,8 @@ async function handleHireEmail(req, res) {
             hiredEmailSent: true,
             hiredEmailSentAt: nowIso(),
             hiredEmailId: emailResult.id || "",
+            offerResponseStatus: application.offerResponseStatus || "Offer Accepted",
+            onboardingStatus: application.onboardingStatus || "In Progress",
             lastCommunicationAction: "Employment Confirmation Email Sent",
             lastCommunicationAt: nowIso(),
             updatedAt: nowIso()
