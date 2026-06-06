@@ -1068,6 +1068,41 @@ Joe's Excellent Events & Management</textarea>
             </div>
         </section>
 
+        <section class="ats-panel">
+            <h2>Automated Reminder Schedule</h2>
+            <p>Prepare, track and send scheduled interview reminders using the approved Email Templates Library.</p>
+
+            <div class="admin-actions" style="text-align:left; margin-bottom:18px;">
+                <button id="scheduleInterviewRemindersBtn" type="button">Schedule Reminders For Selected Candidate</button>
+                <button id="processDueRemindersBtn" type="button">Process Due Reminders</button>
+                <button id="refreshReminderQueueBtn" type="button">Refresh Reminder Queue</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Candidate</th>
+                            <th>Email</th>
+                            <th>Reminder Type</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="reminderQueueTableBody">
+                        <tr>
+                            <td colspan="6">Reminder schedule records will appear after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="reminderQueueMessage"></div>
+        </section>
+
+
         </div>
 
         <div id="tab-notes" class="dashboard-tab-content">
@@ -1247,7 +1282,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=67"></script>
+<script src="admin.js?v=68"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

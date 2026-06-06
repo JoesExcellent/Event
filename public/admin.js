@@ -12,6 +12,7 @@ let allContactMessages = [];
 let allCommunications = [];
 let allVacancies = [];
 let allEmailTemplates = [];
+let allReminderQueue = [];
 let selectedVacancyId = null;
 let selectedEmailTemplateId = null;
 
@@ -49,6 +50,8 @@ const templateMessage = document.getElementById("templateMessage");
 const templatePreviewBox = document.getElementById("templatePreviewBox");
 const templatePreviewSubject = document.getElementById("templatePreviewSubject");
 const templatePreviewBody = document.getElementById("templatePreviewBody");
+const reminderQueueTableBody = document.getElementById("reminderQueueTableBody");
+const reminderQueueMessage = document.getElementById("reminderQueueMessage");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -260,12 +263,14 @@ async function refreshDashboard(showMessage = false) {
     await loadContactMessages();
     await loadCommunications();
     await loadEmailTemplates();
+    await loadReminderQueue();
     await loadVacancies();
 
     updateCommandCentre();
     renderActivityFeed();
     renderRecruiterTasks();
     renderCommunicationCentre();
+    renderReminderQueue();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -1432,6 +1437,21 @@ function updateStats(applications) {
     }
 }
 
+
+function getDueReminderCount() {
+    const now = new Date();
+
+    return allReminderQueue.filter(reminder => {
+        const status = String(reminder.status || "Scheduled").toLowerCase();
+        const dueAt = new Date(reminder.dueAt || reminder.scheduledFor || 0);
+
+        return status !== "sent" &&
+               status !== "cancelled" &&
+               !Number.isNaN(dueAt.getTime()) &&
+               dueAt <= now;
+    }).length;
+}
+
 function updateCommandCentre() {
     const unread = allContactMessages.filter(message => !message.read).length;
 
@@ -1448,7 +1468,7 @@ function updateCommandCentre() {
         normaliseStatus(app.status) === "New" ||
         normaliseStatus(app.status) === "Screening" ||
         normaliseStatus(app.status) === "Shortlisted"
-    ).length;
+    ).length + getDueReminderCount();
 
     if (unreadMessagesCount) unreadMessagesCount.textContent = unread;
     if (pendingInterviewsCount) pendingInterviewsCount.textContent = pendingInterviews;
@@ -1519,6 +1539,24 @@ function renderRecruiterTasks() {
             tasks.push({
                 title: "Confirm Interview Details",
                 text: `${app.fullName || "Candidate"} has been invited but interview details may need checking.`
+            });
+        });
+
+    allReminderQueue
+        .filter(reminder => {
+            const status = String(reminder.status || "Scheduled").toLowerCase();
+            const dueAt = new Date(reminder.dueAt || reminder.scheduledFor || 0);
+
+            return status !== "sent" &&
+                   status !== "cancelled" &&
+                   !Number.isNaN(dueAt.getTime()) &&
+                   dueAt <= new Date();
+        })
+        .slice(0, 5)
+        .forEach(reminder => {
+            tasks.push({
+                title: "Reminder Due",
+                text: `${reminder.candidateName || "Candidate"} is due: ${reminder.reminderLabel || reminder.reminderType || "Interview Reminder"}.`
             });
         });
 
@@ -1597,6 +1635,201 @@ function renderCommunicationCentre() {
 
         communicationTableBody.appendChild(tr);
     });
+}
+
+
+function setReminderQueueMessage(message, isError = false) {
+    if (!reminderQueueMessage) return;
+
+    reminderQueueMessage.textContent = message || "";
+    reminderQueueMessage.style.color = isError ? "#ff6a00" : "#ffffff";
+    reminderQueueMessage.style.fontWeight = "700";
+    reminderQueueMessage.style.marginTop = "14px";
+}
+
+async function loadReminderQueue() {
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/reminder-queue`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load reminder queue.");
+        }
+
+        allReminderQueue = result.reminders || [];
+    } catch (error) {
+        console.error(error);
+        allReminderQueue = [];
+
+        if (reminderQueueTableBody) {
+            reminderQueueTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Failed to load reminder schedule records.</td>
+                </tr>
+            `;
+        }
+    }
+}
+
+function getReminderDisplayStatus(reminder) {
+    const status = String(reminder.status || "Scheduled");
+
+    if (status.toLowerCase() === "sent") return "Sent";
+    if (status.toLowerCase() === "failed") return "Failed";
+    if (status.toLowerCase() === "cancelled") return "Cancelled";
+
+    const dueAt = new Date(reminder.dueAt || reminder.scheduledFor || 0);
+
+    if (!Number.isNaN(dueAt.getTime()) && dueAt <= new Date()) {
+        return "Due Now";
+    }
+
+    return status;
+}
+
+function renderReminderQueue() {
+    if (!reminderQueueTableBody) return;
+
+    const reminders = allReminderQueue.slice()
+        .sort((a, b) => new Date(a.dueAt || a.scheduledFor || 0) - new Date(b.dueAt || b.scheduledFor || 0));
+
+    if (!reminders.length) {
+        reminderQueueTableBody.innerHTML = `
+            <tr>
+                <td colspan="6">No scheduled reminders found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    reminderQueueTableBody.innerHTML = reminders.slice(0, 100).map(reminder => {
+        const displayStatus = getReminderDisplayStatus(reminder);
+        const canSend = !["Sent", "Cancelled"].includes(displayStatus);
+
+        return `
+            <tr>
+                <td>${escapeHtml(reminder.candidateName || "Candidate")}</td>
+                <td>${escapeHtml(reminder.email || "N/A")}</td>
+                <td>${escapeHtml(reminder.reminderLabel || reminder.reminderType || "Interview Reminder")}</td>
+                <td>${escapeHtml(formatDateTime(reminder.dueAt || reminder.scheduledFor))}</td>
+                <td>${escapeHtml(displayStatus)}</td>
+                <td>
+                    ${canSend ? `<button type="button" onclick="sendQueuedReminder('${escapeQuotes(reminder.id)}')">Send Now</button>` : ""}
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function scheduleInterviewRemindersForSelectedCandidate() {
+    if (!selectedApplicationId) {
+        showToast("Please select a candidate first.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot schedule reminders.", "error");
+        return;
+    }
+
+    if (!confirm("Schedule 7 day, 24 hour and same day interview reminders for this candidate?")) {
+        return;
+    }
+
+    try {
+        const payload = {
+            interviewDate: document.getElementById("interviewDate")?.value || "",
+            interviewTime: document.getElementById("interviewTime")?.value || "",
+            interviewLocation: document.getElementById("interviewLocation")?.value || ""
+        };
+
+        const response = await fetch(`${API_BASE}/api/admin/applications/${selectedApplicationId}/schedule-reminders`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to schedule reminders.");
+        }
+
+        showToast(result.message || "Interview reminders scheduled.", "success");
+        setReminderQueueMessage(result.message || "Interview reminders scheduled.");
+        await refreshDashboard();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to schedule reminders.", "error");
+        setReminderQueueMessage(error.message || "Failed to schedule reminders.", true);
+    }
+}
+
+async function processDueReminders() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot process reminders.", "error");
+        return;
+    }
+
+    if (!confirm("Process all reminders that are due now?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/reminders/process-due`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to process reminders.");
+        }
+
+        showToast(result.message || "Due reminders processed.", "success");
+        setReminderQueueMessage(result.message || "Due reminders processed.");
+        await refreshDashboard();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to process reminders.", "error");
+        setReminderQueueMessage(error.message || "Failed to process reminders.", true);
+    }
+}
+
+async function sendQueuedReminder(id) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send queued reminders.", "error");
+        return;
+    }
+
+    if (!confirm("Send this scheduled reminder now?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/reminder-queue/${encodeURIComponent(id)}/send`, {
+            method: "POST",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to send queued reminder.");
+        }
+
+        showToast(result.message || "Queued reminder sent.", "success");
+        setReminderQueueMessage(result.message || "Queued reminder sent.");
+        await refreshDashboard();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to send queued reminder.", "error");
+        setReminderQueueMessage(error.message || "Failed to send queued reminder.", true);
+    }
 }
 
 
@@ -2183,6 +2416,7 @@ function logoutAdmin() {
     allContactMessages = [];
     allVacancies = [];
     allEmailTemplates = [];
+    allReminderQueue = [];
     selectedVacancyId = null;
     selectedEmailTemplateId = null;
 
@@ -2219,6 +2453,13 @@ document.getElementById("restoreTemplateBtn")?.addEventListener("click", functio
     restoreEmailTemplate();
 });
 document.getElementById("clearTemplateEditorBtn")?.addEventListener("click", clearEmailTemplateEditor);
+document.getElementById("scheduleInterviewRemindersBtn")?.addEventListener("click", scheduleInterviewRemindersForSelectedCandidate);
+document.getElementById("processDueRemindersBtn")?.addEventListener("click", processDueReminders);
+document.getElementById("refreshReminderQueueBtn")?.addEventListener("click", async function () {
+    await loadReminderQueue();
+    renderReminderQueue();
+    showToast("Reminder queue refreshed.", "success");
+});
 
 candidateSearchInput?.addEventListener("input", applyCandidateFilters);
 statusFilterSelect?.addEventListener("change", applyCandidateFilters);
@@ -2254,6 +2495,9 @@ window.previewEmailTemplate = previewEmailTemplate;
 window.saveEmailTemplate = saveEmailTemplate;
 window.restoreEmailTemplate = restoreEmailTemplate;
 window.clearEmailTemplateEditor = clearEmailTemplateEditor;
+window.scheduleInterviewRemindersForSelectedCandidate = scheduleInterviewRemindersForSelectedCandidate;
+window.processDueReminders = processDueReminders;
+window.sendQueuedReminder = sendQueuedReminder;
 
 if (authToken) {
     setDashboardVisible(true);
