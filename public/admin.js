@@ -9,6 +9,7 @@ let autoRefreshTimer = null;
 
 let allApplications = [];
 let allContactMessages = [];
+let allCommunications = [];
 let allVacancies = [];
 let selectedVacancyId = null;
 
@@ -244,6 +245,7 @@ async function loginAdmin() {
 async function refreshDashboard(showMessage = false) {
     await loadApplications();
     await loadContactMessages();
+    await loadCommunications();
     await loadVacancies();
 
     updateCommandCentre();
@@ -542,7 +544,36 @@ function renderCandidateCommunicationTimeline(application) {
 
     if (!timeline) return;
 
+    const records = allCommunications
+        .filter(record =>
+            (record.applicationId && record.applicationId === application.id) ||
+            (record.candidateId && record.candidateId === application.id) ||
+            (record.email && application.email && record.email.toLowerCase() === application.email.toLowerCase())
+        )
+        .sort((a, b) => new Date(b.sentAt || b.createdAt || 0) - new Date(a.sentAt || a.createdAt || 0));
+
+    if (records.length) {
+        timeline.innerHTML = records.map(record => `
+            <li>
+                <strong>${escapeHtml(record.action || record.communicationType || "Communication")}</strong>
+                ${escapeHtml(formatDateTime(record.sentAt || record.createdAt))}<br>
+                ${escapeHtml(record.communicationType || record.type || "Email")} — ${escapeHtml(record.status || "Sent")}
+                ${record.emailId ? `<br>Reference: ${escapeHtml(record.emailId)}` : ""}
+            </li>
+        `).join("");
+        return;
+    }
+
     const items = [];
+
+    if (application.applicationReceivedSent) {
+        items.push({
+            title: "Application Received Email Sent",
+            text: application.lastCommunicationAt
+                ? `Email sent on ${formatDateTime(application.lastCommunicationAt)}.`
+                : "Application received email has been sent."
+        });
+    }
 
     if (application.invitationSent) {
         items.push({
@@ -550,13 +581,6 @@ function renderCandidateCommunicationTimeline(application) {
             text: application.invitationSentAt
                 ? `Email sent on ${formatDateTime(application.invitationSentAt)}.`
                 : "Interview invitation email has been sent."
-        });
-    }
-
-    if (application.invitationEmailId) {
-        items.push({
-            title: "Interview Invitation Delivery Reference",
-            text: `Resend Email ID: ${application.invitationEmailId}`
         });
     }
 
@@ -569,17 +593,37 @@ function renderCandidateCommunicationTimeline(application) {
         });
     }
 
-    if (application.reminderEmailId) {
+    if (application.offerSent) {
         items.push({
-            title: "Interview Reminder Delivery Reference",
-            text: `Resend Email ID: ${application.reminderEmailId}`
+            title: "Offer Email Sent",
+            text: application.offerSentAt
+                ? `Email sent on ${formatDateTime(application.offerSentAt)}.`
+                : "Offer email has been sent."
+        });
+    }
+
+    if (application.hiredEmailSent) {
+        items.push({
+            title: "Employment Confirmation Email Sent",
+            text: application.hiredEmailSentAt
+                ? `Email sent on ${formatDateTime(application.hiredEmailSentAt)}.`
+                : "Employment confirmation email has been sent."
+        });
+    }
+
+    if (application.rejectionSent) {
+        items.push({
+            title: "Rejection Email Sent",
+            text: application.rejectionSentAt
+                ? `Email sent on ${formatDateTime(application.rejectionSentAt)}.`
+                : "Rejection email has been sent."
         });
     }
 
     if (!items.length) {
         items.push({
             title: "No Email Activity Yet",
-            text: "No interview invitation or interview reminder has been recorded for this candidate yet."
+            text: "No email activity has been recorded for this candidate yet."
         });
     }
 
@@ -1479,17 +1523,44 @@ function renderRecruiterTasks() {
     `).join("");
 }
 
+
+async function loadCommunications() {
+    try {
+        const response = await fetch(`${API_BASE}/api/communications`, {
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load communication records.");
+        }
+
+        allCommunications = result.communications || [];
+    } catch (error) {
+        console.error(error);
+        allCommunications = [];
+
+        if (communicationTableBody) {
+            communicationTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6">Failed to load communication records.</td>
+                </tr>
+            `;
+        }
+    }
+}
+
 function renderCommunicationCentre() {
     if (!communicationTableBody) return;
 
-    const communicationRecords = allApplications.filter(app =>
-        app.email || app.invitationSent || app.invitationEmailId
-    );
+    const communicationRecords = allCommunications.slice()
+        .sort((a, b) => new Date(b.sentAt || b.createdAt || 0) - new Date(a.sentAt || a.createdAt || 0));
 
     if (!communicationRecords.length) {
         communicationTableBody.innerHTML = `
             <tr>
-                <td colspan="5">No communication records found.</td>
+                <td colspan="6">No communication records found.</td>
             </tr>
         `;
         return;
@@ -1497,20 +1568,17 @@ function renderCommunicationCentre() {
 
     communicationTableBody.innerHTML = "";
 
-    communicationRecords.forEach(app => {
-        const needsFollowUp =
-            normaliseStatus(app.status) === "New" ||
-            normaliseStatus(app.status) === "Screening" ||
-            normaliseStatus(app.status) === "Shortlisted";
-
+    communicationRecords.slice(0, 100).forEach(record => {
+        const needsFollowUp = String(record.followUp || "").toLowerCase().includes("required");
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-            <td>${escapeHtml(app.fullName || "Candidate")}</td>
-            <td>${escapeHtml(app.email || "N/A")}</td>
-            <td>${app.invitationSent ? "Yes" : "No"}</td>
-            <td>${escapeHtml(app.invitationEmailId || "N/A")}</td>
-            <td>${needsFollowUp ? "Follow up required" : "No urgent follow-up"}</td>
+            <td>${escapeHtml(record.candidateName || "Candidate")}</td>
+            <td>${escapeHtml(record.email || "N/A")}</td>
+            <td>${escapeHtml(record.communicationType || record.type || "Email")}</td>
+            <td>${escapeHtml(record.status || "Sent")}</td>
+            <td>${escapeHtml(formatDateTime(record.sentAt || record.createdAt))}</td>
+            <td>${needsFollowUp ? "Follow up required" : escapeHtml(record.followUp || "No urgent follow-up")}</td>
         `;
 
         communicationTableBody.appendChild(tr);
