@@ -543,6 +543,53 @@ async function sendTemplateEmail(templateId, application, extraData = {}) {
     });
 }
 
+
+function normaliseCommunicationForClient(doc) {
+    return { id: doc.id, ...doc.data() };
+}
+
+async function logCommunication({
+    applicationId = "",
+    application = {},
+    communicationType = "Communication",
+    action = "Communication Sent",
+    status = "Sent",
+    emailId = "",
+    subject = "",
+    extra = {}
+}) {
+    try {
+        const candidateName = application.fullName || application.name || extra.candidateName || "Candidate";
+        const email = application.email || extra.email || "";
+        const position = application.position || extra.position || "";
+        const sentAt = nowIso();
+
+        const record = {
+            applicationId: applicationId || application.id || "",
+            candidateId: applicationId || application.id || "",
+            candidateName,
+            email,
+            position,
+            communicationType,
+            type: communicationType,
+            action,
+            status,
+            emailId: emailId || "",
+            subject: subject || "",
+            sentAt,
+            createdAt: sentAt,
+            recruiterEmail: extra.recruiterEmail || "system",
+            followUp: extra.followUp || "No urgent follow-up"
+        };
+
+        await db.collection("communications").add(record);
+        return record;
+    } catch (error) {
+        console.error("Communication logging failed:", error);
+        return null;
+    }
+}
+
 /* =====================================================
    HEALTH CHECK
 ===================================================== */
@@ -663,6 +710,15 @@ async function applicationSubmitHandler(req, res) {
                     lastCommunicationAction: "Application Received Email Sent",
                     lastCommunicationAt: nowIso()
                 });
+
+                await logCommunication({
+                    applicationId: docRef.id,
+                    application: { id: docRef.id, ...application },
+                    communicationType: "Application Received Email",
+                    action: "Application Received Email Sent",
+                    status: "Sent",
+                    emailId: emailResult.id || ""
+                });
             } catch (emailError) {
                 console.error("Application received email failed:", emailError);
             }
@@ -719,6 +775,27 @@ async function listApplicationsHandler(req, res) {
 app.get("/api/admin/applications", requireAuth, listApplicationsHandler);
 app.get("/api/applications", requireAuth, listApplicationsHandler);
 
+
+async function listCommunicationsHandler(req, res) {
+    try {
+        const snapshot = await db
+            .collection("communications")
+            .orderBy("sentAt", "desc")
+            .limit(500)
+            .get();
+
+        const communications = snapshot.docs.map(normaliseCommunicationForClient);
+
+        res.json({ communications });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load communication records." });
+    }
+}
+
+app.get("/api/admin/communications", requireAuth, listCommunicationsHandler);
+app.get("/api/communications", requireAuth, listCommunicationsHandler);
+
 async function updateApplicationHandler(req, res) {
     try {
         const id = req.params.id;
@@ -737,6 +814,16 @@ async function updateApplicationHandler(req, res) {
         delete updateData.id;
 
         await ref.update(updateData);
+
+        await logCommunication({
+            applicationId: application.id,
+            application,
+            communicationType: selectedReminder.action.replace(" Sent", ""),
+            action: selectedReminder.action,
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail: req.user?.email || "system" }
+        });
 
         res.json({
             message: "Application updated successfully.",
@@ -824,6 +911,16 @@ async function handleInterviewInvite(req, res) {
             lastCommunicationAction: "Interview Invitation Sent",
             lastCommunicationAt: nowIso(),
             updatedAt: nowIso()
+        });
+
+        await logCommunication({
+            applicationId: application.id,
+            application: updatedApplication,
+            communicationType: "Interview Invitation",
+            action: "Interview Invitation Sent",
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail: req.user?.email || "system" }
         });
 
         res.json({
@@ -954,6 +1051,16 @@ async function handleOfferEmail(req, res) {
             updatedAt: nowIso()
         });
 
+        await logCommunication({
+            applicationId: application.id,
+            application: updatedApplication,
+            communicationType: "Offer Email",
+            action: "Offer Email Sent",
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail: req.user?.email || "system" }
+        });
+
         res.json({
             message: "Offer email sent successfully.",
             emailId: emailResult.id || ""
@@ -993,6 +1100,16 @@ async function handleHireEmail(req, res) {
             updatedAt: nowIso()
         });
 
+        await logCommunication({
+            applicationId: application.id,
+            application: updatedApplication,
+            communicationType: "Employment Confirmation Email",
+            action: "Employment Confirmation Email Sent",
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail: req.user?.email || "system" }
+        });
+
         res.json({
             message: "Candidate marked as hired and employment confirmation email sent.",
             emailId: emailResult.id || ""
@@ -1029,6 +1146,16 @@ async function handleRejectionEmail(req, res) {
             lastCommunicationAction: "Rejection Email Sent",
             lastCommunicationAt: nowIso(),
             updatedAt: nowIso()
+        });
+
+        await logCommunication({
+            applicationId: application.id,
+            application: updatedApplication,
+            communicationType: "Rejection Email",
+            action: "Rejection Email Sent",
+            status: "Sent",
+            emailId: emailResult.id || "",
+            extra: { recruiterEmail: req.user?.email || "system" }
         });
 
         res.json({
