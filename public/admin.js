@@ -410,6 +410,7 @@ function renderApplications(applications) {
             </td>
             <td>
                 <button onclick="selectCandidate('${id}', '${fullName}')">Interview</button>
+                <button onclick="shortlistCandidate('${id}')">Shortlist</button>
                 <button onclick="openCandidateModal('${id}')">View</button>
                 <button onclick="sendOfferEmail('${id}')">Offer Job</button>
                 <button onclick="markCandidateHired('${id}')">Mark Hired</button>
@@ -720,6 +721,29 @@ async function sendOfferFromModal() {
         console.error(error);
         showToast(error.message || "Offer email failed.", "error");
     }
+}
+
+
+async function shortlistCandidate(id) {
+    if (!id) {
+        showToast("Candidate could not be found.", "error");
+        return;
+    }
+
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot shortlist candidates.", "error");
+        return;
+    }
+
+    const application = allApplications.find(app => app.id === id);
+    const candidateName = application?.fullName || "this candidate";
+
+    if (!confirm(`Add ${candidateName} to the shortlist?`)) {
+        return;
+    }
+
+    await updateApplicationStatus(id, "Shortlisted");
+    showToast(`${candidateName} has been added to the shortlist.`, "success");
 }
 
 
@@ -1296,6 +1320,10 @@ function updateStats(applications) {
         normaliseStatus(app.status).toLowerCase().includes("interview")
     ).length;
 
+    const shortlistedCount = applications.filter(app =>
+        normaliseStatus(app.status).toLowerCase() === "shortlisted"
+    ).length;
+
     const hiredCount = applications.filter(app =>
         normaliseStatus(app.status).toLowerCase() === "hired"
     ).length;
@@ -1322,7 +1350,7 @@ function updateStats(applications) {
     }).length;
 
     if (totalApplications) totalApplications.textContent = total;
-    if (newApplications) newApplications.textContent = newCount;
+    if (newApplications) newApplications.textContent = shortlistedCount;
     if (interviewApplications) interviewApplications.textContent = interviewCount;
     if (hiredApplications) hiredApplications.textContent = hiredCount;
 
@@ -1338,7 +1366,7 @@ function updateStats(applications) {
             <p>
                 ATS Summary:
                 ${total} visible applications,
-                ${newCount} new,
+                ${shortlistedCount} shortlisted,
                 ${interviewCount} in interview,
                 ${hiredCount} hired.
             </p>
@@ -1866,6 +1894,7 @@ window.selectCandidateFromModal = selectCandidateFromModal;
 window.moveModalCandidateToShortlist = moveModalCandidateToShortlist;
 window.sendOfferFromModal = sendOfferFromModal;
 window.sendOfferEmail = sendOfferEmail;
+window.shortlistCandidate = shortlistCandidate;
 window.markCandidateHired = markCandidateHired;
 window.sendRejectionFromModal = sendRejectionFromModal;
 window.moveModalCandidateToOffer = moveModalCandidateToOffer;
