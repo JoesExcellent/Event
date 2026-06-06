@@ -52,6 +52,15 @@ const templatePreviewSubject = document.getElementById("templatePreviewSubject")
 const templatePreviewBody = document.getElementById("templatePreviewBody");
 const reminderQueueTableBody = document.getElementById("reminderQueueTableBody");
 const reminderQueueMessage = document.getElementById("reminderQueueMessage");
+const offerCandidateNameInput = document.getElementById("offerCandidateName");
+const offerCandidatePositionInput = document.getElementById("offerCandidatePosition");
+const offerResponseStatusInput = document.getElementById("offerResponseStatus");
+const candidateStartDateInput = document.getElementById("candidateStartDate");
+const contractStatusInput = document.getElementById("contractStatus");
+const onboardingStatusInput = document.getElementById("onboardingStatus");
+const offerOnboardingNotesInput = document.getElementById("offerOnboardingNotes");
+const offerTrackingTableBody = document.getElementById("offerTrackingTableBody");
+const offerTrackingMessage = document.getElementById("offerTrackingMessage");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -271,6 +280,7 @@ async function refreshDashboard(showMessage = false) {
     renderRecruiterTasks();
     renderCommunicationCentre();
     renderReminderQueue();
+    renderOfferTrackingTable();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -467,6 +477,7 @@ function openCandidateModal(id) {
     document.getElementById("modalCandidateAvailability").textContent = application.availability || "N/A";
     document.getElementById("modalCandidateDate").textContent = formatDate(application.createdAt);
     document.getElementById("modalCandidateRating").textContent = rating;
+    fillOfferTrackingForm(application);
     document.getElementById("modalCandidateScore").textContent = `${score}%`;
     document.getElementById("modalCandidateStage").textContent = status;
     document.getElementById("modalCandidateMessage").textContent = application.message || "No application message available.";
@@ -670,6 +681,7 @@ function selectCandidate(id, fullName) {
     if (selectedApplication) {
         if (starRating) starRating.value = selectedApplication.rating || "";
         if (candidateNotes) candidateNotes.value = selectedApplication.notes || "";
+        fillOfferTrackingForm(selectedApplication);
     }
 
     showToast(`Selected ${fullName}`, "info");
@@ -731,7 +743,27 @@ async function moveModalCandidateToShortlist() {
 }
 
 async function moveModalCandidateToOffer() {
-    if (modalApplicationId) await updateApplicationStatus(modalApplicationId, "Offer Made");
+    if (!modalApplicationId) {
+        showToast("Please open a candidate first.", "error");
+        return;
+    }
+
+    await updateApplicationStatus(modalApplicationId, "Offer Made");
+
+    try {
+        const application = allApplications.find(app => app.id === modalApplicationId);
+        if (application) {
+            await saveOfferTrackingForApplication(application.id, {
+                offerResponseStatus: application.offerResponseStatus || "Offer Pending",
+                candidateStartDate: application.candidateStartDate || "",
+                contractStatus: application.contractStatus || "Not Sent",
+                onboardingStatus: application.onboardingStatus || "Not Started",
+                offerOnboardingNotes: application.offerOnboardingNotes || ""
+            }, false);
+        }
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 async function moveModalCandidateToHired() {
@@ -1833,6 +1865,213 @@ async function sendQueuedReminder(id) {
 }
 
 
+function setOfferTrackingMessage(message, isError = false) {
+    if (!offerTrackingMessage) return;
+    offerTrackingMessage.textContent = message || "";
+    offerTrackingMessage.style.color = isError ? "#ff6a00" : "#ffffff";
+    offerTrackingMessage.style.fontWeight = "700";
+    offerTrackingMessage.style.marginTop = "14px";
+}
+
+function getSelectedOfferApplication() {
+    const id = modalApplicationId || selectedApplicationId;
+    return allApplications.find(app => app.id === id) || null;
+}
+
+function fillOfferTrackingForm(application) {
+    if (!application) return;
+
+    if (offerCandidateNameInput) offerCandidateNameInput.value = application.fullName || "";
+    if (offerCandidatePositionInput) offerCandidatePositionInput.value = application.position || "";
+    if (offerResponseStatusInput) offerResponseStatusInput.value = application.offerResponseStatus || (normaliseStatus(application.status) === "Offer Made" ? "Offer Pending" : "");
+    if (candidateStartDateInput) candidateStartDateInput.value = application.candidateStartDate || "";
+    if (contractStatusInput) contractStatusInput.value = application.contractStatus || "";
+    if (onboardingStatusInput) onboardingStatusInput.value = application.onboardingStatus || "";
+    if (offerOnboardingNotesInput) offerOnboardingNotesInput.value = application.offerOnboardingNotes || "";
+}
+
+function clearOfferTrackingForm() {
+    if (offerCandidateNameInput) offerCandidateNameInput.value = "";
+    if (offerCandidatePositionInput) offerCandidatePositionInput.value = "";
+    if (offerResponseStatusInput) offerResponseStatusInput.value = "";
+    if (candidateStartDateInput) candidateStartDateInput.value = "";
+    if (contractStatusInput) contractStatusInput.value = "";
+    if (onboardingStatusInput) onboardingStatusInput.value = "";
+    if (offerOnboardingNotesInput) offerOnboardingNotesInput.value = "";
+    setOfferTrackingMessage("");
+}
+
+function getOfferTrackingPayload(overrides = {}) {
+    return {
+        offerResponseStatus: overrides.offerResponseStatus !== undefined ? overrides.offerResponseStatus : (offerResponseStatusInput?.value || ""),
+        candidateStartDate: overrides.candidateStartDate !== undefined ? overrides.candidateStartDate : (candidateStartDateInput?.value || ""),
+        contractStatus: overrides.contractStatus !== undefined ? overrides.contractStatus : (contractStatusInput?.value || ""),
+        onboardingStatus: overrides.onboardingStatus !== undefined ? overrides.onboardingStatus : (onboardingStatusInput?.value || ""),
+        offerOnboardingNotes: overrides.offerOnboardingNotes !== undefined ? overrides.offerOnboardingNotes : (offerOnboardingNotesInput?.value || "")
+    };
+}
+
+async function saveOfferTrackingForApplication(id, payload, showSuccess = true) {
+    if (!id) {
+        throw new Error("No candidate selected for offer tracking.");
+    }
+
+    const response = await fetch(`${API_BASE}/api/admin/applications/${id}/offer-tracking`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.message || "Failed to save offer tracking.");
+    }
+
+    if (showSuccess) {
+        showToast(result.message || "Offer tracking saved.", "success");
+        setOfferTrackingMessage(result.message || "Offer tracking saved.");
+    }
+
+    return result;
+}
+
+async function saveOfferTracking() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot save offer tracking.", "error");
+        return;
+    }
+
+    const application = getSelectedOfferApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setOfferTrackingMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    try {
+        await saveOfferTrackingForApplication(application.id, getOfferTrackingPayload(), true);
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillOfferTrackingForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save offer tracking.", "error");
+        setOfferTrackingMessage(error.message || "Failed to save offer tracking.", true);
+    }
+}
+
+async function setOfferWorkflowStatus(offerResponseStatus) {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot update offer tracking.", "error");
+        return;
+    }
+
+    const application = getSelectedOfferApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setOfferTrackingMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    const payload = getOfferTrackingPayload({ offerResponseStatus });
+
+    if (offerResponseStatus === "Offer Accepted") {
+        payload.onboardingStatus = payload.onboardingStatus || "In Progress";
+        payload.contractStatus = payload.contractStatus || "Sent";
+    }
+
+    if (offerResponseStatus === "Offer Declined") {
+        payload.onboardingStatus = "Not Started";
+    }
+
+    try {
+        await saveOfferTrackingForApplication(application.id, payload, false);
+        showToast(`${offerResponseStatus} recorded.`, "success");
+        setOfferTrackingMessage(`${offerResponseStatus} recorded.`);
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillOfferTrackingForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to update offer workflow.", "error");
+        setOfferTrackingMessage(error.message || "Failed to update offer workflow.", true);
+    }
+}
+
+async function confirmStartDate() {
+    const application = getSelectedOfferApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setOfferTrackingMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    if (!candidateStartDateInput?.value) {
+        showToast("Please enter a start date before confirming.", "error");
+        setOfferTrackingMessage("Please enter a start date before confirming.", true);
+        return;
+    }
+
+    const payload = getOfferTrackingPayload({
+        offerResponseStatus: offerResponseStatusInput?.value || "Offer Accepted",
+        onboardingStatus: onboardingStatusInput?.value || "Ready For Start"
+    });
+
+    try {
+        await saveOfferTrackingForApplication(application.id, payload, false);
+        showToast("Start date confirmed.", "success");
+        setOfferTrackingMessage("Start date confirmed.");
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillOfferTrackingForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to confirm start date.", "error");
+        setOfferTrackingMessage(error.message || "Failed to confirm start date.", true);
+    }
+}
+
+function renderOfferTrackingTable() {
+    if (!offerTrackingTableBody) return;
+
+    const records = allApplications.filter(app => {
+        return normaliseStatus(app.status) === "Offer Made" ||
+               normaliseStatus(app.status) === "Hired" ||
+               app.offerResponseStatus ||
+               app.candidateStartDate ||
+               app.contractStatus ||
+               app.onboardingStatus;
+    });
+
+    if (!records.length) {
+        offerTrackingTableBody.innerHTML = `
+            <tr>
+                <td colspan="6">No offer response or start date records found yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    offerTrackingTableBody.innerHTML = records.map(app => `
+        <tr>
+            <td>${escapeHtml(app.fullName || "Candidate")}</td>
+            <td>${escapeHtml(app.position || "N/A")}</td>
+            <td>${escapeHtml(app.offerResponseStatus || (normaliseStatus(app.status) === "Offer Made" ? "Offer Pending" : ""))}</td>
+            <td>${escapeHtml(formatDate(app.candidateStartDate || ""))}</td>
+            <td>${escapeHtml(app.contractStatus || "")}</td>
+            <td>${escapeHtml(app.onboardingStatus || "")}</td>
+        </tr>
+    `).join("");
+}
+
+
 function getTemplateSampleData() {
     return {
         candidateName: "Gary Linekar",
@@ -2453,6 +2692,15 @@ document.getElementById("restoreTemplateBtn")?.addEventListener("click", functio
     restoreEmailTemplate();
 });
 document.getElementById("clearTemplateEditorBtn")?.addEventListener("click", clearEmailTemplateEditor);
+document.getElementById("saveOfferTrackingBtn")?.addEventListener("click", saveOfferTracking);
+document.getElementById("markOfferAcceptedBtn")?.addEventListener("click", function () {
+    setOfferWorkflowStatus("Offer Accepted");
+});
+document.getElementById("markOfferDeclinedBtn")?.addEventListener("click", function () {
+    setOfferWorkflowStatus("Offer Declined");
+});
+document.getElementById("confirmStartDateBtn")?.addEventListener("click", confirmStartDate);
+document.getElementById("clearOfferTrackingBtn")?.addEventListener("click", clearOfferTrackingForm);
 document.getElementById("scheduleInterviewRemindersBtn")?.addEventListener("click", scheduleInterviewRemindersForSelectedCandidate);
 document.getElementById("processDueRemindersBtn")?.addEventListener("click", processDueReminders);
 document.getElementById("refreshReminderQueueBtn")?.addEventListener("click", async function () {
@@ -2495,6 +2743,11 @@ window.previewEmailTemplate = previewEmailTemplate;
 window.saveEmailTemplate = saveEmailTemplate;
 window.restoreEmailTemplate = restoreEmailTemplate;
 window.clearEmailTemplateEditor = clearEmailTemplateEditor;
+window.saveOfferTracking = saveOfferTracking;
+window.clearOfferTrackingForm = clearOfferTrackingForm;
+window.setOfferWorkflowStatus = setOfferWorkflowStatus;
+window.confirmStartDate = confirmStartDate;
+window.renderOfferTrackingTable = renderOfferTrackingTable;
 window.scheduleInterviewRemindersForSelectedCandidate = scheduleInterviewRemindersForSelectedCandidate;
 window.processDueReminders = processDueReminders;
 window.sendQueuedReminder = sendQueuedReminder;
