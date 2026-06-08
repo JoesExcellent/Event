@@ -1861,6 +1861,156 @@ app.post("/api/reminders/process-due", requireAuth, requireEditor, processDueRem
    CONTACT MESSAGES
 ===================================================== */
 
+
+
+/* =====================================================
+   PHASE 4F - CANDIDATE PORTAL ACCESS
+===================================================== */
+
+async function handlePortalAccessUpdate(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        const portalAccessStatus = clean(req.body.portalAccessStatus) || "";
+        const documentDownloadStatus = clean(req.body.documentDownloadStatus) || "";
+        const contractAcceptanceStatus = clean(req.body.contractAcceptanceStatus) || "";
+        const eSignatureStatus = clean(req.body.eSignatureStatus) || "";
+        const selfServiceStatus = clean(req.body.selfServiceStatus) || "";
+        const portalAccessDate = clean(req.body.portalAccessDate) || "";
+        const portalAccessNotes = clean(req.body.portalAccessNotes) || "";
+
+        const updateData = {
+            portalAccessStatus,
+            documentDownloadStatus,
+            contractAcceptanceStatus,
+            eSignatureStatus,
+            selfServiceStatus,
+            portalAccessDate,
+            portalAccessNotes,
+            portalAccessUpdatedAt: nowIso(),
+            lastCommunicationAction: `Portal Access Updated - ${portalAccessStatus || "Recorded"}`,
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        };
+
+        if (!application.portalAccessCreatedAt) {
+            updateData.portalAccessCreatedAt = nowIso();
+        }
+
+        await ref.update(updateData);
+
+        await logCommunication({
+            applicationId: application.id,
+            application: { ...application, ...updateData },
+            communicationType: "Candidate Portal",
+            action: `Portal Access Updated - ${portalAccessStatus || "Recorded"}`,
+            status: "Recorded",
+            emailId: "",
+            extra: { recruiterEmail: req.user?.email || "system" }
+        });
+
+        res.json({
+            message: "Candidate portal access saved successfully.",
+            application: { ...application, ...updateData }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to save candidate portal access." });
+    }
+}
+
+async function handlePortalInvite(req, res) {
+    try {
+        const found = await getApplicationOr404(req.params.id, res);
+        if (!found) return;
+
+        const { ref, application } = found;
+
+        if (!application.email) {
+            return res.status(400).json({ message: "Candidate email address is missing." });
+        }
+
+        const portalAccessStatus = clean(req.body.portalAccessStatus) || "Invite Sent";
+        const documentDownloadStatus = clean(req.body.documentDownloadStatus) || "Available";
+        const contractAcceptanceStatus = clean(req.body.contractAcceptanceStatus) || application.contractAcceptanceStatus || "Sent";
+        const eSignatureStatus = clean(req.body.eSignatureStatus) || application.eSignatureStatus || "Pending";
+        const selfServiceStatus = clean(req.body.selfServiceStatus) || "Enabled";
+        const portalAccessDate = clean(req.body.portalAccessDate) || new Date().toISOString().slice(0, 10);
+        const portalAccessNotes = clean(req.body.portalAccessNotes) || application.portalAccessNotes || "";
+
+        const candidateName = application.fullName || application.name || "Candidate";
+        const subject = `Candidate Portal Access - ${application.position || "Onboarding"}`;
+        const body = `Your candidate portal access has been prepared.
+
+You will be able to review onboarding documents, employment information, contract status and first day instructions through the portal.
+
+Position: ${application.position || "N/A"}
+Start Date: ${application.candidateStartDate || "To be confirmed"}
+
+Please check your onboarding information carefully and contact us if anything needs to be updated.
+
+Kind regards,
+
+Recruitment Team
+Joe's Excellent Events & Management`;
+
+        const emailResult = await sendEmail({
+            to: application.email,
+            subject,
+            html: buildEmailHtml("Candidate Portal Access", candidateName, body)
+        });
+
+        const updateData = {
+            portalAccessStatus,
+            documentDownloadStatus,
+            contractAcceptanceStatus,
+            eSignatureStatus,
+            selfServiceStatus,
+            portalAccessDate,
+            portalAccessNotes,
+            portalInviteSentAt: nowIso(),
+            portalAccessUpdatedAt: nowIso(),
+            lastCommunicationAction: "Candidate Portal Invite Sent",
+            lastCommunicationAt: nowIso(),
+            updatedAt: nowIso()
+        };
+
+        if (!application.portalAccessCreatedAt) {
+            updateData.portalAccessCreatedAt = nowIso();
+        }
+
+        await ref.update(updateData);
+
+        await logCommunication({
+            applicationId: application.id,
+            application: { ...application, ...updateData },
+            communicationType: "Candidate Portal Invite",
+            action: "Candidate Portal Invite Sent",
+            status: "Sent",
+            emailId: emailResult.id || "",
+            subject,
+            extra: { recruiterEmail: req.user?.email || "system" }
+        });
+
+        res.json({
+            message: "Candidate portal invite sent successfully.",
+            emailId: emailResult.id || "",
+            application: { ...application, ...updateData }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to send candidate portal invite." });
+    }
+}
+
+app.patch("/api/admin/applications/:id/portal-access", requireAuth, requireEditor, handlePortalAccessUpdate);
+app.patch("/api/applications/:id/portal-access", requireAuth, requireEditor, handlePortalAccessUpdate);
+app.post("/api/admin/applications/:id/portal-invite", requireAuth, requireEditor, handlePortalInvite);
+app.post("/api/applications/:id/portal-invite", requireAuth, requireEditor, handlePortalInvite);
+
 app.post("/api/contact", async (req, res) => {
     try {
         const message = {
