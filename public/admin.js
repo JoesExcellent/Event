@@ -281,6 +281,7 @@ async function refreshDashboard(showMessage = false) {
     renderCommunicationCentre();
     renderReminderQueue();
     renderOfferTrackingTable();
+    renderPortalAccessTable();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -478,6 +479,7 @@ function openCandidateModal(id) {
     document.getElementById("modalCandidateDate").textContent = formatDate(application.createdAt);
     document.getElementById("modalCandidateRating").textContent = rating;
     fillOfferTrackingForm(application);
+    fillPortalAccessForm(application);
     document.getElementById("modalCandidateScore").textContent = `${score}%`;
     document.getElementById("modalCandidateStage").textContent = status;
     document.getElementById("modalCandidateMessage").textContent = application.message || "No application message available.";
@@ -682,6 +684,7 @@ function selectCandidate(id, fullName) {
         if (starRating) starRating.value = selectedApplication.rating || "";
         if (candidateNotes) candidateNotes.value = selectedApplication.notes || "";
         fillOfferTrackingForm(selectedApplication);
+        fillPortalAccessForm(selectedApplication);
     }
 
     showToast(`Selected ${fullName}`, "info");
@@ -2751,6 +2754,261 @@ window.renderOfferTrackingTable = renderOfferTrackingTable;
 window.scheduleInterviewRemindersForSelectedCandidate = scheduleInterviewRemindersForSelectedCandidate;
 window.processDueReminders = processDueReminders;
 window.sendQueuedReminder = sendQueuedReminder;
+
+
+/* =====================================================
+   PHASE 4F - CANDIDATE PORTAL ACCESS
+===================================================== */
+
+function setPortalAccessMessage(message, isError = false) {
+    const box = document.getElementById("portalAccessMessage");
+    if (!box) return;
+    box.textContent = message || "";
+    box.style.color = isError ? "#ff6a00" : "#ffffff";
+    box.style.fontWeight = "700";
+    box.style.marginTop = "14px";
+}
+
+function getSelectedPortalApplication() {
+    const id = modalApplicationId || selectedApplicationId;
+    return allApplications.find(app => app.id === id) || null;
+}
+
+function fillPortalAccessForm(application) {
+    if (!application) return;
+
+    const map = {
+        portalCandidateName: application.fullName || "",
+        portalCandidateEmail: application.email || "",
+        portalAccessStatus: application.portalAccessStatus || "",
+        documentDownloadStatus: application.documentDownloadStatus || "",
+        contractAcceptanceStatus: application.contractAcceptanceStatus || "",
+        eSignatureStatus: application.eSignatureStatus || "",
+        selfServiceStatus: application.selfServiceStatus || "",
+        portalAccessDate: application.portalAccessDate || "",
+        portalAccessNotes: application.portalAccessNotes || ""
+    };
+
+    Object.keys(map).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = map[id];
+    });
+}
+
+function clearPortalAccessForm() {
+    [
+        "portalCandidateName",
+        "portalCandidateEmail",
+        "portalAccessStatus",
+        "documentDownloadStatus",
+        "contractAcceptanceStatus",
+        "eSignatureStatus",
+        "selfServiceStatus",
+        "portalAccessDate",
+        "portalAccessNotes"
+    ].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = "";
+    });
+
+    setPortalAccessMessage("");
+}
+
+function getPortalAccessPayload(overrides = {}) {
+    return {
+        portalAccessStatus: overrides.portalAccessStatus !== undefined ? overrides.portalAccessStatus : (document.getElementById("portalAccessStatus")?.value || ""),
+        documentDownloadStatus: overrides.documentDownloadStatus !== undefined ? overrides.documentDownloadStatus : (document.getElementById("documentDownloadStatus")?.value || ""),
+        contractAcceptanceStatus: overrides.contractAcceptanceStatus !== undefined ? overrides.contractAcceptanceStatus : (document.getElementById("contractAcceptanceStatus")?.value || ""),
+        eSignatureStatus: overrides.eSignatureStatus !== undefined ? overrides.eSignatureStatus : (document.getElementById("eSignatureStatus")?.value || ""),
+        selfServiceStatus: overrides.selfServiceStatus !== undefined ? overrides.selfServiceStatus : (document.getElementById("selfServiceStatus")?.value || ""),
+        portalAccessDate: overrides.portalAccessDate !== undefined ? overrides.portalAccessDate : (document.getElementById("portalAccessDate")?.value || ""),
+        portalAccessNotes: overrides.portalAccessNotes !== undefined ? overrides.portalAccessNotes : (document.getElementById("portalAccessNotes")?.value || "")
+    };
+}
+
+async function savePortalAccessForApplication(id, payload, showSuccess = true) {
+    if (!id) {
+        throw new Error("No candidate selected for portal access.");
+    }
+
+    const response = await fetch(`${API_BASE}/api/admin/applications/${id}/portal-access`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.message || "Failed to save portal access.");
+    }
+
+    if (showSuccess) {
+        showToast(result.message || "Portal access saved.", "success");
+        setPortalAccessMessage(result.message || "Portal access saved.");
+    }
+
+    return result;
+}
+
+async function savePortalAccess() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot save portal access.", "error");
+        return;
+    }
+
+    const application = getSelectedPortalApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setPortalAccessMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    try {
+        await savePortalAccessForApplication(application.id, getPortalAccessPayload());
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillPortalAccessForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save portal access.", "error");
+        setPortalAccessMessage(error.message || "Failed to save portal access.", true);
+    }
+}
+
+async function sendPortalInvite() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot send portal invites.", "error");
+        return;
+    }
+
+    const application = getSelectedPortalApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setPortalAccessMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    if (!confirm(`Send portal access invite to ${application.fullName || "this candidate"}?`)) {
+        return;
+    }
+
+    try {
+        const payload = getPortalAccessPayload({
+            portalAccessStatus: "Invite Sent",
+            documentDownloadStatus: document.getElementById("documentDownloadStatus")?.value || "Available",
+            selfServiceStatus: document.getElementById("selfServiceStatus")?.value || "Enabled",
+            portalAccessDate: document.getElementById("portalAccessDate")?.value || new Date().toISOString().slice(0, 10)
+        });
+
+        const response = await fetch(`${API_BASE}/api/admin/applications/${application.id}/portal-invite`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to send portal invite.");
+        }
+
+        showToast(result.message || "Portal invite sent.", "success");
+        setPortalAccessMessage(result.message || "Portal invite sent.");
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillPortalAccessForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to send portal invite.", "error");
+        setPortalAccessMessage(error.message || "Failed to send portal invite.", true);
+    }
+}
+
+async function markContractAccepted() {
+    if (adminRole === "viewer") {
+        showToast("Viewer accounts cannot update contract acceptance.", "error");
+        return;
+    }
+
+    const application = getSelectedPortalApplication();
+
+    if (!application) {
+        showToast("Please select or open a candidate first.", "error");
+        setPortalAccessMessage("Please select or open a candidate first.", true);
+        return;
+    }
+
+    try {
+        const payload = getPortalAccessPayload({
+            contractAcceptanceStatus: "Accepted",
+            eSignatureStatus: document.getElementById("eSignatureStatus")?.value || "Signed",
+            documentDownloadStatus: document.getElementById("documentDownloadStatus")?.value || "Acknowledged",
+            portalAccessStatus: document.getElementById("portalAccessStatus")?.value || "Active"
+        });
+
+        await savePortalAccessForApplication(application.id, payload, false);
+        showToast("Contract acceptance recorded.", "success");
+        setPortalAccessMessage("Contract acceptance recorded.");
+        await refreshDashboard();
+
+        const updated = allApplications.find(app => app.id === application.id);
+        if (updated) fillPortalAccessForm(updated);
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to mark contract accepted.", "error");
+        setPortalAccessMessage(error.message || "Failed to mark contract accepted.", true);
+    }
+}
+
+function renderPortalAccessTable() {
+    const tableBody = document.getElementById("portalAccessTableBody");
+    if (!tableBody) return;
+
+    const records = allApplications.filter(app => {
+        return app.portalAccessStatus ||
+               app.documentDownloadStatus ||
+               app.contractAcceptanceStatus ||
+               app.eSignatureStatus ||
+               app.selfServiceStatus;
+    });
+
+    if (!records.length) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6">No candidate portal access records found yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = records.map(app => `
+        <tr>
+            <td>${escapeHtml(app.fullName || "Candidate")}</td>
+            <td>${escapeHtml(app.email || "")}</td>
+            <td>${escapeHtml(app.portalAccessStatus || "")}</td>
+            <td>${escapeHtml(app.documentDownloadStatus || "")}</td>
+            <td>${escapeHtml(app.contractAcceptanceStatus || "")}</td>
+            <td>${escapeHtml(app.selfServiceStatus || "")}</td>
+        </tr>
+    `).join("");
+}
+
+document.getElementById("savePortalAccessBtn")?.addEventListener("click", savePortalAccess);
+document.getElementById("sendPortalInviteBtn")?.addEventListener("click", sendPortalInvite);
+document.getElementById("markContractAcceptedBtn")?.addEventListener("click", markContractAccepted);
+document.getElementById("clearPortalAccessBtn")?.addEventListener("click", clearPortalAccessForm);
+
+window.savePortalAccess = savePortalAccess;
+window.sendPortalInvite = sendPortalInvite;
+window.markContractAccepted = markContractAccepted;
+window.clearPortalAccessForm = clearPortalAccessForm;
+window.renderPortalAccessTable = renderPortalAccessTable;
+
 
 if (authToken) {
     setDashboardVisible(true);

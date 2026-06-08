@@ -1221,6 +1221,121 @@ Joe's Excellent Events & Management</textarea>
 </div>
 </section>
 
+
+<section class="ats-panel">
+    <h2>Candidate Portal & Document Access Centre</h2>
+    <p>Manage candidate portal access, document downloads, contract acceptance and employee self-service readiness.</p>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="portalCandidateName">Candidate Name</label>
+            <input type="text" id="portalCandidateName" placeholder="Selected candidate name">
+        </div>
+
+        <div class="form-group">
+            <label for="portalCandidateEmail">Candidate Email</label>
+            <input type="email" id="portalCandidateEmail" placeholder="Candidate email">
+        </div>
+
+        <div class="form-group">
+            <label for="portalAccessStatus">Portal Access</label>
+            <select id="portalAccessStatus">
+                <option value="">Select portal access status</option>
+                <option value="Not Created">Not Created</option>
+                <option value="Access Created">Access Created</option>
+                <option value="Invite Sent">Invite Sent</option>
+                <option value="Active">Active</option>
+                <option value="Disabled">Disabled</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="documentDownloadStatus">Document Downloads</label>
+            <select id="documentDownloadStatus">
+                <option value="">Select document download status</option>
+                <option value="Not Available">Not Available</option>
+                <option value="Available">Available</option>
+                <option value="Downloaded">Downloaded</option>
+                <option value="Acknowledged">Acknowledged</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="contractAcceptanceStatus">Contract Acceptance</label>
+            <select id="contractAcceptanceStatus">
+                <option value="">Select contract acceptance status</option>
+                <option value="Not Sent">Not Sent</option>
+                <option value="Sent">Sent</option>
+                <option value="Viewed">Viewed</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Declined">Declined</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="eSignatureStatus">Electronic Signature</label>
+            <select id="eSignatureStatus">
+                <option value="">Select electronic signature status</option>
+                <option value="Not Required">Not Required</option>
+                <option value="Pending">Pending</option>
+                <option value="Signed">Signed</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="selfServiceStatus">Employee Self-Service</label>
+            <select id="selfServiceStatus">
+                <option value="">Select self-service status</option>
+                <option value="Not Enabled">Not Enabled</option>
+                <option value="Enabled">Enabled</option>
+                <option value="Activated">Activated</option>
+                <option value="Suspended">Suspended</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="portalAccessDate">Portal Access Date</label>
+            <input type="date" id="portalAccessDate">
+        </div>
+
+        <div class="form-group full">
+            <label for="portalAccessNotes">Portal / Document Notes</label>
+            <textarea id="portalAccessNotes" placeholder="Add portal access, document download or contract acceptance notes here."></textarea>
+        </div>
+    </div>
+
+    <div class="admin-actions" style="text-align:left;">
+        <button type="button" id="savePortalAccessBtn">Save Portal Record</button>
+        <button type="button" id="sendPortalInviteBtn">Send Portal Invite</button>
+        <button type="button" id="markContractAcceptedBtn">Mark Contract Accepted</button>
+        <button type="button" id="clearPortalAccessBtn">Clear Portal Form</button>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Candidate</th>
+                    <th>Email</th>
+                    <th>Portal Access</th>
+                    <th>Documents</th>
+                    <th>Contract</th>
+                    <th>Self-Service</th>
+                </tr>
+            </thead>
+            <tbody id="portalAccessTableBody">
+                <tr>
+                    <td colspan="6">Portal access records will appear here after records are saved.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="portalAccessMessage"></div>
+</section>
+
+
 <div id="tab-notes" class="dashboard-tab-content">
 <section class="notes-card">
             <h2>Admin Notes</h2>
@@ -1398,7 +1513,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=78"></script>
+<script src="admin.js?v=79"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
