@@ -1857,6 +1857,169 @@ app.post("/api/reminder-queue/:id/send", requireAuth, requireEditor, sendReminde
 app.post("/api/admin/reminders/process-due", requireAuth, requireEditor, processDueRemindersHandler);
 app.post("/api/reminders/process-due", requireAuth, requireEditor, processDueRemindersHandler);
 
+
+/* =====================================================
+   PHASE 5A.1 - CANDIDATE SELF-SERVICE PORTAL
+===================================================== */
+
+function createCandidateToken(application) {
+    return jwt.sign(
+        {
+            role: "candidate",
+            applicationId: application.id,
+            email: application.email
+        },
+        JWT_SECRET,
+        { expiresIn: "12h" }
+    );
+}
+
+function requireCandidateAuth(req, res, next) {
+    const header = req.headers.authorization || "";
+
+    if (!header.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Candidate login required." });
+    }
+
+    try {
+        const payload = jwt.verify(header.replace("Bearer ", ""), JWT_SECRET);
+
+        if (!payload || payload.role !== "candidate" || !payload.applicationId) {
+            return res.status(401).json({ message: "Invalid candidate login." });
+        }
+
+        req.candidate = payload;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "Candidate login expired. Please sign in again." });
+    }
+}
+
+function cleanCandidateApplication(application) {
+    return {
+        id: application.id || "",
+        fullName: application.fullName || application.name || "Candidate",
+        name: application.name || application.fullName || "Candidate",
+        email: application.email || "",
+        phone: application.phone || "",
+        address: application.address || "",
+        position: application.position || "N/A",
+        availability: application.availability || "N/A",
+        status: application.status || "New",
+        createdAt: application.createdAt || "",
+        updatedAt: application.updatedAt || "",
+        interviewDate: application.interviewDate || "",
+        interviewTime: application.interviewTime || "",
+        interviewLocation: application.interviewLocation || "",
+        invitationSent: Boolean(application.invitationSent),
+        reminderSent: Boolean(application.reminderSent),
+        offerResponseStatus: application.offerResponseStatus || "Not Yet Recorded",
+        candidateStartDate: application.candidateStartDate || "",
+        contractStatus: application.contractStatus || "Not Sent",
+        onboardingStatus: application.onboardingStatus || "Not Started",
+        welcomePackStatus: application.welcomePackStatus || "Not Sent",
+        handbookStatus: application.handbookStatus || "Not Sent",
+        rtwStatus: application.rtwStatus || "Pending",
+        dbsStatus: application.dbsStatus || "Not Required",
+        trainingStatus: application.trainingStatus || "Not Started",
+        inductionDate: application.inductionDate || "",
+        inductionStatus: application.inductionStatus || "Not Scheduled",
+        readyToStart: application.readyToStart || "No",
+        portalAccessStatus: application.portalAccessStatus || "Not Created",
+        documentDownloadStatus: application.documentDownloadStatus || "Not Available",
+        contractAcceptanceStatus: application.contractAcceptanceStatus || "Not Sent",
+        eSignatureStatus: application.eSignatureStatus || "Not Required",
+        selfServiceStatus: application.selfServiceStatus || "Not Enabled",
+        portalAccessDate: application.portalAccessDate || "",
+        portalAccessNotes: application.portalAccessNotes || "",
+        lastCommunicationAction: application.lastCommunicationAction || "No recent communication recorded.",
+        lastCommunicationAt: application.lastCommunicationAt || ""
+    };
+}
+
+async function findCandidateApplicationByEmail(email) {
+    const requestedEmail = clean(email).toLowerCase();
+
+    if (!requestedEmail) return null;
+
+    let snapshot = await db
+        .collection("applications")
+        .where("email", "==", requestedEmail)
+        .limit(1)
+        .get();
+
+    if (snapshot.empty) {
+        snapshot = await db
+            .collection("applications")
+            .where("email", "==", clean(email))
+            .limit(1)
+            .get();
+    }
+
+    if (snapshot.empty) {
+        return null;
+    }
+
+    const doc = snapshot.docs[0];
+    return {
+        id: doc.id,
+        ...doc.data()
+    };
+}
+
+app.post("/api/candidate/login", async (req, res) => {
+    try {
+        const email = clean(req.body.email);
+
+        if (!email) {
+            return res.status(400).json({ message: "Please enter your email address." });
+        }
+
+        const application = await findCandidateApplicationByEmail(email);
+
+        if (!application) {
+            return res.status(404).json({ message: "No application was found for that email address." });
+        }
+
+        const token = createCandidateToken(application);
+
+        res.json({
+            message: "Candidate login successful.",
+            token,
+            candidate: cleanCandidateApplication(application)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Candidate login failed." });
+    }
+});
+
+app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
+    try {
+        const doc = await db.collection("applications").doc(req.candidate.applicationId).get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const application = {
+            id: doc.id,
+            ...doc.data()
+        };
+
+        if ((application.email || "").toLowerCase() !== (req.candidate.email || "").toLowerCase()) {
+            return res.status(403).json({ message: "Candidate profile mismatch." });
+        }
+
+        res.json({
+            candidate: cleanCandidateApplication(application)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load candidate profile." });
+    }
+});
+
 /* =====================================================
    CONTACT MESSAGES
 ===================================================== */
