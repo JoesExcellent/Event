@@ -30,145 +30,275 @@
             margin: auto;
             display: flex;
             justify-content: center;
+            align-items: center;
+            gap: 42px;
             flex-wrap: wrap;
-            gap: 14px;
         }
 
         nav a {
             color: #ffffff;
             text-decoration: none;
-            font-weight: bold;
-            padding: 10px 18px;
-            border: 1px solid #ff6a00;
-            border-radius: 30px;
-            transition: 0.3s;
+            font-size: 0.95rem;
+            font-weight: 700;
         }
 
         nav a:hover,
         nav a.active {
             background: #ff6a00;
-            color: #061726;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
         }
 
         .hero {
-            padding: 70px 7% 50px;
-            text-align: center;
-        }
-
-        .hero-inner {
-            max-width: 1100px;
-            margin: auto;
+            background: #020b14;
+            padding: 35px 7%;
+            border-bottom: 2px solid #ff6a00;
         }
 
         .hero-image {
-            width: 100%;
-            max-width: 950px;
-            margin: 0 auto 32px;
-            border-radius: 26px;
+            max-width: 1200px;
+            margin: auto;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
             overflow: hidden;
-            border: 3px solid #ff6a00;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
-            background: #0b2238;
+            background: #123756;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
         }
 
         .hero-image img {
             width: 100%;
             display: block;
-            height: auto;
         }
 
-        .portal-button {
+        .intro-section {
+            background: #0b2a44;
+            padding: 75px 7%;
+        }
+
+        .intro-grid,
+        .portal-grid,
+        .apply-grid,
+        .cta-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 55px;
+            align-items: center;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            min-height: 260px;
+            border: 1px solid #ffb000;
+            border-radius: 18px;
+            background: #123756;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-placeholder img {
+            width: 100%;
+            height: 100%;
+            min-height: 260px;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+
+        .text-box h1,
+        .text-box h2,
+        .content-box h2,
+        .cta-box h2 {
+            font-size: clamp(2.1rem, 4vw, 3.5rem);
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 22px;
+        }
+
+        .text-box span,
+        .content-box span,
+        .cta-box span {
+            color: #ff6a00;
+            display: block;
+        }
+
+        .text-box p,
+        .content-box p,
+        .cta-box p {
+            margin-bottom: 18px;
+            color: #f2f2f2;
+        }
+
+        .btn {
             display: inline-block;
             background: #ff6a00;
-            color: #061726;
-            text-decoration: none;
-            font-weight: bold;
-            padding: 15px 34px;
-            border-radius: 40px;
-            font-size: 1.05rem;
-            transition: 0.3s;
-            box-shadow: 0 8px 20px rgba(255, 106, 0, 0.35);
-        }
-
-        .portal-button:hover {
-            background: #ffffff;
-            color: #061726;
-            transform: translateY(-2px);
-        }
-
-        .intro {
-            padding: 40px 7% 70px;
-        }
-
-        .intro-content {
-            max-width: 1050px;
-            margin: auto;
-            background: #0b2238;
-            border-radius: 24px;
-            padding: 38px;
-            border: 1px solid rgba(255, 106, 0, 0.45);
-        }
-
-        .intro-content h1 {
-            font-size: 2.3rem;
-            margin-bottom: 18px;
             color: #ffffff;
+            text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 10px;
         }
 
-        .intro-content h1 span {
-            color: #ff6a00;
+        .btn:hover {
+            background: #ff7a1a;
         }
 
-        .intro-content p {
-            font-size: 1.05rem;
-            margin-bottom: 16px;
-            color: #f0f0f0;
+        .btn-secondary {
+            background: #0b2a44;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+            margin-left: 10px;
         }
 
-        .candidate-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-top: 34px;
-        }
-
-        .candidate-card {
+        .portal-section,
+        .promise-section,
+        .faq-section {
             background: #061726;
-            border: 1px solid rgba(255, 106, 0, 0.4);
-            border-radius: 20px;
-            padding: 26px;
+            padding: 80px 7%;
         }
 
-        .candidate-card h2 {
+        .apply-section,
+        .journey-section,
+        .cta-section {
+            background: #0b2a44;
+            padding: 80px 7%;
+        }
+
+        .section-heading {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 50px;
+        }
+
+        .section-heading h2 {
             color: #ff6a00;
-            font-size: 1.25rem;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 15px;
+        }
+
+        .section-heading p {
+            color: #f2f2f2;
+        }
+
+        .content-box,
+        .cta-box {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 34px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+        }
+
+        .content-box ul {
+            list-style: none;
+            margin: 18px 0;
+        }
+
+        .content-box li {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .journey-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .journey-card,
+        .promise-card,
+        .faq-card {
+            background: #13283b;
+            padding: 28px 22px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+
+        .journey-card {
+            text-align: center;
+        }
+
+        .journey-card span {
+            width: 36px;
+            height: 36px;
+            background: #ff6a00;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
             margin-bottom: 12px;
         }
 
-        .candidate-card p {
-            font-size: 0.98rem;
-            color: #eeeeee;
+        .journey-card h3,
+        .promise-card h3,
+        .faq-card h3 {
+            color: #ff6a00;
+            margin-bottom: 10px;
+        }
+
+        .journey-card p,
+        .promise-card p,
+        .faq-card p {
+            color: #f2f2f2;
+            font-size: 0.95rem;
+        }
+
+        .promise-grid,
+        .faq-grid {
+            max-width: 1100px;
+            margin: auto;
+            display: grid;
+            gap: 24px;
+        }
+
+        .promise-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .faq-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .cta-section {
+            border-bottom: 2px solid #ff6a00;
         }
 
         footer {
             background: #020b14;
-            border-top: 2px solid #ff6a00;
             text-align: center;
-            padding: 26px 7%;
-            color: #ffffff;
+            padding: 30px 20px;
+            font-size: 0.9rem;
         }
 
-        @media (max-width: 850px) {
-            .candidate-grid {
+        @media (max-width: 900px) {
+            .intro-grid,
+            .portal-grid,
+            .apply-grid,
+            .cta-grid,
+            .journey-grid,
+            .promise-grid,
+            .faq-grid {
                 grid-template-columns: 1fr;
+                text-align: center;
             }
 
-            .intro-content h1 {
-                font-size: 1.9rem;
+            nav {
+                gap: 18px;
             }
 
-            nav a {
+            .btn,
+            .btn-secondary {
                 width: 100%;
+                margin-left: 0;
                 text-align: center;
             }
         }
@@ -177,80 +307,270 @@
 
 <body>
 
-<header>
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="our-services.html">Our Services</a>
-        <a href="careers.html">Careers</a>
-        <a href="candidates.html" class="active">Candidates</a>
-        <a href="contact-us.html">Contact Us</a>
-        <a href="admin.html">Admin</a>
-    </nav>
-</header>
+    <header>
+        <nav class="navbar">
+            <a href="index.html">Home</a>
+            <a href="home.html">About</a>
+            <a href="our-services.html">Services</a>
+            <a href="careers.html">Careers</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="executive.html">Executive</a>
+            <a href="apply.html">Apply</a>
+            <a href="candidates.html" class="active">Candidates</a>
+            <a href="contact us.html">Contact</a>
+        </nav>
+    </header>
 
-<section class="hero">
-    <div class="hero-inner">
-
+    <section class="hero">
         <div class="hero-image">
-            <img src="images/candidate-hero.png" alt="Candidates supported by Joe's Excellent Events and Management">
+            <img src="images/candidates-hero.png" alt="Candidate Centre at Joe's Excellent Events and Management">
         </div>
+    </section>
 
-        <a href="candidate-portal.html" class="portal-button">
-            Candidate Portal
-        </a>
+    <main>
 
-    </div>
-</section>
+        <section class="intro-section">
+            <div class="intro-grid">
 
-<section class="intro">
-    <div class="intro-content">
+                <div class="photo-placeholder">
+                    <img src="images/candidates-intro.png" alt="Candidate support and recruitment journey">
+                </div>
 
-        <h1>Candidate <span>Support & Opportunities</span></h1>
+                <div class="text-box">
+                    <h1>
+                        Candidate Centre
+                        <span>Track Your Journey With Confidence</span>
+                    </h1>
 
-        <p>
-            Joe’s Excellent Events & Management supports candidates who want to build confidence,
-            develop professional skills and take the next step towards meaningful work opportunities.
-        </p>
+                    <p>
+                        Whether you are applying for a new opportunity, preparing for an interview or progressing through onboarding, our Candidate Centre provides a clear and professional route through every stage of the recruitment journey.
+                    </p>
 
-        <p>
-            Our candidate process is designed to be clear, supportive and professional, helping applicants
-            stay informed, prepared and connected throughout their journey.
-        </p>
+                    <p>
+                        This page is designed to help applicants access the right area quickly, understand the recruitment process and move forward with confidence.
+                    </p>
 
-        <div class="candidate-grid">
+                    <a href="candidate.html" class="btn">Access Candidate Portal</a>
+                </div>
 
-            <div class="candidate-card">
-                <h2>Apply With Confidence</h2>
+            </div>
+        </section>
+
+        <section class="portal-section">
+            <div class="portal-grid">
+
+                <div class="content-box">
+                    <h2>
+                        Already
+                        <span>Applied?</span>
+                    </h2>
+
+                    <p>
+                        Existing applicants can use the Candidate Portal to view progress and stay informed throughout the recruitment process.
+                    </p>
+
+                    <ul>
+                        <li>View application progress</li>
+                        <li>Review interview invitations</li>
+                        <li>Monitor onboarding activity</li>
+                        <li>Track portal access</li>
+                        <li>Review employment readiness</li>
+                    </ul>
+
+                    <a href="candidate.html" class="btn">Access Candidate Portal</a>
+                </div>
+
+                <div class="photo-placeholder">
+                    <img src="images/candidate-portal-access.png" alt="Candidate portal access and recruitment updates">
+                </div>
+
+            </div>
+        </section>
+
+        <section class="apply-section">
+            <div class="apply-grid">
+
+                <div class="photo-placeholder">
+                    <img src="images/candidate-journey.png" alt="Candidate journey and application pathway">
+                </div>
+
+                <div class="content-box">
+                    <h2>
+                        Ready To
+                        <span>Apply?</span>
+                    </h2>
+
+                    <p>
+                        Join Joe’s Excellent Events & Management and take the next step towards opportunity, professional growth and career development.
+                    </p>
+
+                    <p>
+                        Our application form allows you to submit your details, upload your CV and begin your journey through a fair and structured recruitment process.
+                    </p>
+
+                    <a href="apply.html" class="btn">Apply Now</a>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="journey-section">
+            <div class="section-heading">
+                <h2>Recruitment Journey</h2>
                 <p>
-                    Submit your details securely and take the first step towards joining a professional,
-                    people-focused organisation.
+                    Our recruitment pathway is designed to be clear, professional and supportive from first application through to employment readiness.
                 </p>
             </div>
 
-            <div class="candidate-card">
-                <h2>Track Your Progress</h2>
+            <div class="journey-grid">
+
+                <div class="journey-card">
+                    <span>1</span>
+                    <h3>Apply</h3>
+                    <p>Submit your application and upload your CV.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>2</span>
+                    <h3>Review</h3>
+                    <p>Your details are reviewed by the recruitment team.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>3</span>
+                    <h3>Interview Invitation</h3>
+                    <p>Suitable candidates may be invited to interview.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>4</span>
+                    <h3>Interview</h3>
+                    <p>Meet with the team and discuss your skills.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>5</span>
+                    <h3>Offer</h3>
+                    <p>Successful candidates may receive an offer.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>6</span>
+                    <h3>Onboarding</h3>
+                    <p>Complete checks, documents and preparation steps.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>7</span>
+                    <h3>Candidate Portal</h3>
+                    <p>Track status, interviews and portal access.</p>
+                </div>
+
+                <div class="journey-card">
+                    <span>8</span>
+                    <h3>Ready To Start</h3>
+                    <p>Move forward confidently into your new opportunity.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="promise-section">
+            <div class="section-heading">
+                <h2>Our Candidate Promise</h2>
                 <p>
-                    Use the candidate portal to check application progress, interview details and important
-                    updates when available.
+                    We want every candidate to feel respected, informed and supported throughout the recruitment journey.
                 </p>
             </div>
 
-            <div class="candidate-card">
-                <h2>Grow Professionally</h2>
+            <div class="promise-grid">
+
+                <div class="promise-card">
+                    <h3>Professional</h3>
+                    <p>Clear communication and structured recruitment standards.</p>
+                </div>
+
+                <div class="promise-card">
+                    <h3>Supportive</h3>
+                    <p>Encouragement and respect throughout the process.</p>
+                </div>
+
+                <div class="promise-card">
+                    <h3>Transparent</h3>
+                    <p>Honest updates and clear expectations wherever possible.</p>
+                </div>
+
+                <div class="promise-card">
+                    <h3>Opportunity Focused</h3>
+                    <p>Helping candidates develop confidence, skills and ambition.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="faq-section">
+            <div class="section-heading">
+                <h2>Candidate FAQs</h2>
                 <p>
-                    We value ambition, reliability and positive attitude, supporting candidates as they grow
-                    in confidence and responsibility.
+                    Simple answers to common questions about applications, interviews and portal access.
                 </p>
             </div>
 
-        </div>
+            <div class="faq-grid">
 
-    </div>
-</section>
+                <div class="faq-card">
+                    <h3>How do I access my Candidate Portal?</h3>
+                    <p>Use the email address supplied in your application to log in through the Candidate Portal.</p>
+                </div>
 
-<footer>
-    <p>&copy; 2026 Joe's Excellent Events & Management. All rights reserved.</p>
-</footer>
+                <div class="faq-card">
+                    <h3>Can I view interview details online?</h3>
+                    <p>Yes. Interview information will appear in your Candidate Portal when it has been scheduled.</p>
+                </div>
+
+                <div class="faq-card">
+                    <h3>Can I track onboarding progress?</h3>
+                    <p>Yes. Onboarding milestones are displayed inside the portal when they are available.</p>
+                </div>
+
+                <div class="faq-card">
+                    <h3>Will I receive email notifications?</h3>
+                    <p>Yes. Recruitment communications may continue by email alongside portal updates.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="cta-grid">
+
+                <div class="cta-box">
+                    <h2>
+                        Your Next Opportunity
+                        <span>Starts Here</span>
+                    </h2>
+
+                    <p>
+                        Whether you are ready to apply or already moving through the recruitment process, Joe’s Excellent Events & Management is committed to supporting candidates with professionalism, respect and care.
+                    </p>
+
+                    <a href="apply.html" class="btn">Apply Now</a>
+                    <a href="candidate.html" class="btn btn-secondary">Access Candidate Portal</a>
+                </div>
+
+                <div class="photo-placeholder">
+                    <img src="images/candidate-success.png" alt="Diverse professional team welcoming a new candidate">
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+        <p>All rights reserved.</p>
+    </footer>
 
 </body>
 </html>
