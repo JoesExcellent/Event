@@ -1948,14 +1948,12 @@ async function findCandidateApplicationByEmail(email) {
     let snapshot = await db
         .collection("applications")
         .where("email", "==", requestedEmail)
-        .limit(1)
         .get();
 
     if (snapshot.empty) {
         snapshot = await db
             .collection("applications")
             .where("email", "==", clean(email))
-            .limit(1)
             .get();
     }
 
@@ -1963,11 +1961,18 @@ async function findCandidateApplicationByEmail(email) {
         return null;
     }
 
-    const doc = snapshot.docs[0];
-    return {
+    const applications = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-    };
+    }));
+
+    applications.sort((a, b) => {
+        const dateA = Date.parse(a.updatedAt || a.createdAt || a.submittedAt || "") || 0;
+        const dateB = Date.parse(b.updatedAt || b.createdAt || b.submittedAt || "") || 0;
+        return dateB - dateA;
+    });
+
+    return applications[0];
 }
 
 app.post("/api/candidate/login", async (req, res) => {
