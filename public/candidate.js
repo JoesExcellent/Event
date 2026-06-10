@@ -176,7 +176,14 @@ function renderCandidate(candidate) {
     setText("applicationPosition", candidate.position);
     setText("applicationAvailability", candidate.availability);
     setText("applicationDate", formatDate(candidate.createdAt));
-    setStatus("applicationStatus", candidate.status);
+    const mainApplicationStatus =
+        candidate.interviewResponse === "Interview Accepted" || candidate.interviewResponse === "Interview Declined"
+            ? candidate.interviewResponse
+            : candidate.interviewStatus === "Interview Accepted" || candidate.interviewStatus === "Interview Declined"
+                ? candidate.interviewStatus
+                : candidate.status;
+
+    setStatus("applicationStatus", mainApplicationStatus);
 
     setText("interviewDate", formatDate(candidate.interviewDate));
     setText("interviewTime", candidate.interviewTime || "N/A");
