@@ -1,126 +1,664 @@
-Skip to main content
-Poetry Foundation
-Search
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Portal | Joe's Excellent Events & Management</title>
 
-Poetry magazine
-June 2026
-Subscribe
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-Speech: “To be, or not to be, that is the question”
-By William Shakespeare
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #061726;
+            color: #ffffff;
+            line-height: 1.6;
+        }
 
-(from Hamlet, spoken by Hamlet)
-To be, or not to be, that is the question:
-Whether 'tis nobler in the mind to suffer
-The slings and arrows of outrageous fortune,
-Or to take arms against a sea of troubles
-And by opposing end them. To die—to sleep,
-No more; and by a sleep to say we end
-The heart-ache and the thousand natural shocks
-That flesh is heir to: 'tis a consummation
-Devoutly to be wish'd. To die, to sleep;
-To sleep, perchance to dream—ay, there's the rub:
-For in that sleep of death what dreams may come,
-When we have shuffled off this mortal coil,
-Must give us pause—there's the respect
-That makes calamity of so long life.
-For who would bear the whips and scorns of time,
-Th'oppressor's wrong, the proud man's contumely,
-The pangs of dispriz'd love, the law's delay,
-The insolence of office, and the spurns
-That patient merit of th'unworthy takes,
-When he himself might his quietus make
-With a bare bodkin? Who would fardels bear,
-To grunt and sweat under a weary life,
-But that the dread of something after death,
-The undiscovere'd country, from whose bourn
-No traveller returns, puzzles the will,
-And makes us rather bear those ills we have
-Than fly to others that we know not of?
-Thus conscience doth make cowards of us all,
-And thus the native hue of resolution
-Is sicklied o'er with the pale cast of thought,
-And enterprises of great pith and moment
-With this regard their currents turn awry
-And lose the name of action.
+        header {
+            background: #020b14;
+            border-bottom: 2px solid #ff6a00;
+            padding: 18px 7%;
+        }
 
-    Collection
+        nav {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 42px;
+            flex-wrap: wrap;
+        }
 
-    Poems of Anxiety and Uncertainty
-    By The Editors
-    April 25, 2017
-    Confronting and coping with uncharted terrains through poetry.
-    Article
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
 
-    William Shakespeare: Selections
-    By Kevin Barents
-    November 5, 2018
-    An introduction to one of the most influential English-language poets of all time
+        nav a:hover,
+        nav a.active {
+            background: #ff6a00;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 10px;
+        }
 
-    Poems & Poets
-        Collections
-        Poem Guides
-        Poem of the Day
-        Poems
-        All Poems
-        Poets
-        All Poets
-    Topics & Themes
-        Adults
-        Children
-        Education
-        Educators
-        Glossary of Poetic Terms
-        Teens
-    Features
-        About the Magazine
+        .hero {
+            background: #020b14;
+            padding: 70px 7%;
+            border-bottom: 2px solid #ff6a00;
+        }
 
-        Advertise with Poetry
-        Articles
-        Books
-        Podcasts
+        .hero-box {
+            max-width: 1100px;
+            margin: auto;
+            background: linear-gradient(135deg, #0b2a44, #061726);
+            border: 1px solid rgba(255, 176, 0, 0.55);
+            border-radius: 18px;
+            padding: 55px;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 45px;
+            align-items: center;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
 
-        Poetry Magazine
+        .hero-box h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            line-height: 1.05;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
 
-        Poetry Historical Index
+        .hero-box span {
+            color: #ff6a00;
+            display: block;
+        }
 
-        Poetry Magazine Archive
+        .hero-box p {
+            font-size: 1.1rem;
+            color: #f2f2f2;
+            max-width: 650px;
+        }
 
-        Submit to Poetry
-        Subscriptions
-        Video
-    Grants & Programs
-        Awards
-        Events
-        All Past Events
-        Past Exhibitions
-        Grants
-        Library
-        Partnerships
-        Programs
-    About Us
-        Contact Us
-        Give
-        Jobs
-        News
-        Our Team
-        Press Releases
-        Reports & Financials
-        Trustees
-        Visit
+        .phase-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 176, 0, 0.35);
+            border-radius: 16px;
+            padding: 34px;
+        }
 
-Poetry Foundation
-Facebook
-Instagram
+        .phase-card h2 {
+            color: #ff6a00;
+            margin-bottom: 18px;
+            font-size: 1.8rem;
+        }
 
-    Contact Us
-    Newsletters
-    Press
-    Privacy Policy
-    Terms of Use
-    Poetry Mobile App
+        .portal-section {
+            background: #061726;
+            padding: 80px 7%;
+        }
 
-    61 West Superior Street, Chicago, IL 60654
-    © 2026 Poetry Foundation
+        .portal-card {
+            max-width: 1100px;
+            margin: auto;
+            background: #13283b;
+            border: 1px solid rgba(255, 176, 0, 0.35);
+            border-radius: 18px;
+            padding: 45px;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
 
-See a problem on this page?
+        .portal-card h2 {
+            color: #ff6a00;
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .portal-card p {
+            color: #f2f2f2;
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            color: #ff6a00;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+            background: #0b2a44;
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.55);
+        }
+
+        .btn {
+            display: inline-block;
+            background: #ff6a00;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 13px 24px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background: #ff7a1a;
+        }
+
+        .btn-secondary {
+            background: #0b2a44;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+            margin-left: 10px;
+        }
+
+        .message {
+            margin-top: 18px;
+            font-weight: 700;
+            color: #ff6a00;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 35px;
+        }
+
+        .dashboard-header h2 {
+            text-align: left;
+            margin-bottom: 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 176, 0, 0.25);
+            border-radius: 14px;
+            padding: 28px;
+        }
+
+        .info-card h3 {
+            color: #ff6a00;
+            margin-bottom: 18px;
+            font-size: 1.3rem;
+        }
+
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .info-value {
+            color: #f2f2f2;
+        }
+
+        .candidate-status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .status-good {
+            background: rgba(46, 204, 113, 0.18);
+            color: #7dffad;
+            border: 1px solid rgba(46, 204, 113, 0.45);
+        }
+
+        .status-warning {
+            background: rgba(255, 176, 0, 0.18);
+            color: #ffcc66;
+            border: 1px solid rgba(255, 176, 0, 0.45);
+        }
+
+        .status-danger {
+            background: rgba(255, 80, 80, 0.18);
+            color: #ff9a9a;
+            border: 1px solid rgba(255, 80, 80, 0.45);
+        }
+
+        .status-neutral {
+            background: rgba(255, 255, 255, 0.10);
+            color: #f2f2f2;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .support-section {
+            background: #0b2a44;
+            padding: 80px 7%;
+        }
+
+        .support-box {
+            max-width: 1100px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 55px;
+            text-align: center;
+        }
+
+        .support-box h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 20px;
+        }
+
+        .support-box span {
+            color: #ff6a00;
+        }
+
+        footer {
+            background: #020b14;
+            border-top: 2px solid #ff6a00;
+            text-align: center;
+            padding: 30px 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero-box,
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .dashboard-header {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .dashboard-header h2 {
+                text-align: center;
+            }
+
+            .info-row {
+                grid-template-columns: 1fr;
+                text-align: left;
+            }
+
+            nav {
+                gap: 18px;
+            }
+
+            .btn,
+            .btn-secondary {
+                width: 100%;
+                margin-left: 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="index.html">Home</a>
+            <a href="home.html">About</a>
+            <a href="our-services.html">Services</a>
+            <a href="careers.html">Careers</a>
+            <a href="jobs.html">Jobs</a>
+            <a href="executive.html">Executive</a>
+            <a href="apply.html">Apply</a>
+            <a href="candidates.html">Candidates</a>
+            <a href="portal.html" class="active">Candidate Portal</a>
+            <a href="contact us.html">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-box">
+            <div>
+                <h1>
+                    Candidate
+                    <span>Portal</span>
+                </h1>
+                <p>
+                    Access your application progress, interview details, onboarding information and candidate portal updates in one secure place.
+                </p>
+            </div>
+
+            <div class="phase-card">
+                <h2>Phase 5A</h2>
+                <p>
+                    Candidate self-service access for applicants progressing through recruitment, interview, offer and onboarding stages.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <main>
+
+        <section class="portal-section" id="candidateLoginSection">
+            <div class="portal-card">
+                <h2>Candidate Login</h2>
+
+                <p>
+                    Enter the email address used on your application to view your candidate portal.
+                </p>
+
+                <form id="candidateLoginForm">
+                    <label for="candidateEmail">Email Address</label>
+                    <input
+                        type="email"
+                        id="candidateEmail"
+                        name="candidateEmail"
+                        placeholder="Enter your application email address"
+                        autocomplete="email"
+                        required
+                    >
+
+                    <button type="submit" class="btn">Login To Candidate Portal</button>
+                </form>
+
+                <p id="candidateLoginMessage" class="message"></p>
+            </div>
+        </section>
+
+        <section class="portal-section" id="candidateDashboardSection" style="display:none;">
+            <div class="portal-card">
+
+                <div class="dashboard-header">
+                    <div>
+                        <h2>Welcome, <span id="welcomeCandidateName">Candidate</span></h2>
+                        <p>
+                            Your candidate record is shown below.
+                        </p>
+                    </div>
+
+                    <div>
+                        <button type="button" id="refreshCandidateBtn" class="btn">Refresh Portal</button>
+                        <button type="button" id="logoutCandidateBtn" class="btn btn-secondary">Log Out</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+
+                    <div class="info-card">
+                        <h3>Application Details</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Name</div>
+                            <div class="info-value" id="applicationName">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Email</div>
+                            <div class="info-value" id="applicationEmail">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Phone</div>
+                            <div class="info-value" id="applicationPhone">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Position</div>
+                            <div class="info-value" id="applicationPosition">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Availability</div>
+                            <div class="info-value" id="applicationAvailability">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Application Date</div>
+                            <div class="info-value" id="applicationDate">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Status</div>
+                            <div class="info-value">
+                                <span id="applicationStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Interview Details</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Interview Date</div>
+                            <div class="info-value" id="interviewDate">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Interview Time</div>
+                            <div class="info-value" id="interviewTime">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Interview Location</div>
+                            <div class="info-value" id="interviewLocation">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Interview Status</div>
+                            <div class="info-value">
+                                <span id="interviewStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Offer & Onboarding</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Offer Response</div>
+                            <div class="info-value">
+                                <span id="offerResponseStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Start Date</div>
+                            <div class="info-value" id="candidateStartDate">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Contract</div>
+                            <div class="info-value">
+                                <span id="contractStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Onboarding</div>
+                            <div class="info-value">
+                                <span id="onboardingStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Welcome Pack</div>
+                            <div class="info-value">
+                                <span id="welcomePackStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Handbook</div>
+                            <div class="info-value">
+                                <span id="handbookStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Employment Readiness</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Right To Work</div>
+                            <div class="info-value">
+                                <span id="rtwStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">DBS</div>
+                            <div class="info-value">
+                                <span id="dbsStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Training</div>
+                            <div class="info-value">
+                                <span id="trainingStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Induction Date</div>
+                            <div class="info-value" id="inductionDate">N/A</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Induction Status</div>
+                            <div class="info-value">
+                                <span id="inductionStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Ready To Start</div>
+                            <div class="info-value">
+                                <span id="readyToStart" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Portal Access</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Portal Access</div>
+                            <div class="info-value">
+                                <span id="portalAccessStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Documents</div>
+                            <div class="info-value">
+                                <span id="documentDownloadStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Contract Acceptance</div>
+                            <div class="info-value">
+                                <span id="contractAcceptanceStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">E-Signature</div>
+                            <div class="info-value">
+                                <span id="eSignatureStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Self-Service</div>
+                            <div class="info-value">
+                                <span id="selfServiceStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Access Date</div>
+                            <div class="info-value" id="portalAccessDate">N/A</div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Messages & Notes</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Portal Notes</div>
+                            <div class="info-value" id="portalAccessNotes">No portal notes have been added yet.</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Last Communication</div>
+                            <div class="info-value" id="lastCommunicationAction">No recent communication recorded.</div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Last Updated</div>
+                            <div class="info-value" id="lastCommunicationAt">N/A</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="support-section">
+            <div class="support-box">
+                <h2>
+                    Candidate Support <span>Built Around Progress</span>
+                </h2>
+
+                <p>
+                    This portal helps candidates follow their recruitment, interview and onboarding journey with Joe’s Excellent Events & Management.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Copyright © 2026 Joe’s Excellent Events & Management</p>
+        <p>All rights reserved.</p>
+    </footer>
+
+    <script src="candidate.js"></script>
+
+</body>
+</html>
