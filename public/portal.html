@@ -180,6 +180,31 @@
             color: #ff6a00;
         }
 
+        .interview-action-box {
+            margin-top: 18px;
+        }
+
+        .interview-action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .btn-danger {
+            background: #c0392b;
+        }
+
+        .btn-danger:hover {
+            background: #d64535;
+        }
+
+        .response-message {
+            margin-top: 16px;
+            font-weight: 800;
+            color: #7dffad;
+        }
+
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -495,6 +520,29 @@
                             <div class="info-label">Interview Status</div>
                             <div class="info-value">
                                 <span id="interviewStatus" class="candidate-status-badge status-neutral">N/A</span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Interview Response</div>
+                            <div class="info-value">
+                                <span id="interviewResponseStatus" class="candidate-status-badge status-neutral">Pending</span>
+                            </div>
+                        </div>
+
+                        <div class="info-row" id="interviewResponseActions">
+                            <div class="info-label">Candidate Action</div>
+                            <div class="info-value">
+                                <div class="interview-action-buttons">
+                                    <button type="button" id="acceptInterviewBtn" class="btn">Accept Interview</button>
+                                    <button type="button" id="declineInterviewBtn" class="btn btn-danger">Decline Interview</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-row">
+                            <div class="info-label">Response Message</div>
+                            <div class="info-value">
+                                <p id="interviewResponseMessage" class="response-message"></p>
                             </div>
                         </div>
                     </div>
