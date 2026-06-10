@@ -1911,10 +1911,10 @@ function cleanCandidateApplication(application) {
         interviewDate: application.interviewDate || "",
         interviewTime: application.interviewTime || "",
         interviewLocation: application.interviewLocation || "",
+        interviewStatus: application.interviewStatus || "",
+        interviewResponse: application.interviewResponse || "Pending",
+        interviewResponseAt: application.interviewResponseAt || "",
         invitationSent: Boolean(application.invitationSent),
-        interviewResponse: application.interviewResponse || "pending",
-        interviewResponseDate: application.interviewResponseDate || "",
-        interviewStatus: application.interviewResponse === "accepted" ? "Interview Accepted" : (application.invitationSent ? "Interview Invitation Sent" : application.status || "Not Scheduled"),
         reminderSent: Boolean(application.reminderSent),
         offerResponseStatus: application.offerResponseStatus || "Not Yet Recorded",
         candidateStartDate: application.candidateStartDate || "",
@@ -2023,17 +2023,33 @@ app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
     }
 });
 
-app.patch("/api/candidate/interview-response", requireCandidateAuth, async (req, res) => {
+app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, res) => {
     try {
-        const requestedResponse = clean(req.body.interviewResponse || "accepted");
-        const allowedResponses = ["accepted"];
+        const responseValue = clean(req.body.response).toLowerCase();
 
-        if (!allowedResponses.includes(requestedResponse)) {
+        const responseMap = {
+            accepted: {
+                interviewResponse: "Interview Accepted",
+                interviewStatus: "Interview Accepted",
+                lastCommunicationAction: "Interview Accepted",
+                confirmationMessage: "Your interview attendance has been confirmed."
+            },
+            declined: {
+                interviewResponse: "Interview Declined",
+                interviewStatus: "Interview Declined",
+                lastCommunicationAction: "Interview Declined",
+                confirmationMessage: "You have declined this interview invitation."
+            }
+        };
+
+        const responseData = responseMap[responseValue];
+
+        if (!responseData) {
             return res.status(400).json({ message: "Invalid interview response." });
         }
 
-        const applicationRef = db.collection("applications").doc(req.candidate.applicationId);
-        const doc = await applicationRef.get();
+        const docRef = db.collection("applications").doc(req.candidate.applicationId);
+        const doc = await docRef.get();
 
         if (!doc.exists) {
             return res.status(404).json({ message: "Candidate application not found." });
@@ -2048,33 +2064,47 @@ app.patch("/api/candidate/interview-response", requireCandidateAuth, async (req,
             return res.status(403).json({ message: "Candidate profile mismatch." });
         }
 
-        const now = new Date().toISOString();
+        const timestamp = nowIso();
+
         const updateData = {
-            interviewResponse: "accepted",
-            interviewResponseDate: now,
-            interviewStatus: "Interview Accepted",
-            lastCommunicationAction: "Interview Accepted",
-            lastCommunicationAt: now,
-            updatedAt: now
+            interviewResponse: responseData.interviewResponse,
+            interviewStatus: responseData.interviewStatus,
+            interviewResponseAt: timestamp,
+            lastCommunicationAction: responseData.lastCommunicationAction,
+            lastCommunicationAt: timestamp,
+            updatedAt: timestamp
         };
 
-        await applicationRef.update(updateData);
+        await docRef.update(updateData);
 
-        const updatedDoc = await applicationRef.get();
         const updatedApplication = {
-            id: updatedDoc.id,
-            ...updatedDoc.data()
+            ...application,
+            ...updateData
         };
+
+        await logCommunication({
+            applicationId: doc.id,
+            application: updatedApplication,
+            communicationType: "Candidate Response",
+            action: responseData.lastCommunicationAction,
+            status: "Recorded",
+            subject: responseData.lastCommunicationAction,
+            extra: {
+                recruiterEmail: "candidate-portal",
+                followUp: responseValue === "declined" ? "Candidate declined interview. Recruiter follow-up required." : "Candidate accepted interview."
+            }
+        });
 
         res.json({
-            message: "Your interview attendance has been confirmed.",
+            message: responseData.confirmationMessage,
             candidate: cleanCandidateApplication(updatedApplication)
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Failed to confirm interview attendance." });
+        res.status(500).json({ message: "Failed to save interview response." });
     }
 });
+
 
 /* =====================================================
    CONTACT MESSAGES
