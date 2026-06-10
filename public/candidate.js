@@ -186,7 +186,7 @@ function renderCandidate(candidate) {
     const interviewResponseValue = candidate.interviewResponse || "Pending";
 
     setStatus("interviewStatus", interviewStatusValue);
-    setStatus("interviewResponse", interviewResponseValue);
+    setStatus("interviewResponseStatus", interviewResponseValue);
     updateInterviewResponseControls(interviewResponseValue);
 
     setStatus("offerResponseStatus", candidate.offerResponseStatus || "Not Yet Recorded");
