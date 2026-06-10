@@ -1911,10 +1911,10 @@ function cleanCandidateApplication(application) {
         interviewDate: application.interviewDate || "",
         interviewTime: application.interviewTime || "",
         interviewLocation: application.interviewLocation || "",
-        interviewStatus: application.interviewStatus || (application.invitationSent ? "Interview Invitation Sent" : "Not Scheduled"),
+        invitationSent: Boolean(application.invitationSent),
         interviewResponse: application.interviewResponse || "pending",
         interviewResponseDate: application.interviewResponseDate || "",
-        invitationSent: Boolean(application.invitationSent),
+        interviewStatus: application.interviewResponse === "accepted" ? "Interview Accepted" : (application.invitationSent ? "Interview Invitation Sent" : application.status || "Not Scheduled"),
         reminderSent: Boolean(application.reminderSent),
         offerResponseStatus: application.offerResponseStatus || "Not Yet Recorded",
         candidateStartDate: application.candidateStartDate || "",
@@ -2023,17 +2023,17 @@ app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
     }
 });
 
-
 app.patch("/api/candidate/interview-response", requireCandidateAuth, async (req, res) => {
     try {
-        const response = clean(req.body.response);
+        const requestedResponse = clean(req.body.interviewResponse || "accepted");
+        const allowedResponses = ["accepted"];
 
-        if (response !== "accepted") {
+        if (!allowedResponses.includes(requestedResponse)) {
             return res.status(400).json({ message: "Invalid interview response." });
         }
 
-        const ref = db.collection("applications").doc(req.candidate.applicationId);
-        const doc = await ref.get();
+        const applicationRef = db.collection("applications").doc(req.candidate.applicationId);
+        const doc = await applicationRef.get();
 
         if (!doc.exists) {
             return res.status(404).json({ message: "Candidate application not found." });
@@ -2048,26 +2048,26 @@ app.patch("/api/candidate/interview-response", requireCandidateAuth, async (req,
             return res.status(403).json({ message: "Candidate profile mismatch." });
         }
 
-        const updatedAt = nowIso();
+        const now = new Date().toISOString();
         const updateData = {
             interviewResponse: "accepted",
-            interviewResponseDate: updatedAt,
-            interviewStatus: "Confirmed By Candidate",
-            lastCommunicationAction: "Candidate confirmed interview attendance.",
-            lastCommunicationAt: updatedAt,
-            updatedAt
+            interviewResponseDate: now,
+            interviewStatus: "Interview Accepted",
+            lastCommunicationAction: "Interview Accepted",
+            lastCommunicationAt: now,
+            updatedAt: now
         };
 
-        await ref.update(updateData);
+        await applicationRef.update(updateData);
 
-        const updatedDoc = await ref.get();
+        const updatedDoc = await applicationRef.get();
         const updatedApplication = {
             id: updatedDoc.id,
             ...updatedDoc.data()
         };
 
         res.json({
-            message: "Interview attendance confirmed.",
+            message: "Your interview attendance has been confirmed.",
             candidate: cleanCandidateApplication(updatedApplication)
         });
     } catch (error) {
