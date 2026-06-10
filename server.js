@@ -2077,6 +2077,12 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
 
         const timestamp = nowIso();
 
+        const responseHistoryEntry = {
+            action: responseData.lastCommunicationAction,
+            timestamp,
+            source: "Candidate Portal"
+        };
+
         const updateData = {
             status: responseData.status,
             interviewResponse: responseData.interviewResponse,
@@ -2084,14 +2090,23 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
             interviewResponseAt: timestamp,
             lastCommunicationAction: responseData.lastCommunicationAction,
             lastCommunicationAt: timestamp,
-            updatedAt: timestamp
+            updatedAt: timestamp,
+            responseHistory: admin.firestore.FieldValue.arrayUnion(responseHistoryEntry)
         };
 
         await docRef.update(updateData);
 
+        const existingResponseHistory = Array.isArray(application.responseHistory)
+            ? application.responseHistory
+            : [];
+
         const updatedApplication = {
             ...application,
-            ...updateData
+            ...updateData,
+            responseHistory: [
+                ...existingResponseHistory,
+                responseHistoryEntry
+            ]
         };
 
         await logCommunication({
