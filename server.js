@@ -2038,12 +2038,14 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
 
         const responseMap = {
             accepted: {
+                status: "Interview Accepted",
                 interviewResponse: "Interview Accepted",
                 interviewStatus: "Interview Accepted",
                 lastCommunicationAction: "Interview Accepted",
                 confirmationMessage: "Your interview attendance has been confirmed."
             },
             declined: {
+                status: "Interview Declined",
                 interviewResponse: "Interview Declined",
                 interviewStatus: "Interview Declined",
                 lastCommunicationAction: "Interview Declined",
@@ -2076,6 +2078,7 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
         const timestamp = nowIso();
 
         const updateData = {
+            status: responseData.status,
             interviewResponse: responseData.interviewResponse,
             interviewStatus: responseData.interviewStatus,
             interviewResponseAt: timestamp,
