@@ -169,7 +169,12 @@ function renderCandidate(candidate) {
     if (!candidate) return;
 
     setText("welcomeCandidateName", candidate.fullName || candidate.name || "Candidate");
-    setText("applicationReferenceDisplay", candidate.applicationReference || candidate.id || "N/A");
+    const applicationReference = candidate.applicationReference || candidate.id || "";
+    const maskedApplicationReference = applicationReference.length > 4
+        ? "••••••••••••" + applicationReference.slice(-4)
+        : "••••";
+
+    setText("applicationReferenceDisplay", maskedApplicationReference);
     setText("applicationName", candidate.fullName || candidate.name || "Candidate");
     setText("applicationEmail", candidate.email);
     setText("applicationPhone", candidate.phone);
