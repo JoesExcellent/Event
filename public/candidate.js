@@ -89,47 +89,26 @@ function showDashboard() {
 }
 
 function getPortalRefreshMessageElement() {
-    let messageElement = document.getElementById("portalRefreshMessage");
+    let element = document.getElementById("portalRefreshMessage");
 
-    if (!messageElement && refreshCandidateBtn && refreshCandidateBtn.parentElement) {
-        messageElement = document.createElement("p");
-        messageElement.id = "portalRefreshMessage";
-        messageElement.className = "message";
-        messageElement.style.marginTop = "14px";
-        messageElement.style.fontWeight = "700";
-        messageElement.style.color = "#ff6a00";
-        refreshCandidateBtn.parentElement.appendChild(messageElement);
+    if (!element && refreshCandidateBtn && refreshCandidateBtn.parentElement) {
+        element = document.createElement("p");
+        element.id = "portalRefreshMessage";
+        element.className = "response-message";
+        element.style.marginTop = "16px";
+        refreshCandidateBtn.parentElement.appendChild(element);
     }
 
-    return messageElement;
+    return element;
 }
 
-function showPortalRefreshMessage(message, colour = "#ff6a00") {
-    const messageElement = getPortalRefreshMessageElement();
+function setPortalRefreshMessage(message, color = "#7dffad") {
+    const element = getPortalRefreshMessageElement();
 
-    if (messageElement) {
-        messageElement.textContent = message;
-        messageElement.style.color = colour;
+    if (element) {
+        element.textContent = message;
+        element.style.color = color;
     }
-}
-
-async function refreshCandidatePortal() {
-    if (!refreshCandidateBtn || refreshCandidateBtn.disabled) return;
-
-    const originalButtonText = refreshCandidateBtn.textContent;
-
-    refreshCandidateBtn.disabled = true;
-    refreshCandidateBtn.textContent = "Refreshing...";
-    showPortalRefreshMessage("Refreshing latest portal details...", "#ffffff");
-
-    const refreshed = await loadCandidateProfile();
-
-    if (refreshed) {
-        showPortalRefreshMessage("Portal refreshed successfully.", "#7dffad");
-    }
-
-    refreshCandidateBtn.disabled = false;
-    refreshCandidateBtn.textContent = originalButtonText || "Refresh Portal";
 }
 
 async function candidateLogin(event) {
@@ -180,12 +159,18 @@ async function candidateLogin(event) {
     }
 }
 
-async function loadCandidateProfile() {
+async function loadCandidateProfile(showRefreshFeedback = false) {
     const token = getCandidateToken();
 
     if (!token) {
         showLogin();
-        return false;
+        return;
+    }
+
+    if (showRefreshFeedback && refreshCandidateBtn) {
+        refreshCandidateBtn.disabled = true;
+        refreshCandidateBtn.textContent = "Refreshing...";
+        setPortalRefreshMessage("Refreshing portal...", "#ffffff");
     }
 
     try {
@@ -203,11 +188,22 @@ async function loadCandidateProfile() {
 
         renderCandidate(result.candidate);
         showDashboard();
-        return true;
+
+        if (showRefreshFeedback) {
+            setPortalRefreshMessage("Portal refreshed successfully.", "#7dffad");
+        }
     } catch (error) {
-        localStorage.removeItem(CANDIDATE_TOKEN_KEY);
-        showLogin(error.message || "Please sign in again.");
-        return false;
+        if (showRefreshFeedback) {
+            setPortalRefreshMessage(error.message || "Portal refresh failed. Please try again.", "#ff9a9a");
+        } else {
+            localStorage.removeItem(CANDIDATE_TOKEN_KEY);
+            showLogin(error.message || "Please sign in again.");
+        }
+    } finally {
+        if (showRefreshFeedback && refreshCandidateBtn) {
+            refreshCandidateBtn.disabled = false;
+            refreshCandidateBtn.textContent = "Refresh Portal";
+        }
     }
 }
 
@@ -276,21 +272,33 @@ function renderCandidate(candidate) {
 
 function updateInterviewResponseControls(responseValue) {
     const response = String(responseValue || "").toLowerCase();
-    const hasResponded = response.includes("accepted") || response.includes("declined");
+    const hasAccepted = response.includes("accepted");
+    const hasDeclined = response.includes("declined");
 
     if (interviewResponseActions) {
-        interviewResponseActions.style.display = hasResponded ? "none" : "flex";
+        interviewResponseActions.style.display = "grid";
+    }
+
+    if (acceptInterviewBtn) {
+        acceptInterviewBtn.disabled = false;
+        acceptInterviewBtn.style.display = hasAccepted ? "none" : "inline-block";
+    }
+
+    if (declineInterviewBtn) {
+        declineInterviewBtn.disabled = false;
+        declineInterviewBtn.style.display = hasDeclined ? "none" : "inline-block";
     }
 
     if (interviewResponseMessage) {
-        if (response.includes("accepted")) {
-            interviewResponseMessage.textContent = "Your interview attendance has been confirmed.";
+        if (hasAccepted) {
+            interviewResponseMessage.textContent = "Your interview attendance has been confirmed. If your circumstances change, you can decline this interview using the button above.";
             interviewResponseMessage.style.color = "#7dffad";
-        } else if (response.includes("declined")) {
-            interviewResponseMessage.textContent = "You have declined this interview invitation.";
+        } else if (hasDeclined) {
+            interviewResponseMessage.textContent = "You have declined this interview invitation. If your circumstances change, you can accept this interview using the button above.";
             interviewResponseMessage.style.color = "#ff9a9a";
         } else {
-            interviewResponseMessage.textContent = "";
+            interviewResponseMessage.textContent = "Please confirm whether you can attend this interview.";
+            interviewResponseMessage.style.color = "#ffcc66";
         }
     }
 }
@@ -304,8 +312,13 @@ async function submitInterviewResponse(responseValue) {
     }
 
     const isDecline = responseValue === "declined";
+    const isAccept = responseValue === "accepted";
 
     if (isDecline && !window.confirm("Are you sure you want to decline this interview invitation?")) {
+        return;
+    }
+
+    if (isAccept && !window.confirm("Are you sure you want to accept this interview invitation?")) {
         return;
     }
 
@@ -363,7 +376,9 @@ if (logoutCandidateBtn) {
 }
 
 if (refreshCandidateBtn) {
-    refreshCandidateBtn.addEventListener("click", refreshCandidatePortal);
+    refreshCandidateBtn.addEventListener("click", function () {
+        loadCandidateProfile(true);
+    });
 }
 
 if (acceptInterviewBtn) {
