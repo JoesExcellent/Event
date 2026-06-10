@@ -13,12 +13,20 @@ const candidateEmailInput = document.getElementById("candidateEmail");
 const candidateLoginMessage = document.getElementById("candidateLoginMessage");
 const logoutCandidateBtn = document.getElementById("logoutCandidateBtn");
 const refreshCandidateBtn = document.getElementById("refreshCandidateBtn");
+const acceptInterviewBtn = document.getElementById("acceptInterviewBtn");
+const interviewResponseMessage = document.getElementById("interviewResponseMessage");
 
 function setText(id, value) {
     const element = document.getElementById(id);
     if (element) {
         element.textContent = value || "N/A";
     }
+}
+
+function setMessage(element, message, colour = "#ff6a00") {
+    if (!element) return;
+    element.textContent = message || "";
+    element.style.color = colour;
 }
 
 function setStatus(id, value) {
@@ -32,7 +40,7 @@ function setStatus(id, value) {
 function statusClass(value) {
     const status = String(value || "").toLowerCase();
 
-    if (status.includes("accepted") || status.includes("active") || status.includes("ready") || status.includes("completed") || status.includes("signed") || status.includes("enabled") || status.includes("sent")) {
+    if (status.includes("accepted") || status.includes("confirmed") || status.includes("active") || status.includes("ready") || status.includes("completed") || status.includes("signed") || status.includes("enabled") || status.includes("sent")) {
         return "status-good";
     }
 
@@ -166,7 +174,21 @@ function renderCandidate(candidate) {
     setText("interviewDate", formatDate(candidate.interviewDate));
     setText("interviewTime", candidate.interviewTime || "N/A");
     setText("interviewLocation", candidate.interviewLocation || "N/A");
-    setStatus("interviewStatus", candidate.invitationSent ? "Interview Invitation Sent" : candidate.status || "Not Scheduled");
+    setStatus("interviewStatus", candidate.interviewStatus || (candidate.invitationSent ? "Interview Invitation Sent" : candidate.status || "Not Scheduled"));
+
+    if (acceptInterviewBtn) {
+        const accepted = candidate.interviewResponse === "accepted" || String(candidate.interviewStatus || "").toLowerCase().includes("confirmed");
+        acceptInterviewBtn.disabled = accepted;
+        acceptInterviewBtn.textContent = accepted ? "Interview Accepted" : "Accept Interview";
+    }
+
+    if (interviewResponseMessage) {
+        if (candidate.interviewResponse === "accepted") {
+            setMessage(interviewResponseMessage, "You have confirmed your interview attendance.", "#7dffad");
+        } else {
+            setMessage(interviewResponseMessage, "");
+        }
+    }
 
     setStatus("offerResponseStatus", candidate.offerResponseStatus || "Not Yet Recorded");
     setText("candidateStartDate", formatDate(candidate.candidateStartDate));
@@ -194,6 +216,46 @@ function renderCandidate(candidate) {
     setText("lastCommunicationAt", formatDate(candidate.lastCommunicationAt));
 }
 
+async function acceptInterview() {
+    const token = getCandidateToken();
+
+    if (!token) {
+        showLogin("Please sign in to confirm your interview.");
+        return;
+    }
+
+    setMessage(interviewResponseMessage, "Confirming your interview attendance...", "#ffffff");
+
+    if (acceptInterviewBtn) {
+        acceptInterviewBtn.disabled = true;
+    }
+
+    try {
+        const response = await fetch("/api/candidate/interview-response", {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ response: "accepted" })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Could not confirm interview attendance.");
+        }
+
+        renderCandidate(result.candidate);
+        setMessage(interviewResponseMessage, result.message || "Interview attendance confirmed.", "#7dffad");
+    } catch (error) {
+        if (acceptInterviewBtn) {
+            acceptInterviewBtn.disabled = false;
+        }
+        setMessage(interviewResponseMessage, error.message || "Could not confirm interview attendance.", "#ff6a00");
+    }
+}
+
 function logoutCandidate() {
     localStorage.removeItem(CANDIDATE_TOKEN_KEY);
     localStorage.removeItem(CANDIDATE_EMAIL_KEY);
@@ -211,6 +273,10 @@ if (logoutCandidateBtn) {
 
 if (refreshCandidateBtn) {
     refreshCandidateBtn.addEventListener("click", loadCandidateProfile);
+}
+
+if (acceptInterviewBtn) {
+    acceptInterviewBtn.addEventListener("click", acceptInterview);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
