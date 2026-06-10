@@ -243,6 +243,10 @@ Thank you for your application for the position of {{position}} with Joe's Excel
 
 We are pleased to confirm that your application has been received successfully and has been added to our recruitment system for review.
 
+Application Reference: {{applicationReference}}
+
+Please keep this reference safe. You will need it with your email address to access your Candidate Portal.
+
 Our recruitment team will carefully assess your application, qualifications and experience against the requirements of the role.
 
 If your application is shortlisted, we will contact you regarding the next stage of the recruitment process.
@@ -259,6 +263,10 @@ Joe's Excellent Events & Management`
         body: `Thank you for your application to Joe's Excellent Events & Management.
 
 We are pleased to invite you to attend an interview for the position of {{position}}.
+
+Application Reference: {{applicationReference}}
+
+Please keep this reference safe. You will need it with your email address to access your Candidate Portal.
 
 Interview Details
 Date: {{interviewDate}}
@@ -632,6 +640,7 @@ async function sendTemplateEmail(templateId, application, extraData = {}) {
 
     const data = {
         candidateName: application.fullName || application.name || "Candidate",
+        applicationReference: application.id || application.applicationReference || application.applicationId || "",
         position: application.position || "the position",
         email: application.email || "",
         phone: application.phone || "",
@@ -821,7 +830,7 @@ async function applicationSubmitHandler(req, res) {
             const docRef = await db.collection("applications").add(application);
 
             try {
-                const emailResult = await sendTemplateEmail("applicationReceived", application);
+                const emailResult = await sendTemplateEmail("applicationReceived", { id: docRef.id, ...application });
 
                 await docRef.update({
                     applicationReceivedSent: true,
@@ -1898,6 +1907,7 @@ function requireCandidateAuth(req, res, next) {
 function cleanCandidateApplication(application) {
     return {
         id: application.id || "",
+        applicationReference: application.id || "",
         fullName: application.fullName || application.name || "Candidate",
         name: application.name || application.fullName || "Candidate",
         email: application.email || "",
@@ -1940,53 +1950,47 @@ function cleanCandidateApplication(application) {
     };
 }
 
-async function findCandidateApplicationByEmail(email) {
+async function findCandidateApplicationByEmailAndReference(email, applicationReference) {
     const requestedEmail = clean(email).toLowerCase();
+    const requestedReference = clean(applicationReference);
 
-    if (!requestedEmail) return null;
+    if (!requestedEmail || !requestedReference) return null;
 
-    let snapshot = await db
-        .collection("applications")
-        .where("email", "==", requestedEmail)
-        .get();
+    const doc = await db.collection("applications").doc(requestedReference).get();
 
-    if (snapshot.empty) {
-        snapshot = await db
-            .collection("applications")
-            .where("email", "==", clean(email))
-            .get();
-    }
-
-    if (snapshot.empty) {
+    if (!doc.exists) {
         return null;
     }
 
-    const applications = snapshot.docs.map(doc => ({
+    const application = {
         id: doc.id,
         ...doc.data()
-    }));
+    };
 
-    applications.sort((a, b) => {
-        const dateA = Date.parse(a.updatedAt || a.createdAt || a.submittedAt || "") || 0;
-        const dateB = Date.parse(b.updatedAt || b.createdAt || b.submittedAt || "") || 0;
-        return dateB - dateA;
-    });
+    if ((application.email || "").toLowerCase() !== requestedEmail) {
+        return null;
+    }
 
-    return applications[0];
+    return application;
 }
 
 app.post("/api/candidate/login", async (req, res) => {
     try {
         const email = clean(req.body.email);
+        const applicationReference = clean(req.body.applicationReference);
 
         if (!email) {
             return res.status(400).json({ message: "Please enter your email address." });
         }
 
-        const application = await findCandidateApplicationByEmail(email);
+        if (!applicationReference) {
+            return res.status(400).json({ message: "Please enter your application reference." });
+        }
+
+        const application = await findCandidateApplicationByEmailAndReference(email, applicationReference);
 
         if (!application) {
-            return res.status(404).json({ message: "No application was found for that email address." });
+            return res.status(404).json({ message: "Invalid email address or application reference. Please check both details and try again." });
         }
 
         const token = createCandidateToken(application);
@@ -2202,7 +2206,10 @@ async function handlePortalInvite(req, res) {
 You will be able to review onboarding documents, employment information, contract status and first day instructions through the portal.
 
 Position: ${application.position || "N/A"}
+Application Reference: ${application.id || "N/A"}
 Start Date: ${application.candidateStartDate || "To be confirmed"}
+
+Please keep this reference safe. You will need it with your email address to access your Candidate Portal.
 
 Please check your onboarding information carefully and contact us if anything needs to be updated.
 
