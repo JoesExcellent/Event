@@ -491,6 +491,7 @@ function openCandidateModal(id) {
 
     renderCandidateTimeline(application);
     renderCandidateCommunicationTimeline(application);
+    renderCandidateResponseHistory(application);
 
     const modal = document.getElementById("candidateProfileModal");
 
@@ -688,6 +689,39 @@ function selectCandidate(id, fullName) {
     }
 
     showToast(`Selected ${fullName}`, "info");
+}
+
+
+function renderCandidateResponseHistory(application) {
+    const timeline = document.getElementById("modalCandidateResponseHistory");
+
+    if (!timeline) return;
+
+    const history = Array.isArray(application.responseHistory)
+        ? application.responseHistory
+        : [];
+
+    if (!history.length) {
+        timeline.innerHTML = `
+            <li>
+                <strong>No Response History Yet</strong>
+                No candidate interview response changes have been recorded yet.
+            </li>
+        `;
+        return;
+    }
+
+    const sortedHistory = [...history].sort((a, b) =>
+        new Date(b.timestamp || b.createdAt || 0) - new Date(a.timestamp || a.createdAt || 0)
+    );
+
+    timeline.innerHTML = sortedHistory.map(entry => `
+        <li>
+            <strong>${escapeHtml(entry.action || "Interview Response Updated")}</strong>
+            ${escapeHtml(formatDateTime(entry.timestamp || entry.createdAt || ""))}
+            ${entry.source ? `<br>Source: ${escapeHtml(entry.source)}` : ""}
+        </li>
+    `).join("");
 }
 
 function selectCandidateFromModal() {
