@@ -88,6 +88,50 @@ function showDashboard() {
     dashboardSection.style.display = "block";
 }
 
+function getPortalRefreshMessageElement() {
+    let messageElement = document.getElementById("portalRefreshMessage");
+
+    if (!messageElement && refreshCandidateBtn && refreshCandidateBtn.parentElement) {
+        messageElement = document.createElement("p");
+        messageElement.id = "portalRefreshMessage";
+        messageElement.className = "message";
+        messageElement.style.marginTop = "14px";
+        messageElement.style.fontWeight = "700";
+        messageElement.style.color = "#ff6a00";
+        refreshCandidateBtn.parentElement.appendChild(messageElement);
+    }
+
+    return messageElement;
+}
+
+function showPortalRefreshMessage(message, colour = "#ff6a00") {
+    const messageElement = getPortalRefreshMessageElement();
+
+    if (messageElement) {
+        messageElement.textContent = message;
+        messageElement.style.color = colour;
+    }
+}
+
+async function refreshCandidatePortal() {
+    if (!refreshCandidateBtn || refreshCandidateBtn.disabled) return;
+
+    const originalButtonText = refreshCandidateBtn.textContent;
+
+    refreshCandidateBtn.disabled = true;
+    refreshCandidateBtn.textContent = "Refreshing...";
+    showPortalRefreshMessage("Refreshing latest portal details...", "#ffffff");
+
+    const refreshed = await loadCandidateProfile();
+
+    if (refreshed) {
+        showPortalRefreshMessage("Portal refreshed successfully.", "#7dffad");
+    }
+
+    refreshCandidateBtn.disabled = false;
+    refreshCandidateBtn.textContent = originalButtonText || "Refresh Portal";
+}
+
 async function candidateLogin(event) {
     event.preventDefault();
 
@@ -141,7 +185,7 @@ async function loadCandidateProfile() {
 
     if (!token) {
         showLogin();
-        return;
+        return false;
     }
 
     try {
@@ -159,9 +203,11 @@ async function loadCandidateProfile() {
 
         renderCandidate(result.candidate);
         showDashboard();
+        return true;
     } catch (error) {
         localStorage.removeItem(CANDIDATE_TOKEN_KEY);
         showLogin(error.message || "Please sign in again.");
+        return false;
     }
 }
 
@@ -317,7 +363,7 @@ if (logoutCandidateBtn) {
 }
 
 if (refreshCandidateBtn) {
-    refreshCandidateBtn.addEventListener("click", loadCandidateProfile);
+    refreshCandidateBtn.addEventListener("click", refreshCandidatePortal);
 }
 
 if (acceptInterviewBtn) {
