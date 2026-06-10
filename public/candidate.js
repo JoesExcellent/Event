@@ -5,11 +5,13 @@
 
 const CANDIDATE_TOKEN_KEY = "temcCandidateToken";
 const CANDIDATE_EMAIL_KEY = "temcCandidateEmail";
+const CANDIDATE_REFERENCE_KEY = "temcCandidateReference";
 
 const loginSection = document.getElementById("candidateLoginSection");
 const dashboardSection = document.getElementById("candidateDashboardSection");
 const loginForm = document.getElementById("candidateLoginForm");
 const candidateEmailInput = document.getElementById("candidateEmail");
+const applicationReferenceInput = document.getElementById("applicationReference");
 const candidateLoginMessage = document.getElementById("candidateLoginMessage");
 const logoutCandidateBtn = document.getElementById("logoutCandidateBtn");
 const refreshCandidateBtn = document.getElementById("refreshCandidateBtn");
@@ -90,9 +92,16 @@ async function candidateLogin(event) {
     event.preventDefault();
 
     const email = candidateEmailInput.value.trim();
+    const applicationReference = applicationReferenceInput ? applicationReferenceInput.value.trim() : "";
 
     if (!email) {
         candidateLoginMessage.textContent = "Please enter your email address.";
+        candidateLoginMessage.style.color = "#ff6a00";
+        return;
+    }
+
+    if (!applicationReference) {
+        candidateLoginMessage.textContent = "Please enter your application reference.";
         candidateLoginMessage.style.color = "#ff6a00";
         return;
     }
@@ -106,7 +115,7 @@ async function candidateLogin(event) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, applicationReference })
         });
 
         const result = await response.json();
@@ -117,6 +126,7 @@ async function candidateLogin(event) {
 
         localStorage.setItem(CANDIDATE_TOKEN_KEY, result.token);
         localStorage.setItem(CANDIDATE_EMAIL_KEY, email);
+        localStorage.setItem(CANDIDATE_REFERENCE_KEY, applicationReference);
 
         renderCandidate(result.candidate);
         showDashboard();
@@ -159,6 +169,7 @@ function renderCandidate(candidate) {
     if (!candidate) return;
 
     setText("welcomeCandidateName", candidate.fullName || candidate.name || "Candidate");
+    setText("applicationReferenceDisplay", candidate.applicationReference || candidate.id || "N/A");
     setText("applicationName", candidate.fullName || candidate.name || "Candidate");
     setText("applicationEmail", candidate.email);
     setText("applicationPhone", candidate.phone);
@@ -279,7 +290,9 @@ async function submitInterviewResponse(responseValue) {
 function logoutCandidate() {
     localStorage.removeItem(CANDIDATE_TOKEN_KEY);
     localStorage.removeItem(CANDIDATE_EMAIL_KEY);
+    localStorage.removeItem(CANDIDATE_REFERENCE_KEY);
     candidateEmailInput.value = "";
+    if (applicationReferenceInput) applicationReferenceInput.value = "";
     showLogin("You have been logged out.");
 }
 
@@ -309,8 +322,14 @@ if (declineInterviewBtn) {
 
 document.addEventListener("DOMContentLoaded", function () {
     const savedEmail = localStorage.getItem(CANDIDATE_EMAIL_KEY) || "";
+    const savedReference = localStorage.getItem(CANDIDATE_REFERENCE_KEY) || "";
+
     if (savedEmail && candidateEmailInput) {
         candidateEmailInput.value = savedEmail;
+    }
+
+    if (savedReference && applicationReferenceInput) {
+        applicationReferenceInput.value = savedReference;
     }
 
     loadCandidateProfile();

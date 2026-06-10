@@ -174,27 +174,6 @@
             margin-left: 10px;
         }
 
-
-        .interview-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .btn-danger {
-            background: #c0392b;
-            border: 1px solid rgba(255, 255, 255, 0.20);
-        }
-
-        .btn-danger:hover {
-            background: #d94b3f;
-        }
-
-        #interviewResponseMessage {
-            font-weight: 800;
-            margin-top: 12px;
-        }
-
         .message {
             margin-top: 18px;
             font-weight: 700;
@@ -412,6 +391,16 @@
                         required
                     >
 
+                    <label for="applicationReference">Application Reference</label>
+                    <input
+                        type="text"
+                        id="applicationReference"
+                        name="applicationReference"
+                        placeholder="Enter your application reference"
+                        autocomplete="off"
+                        required
+                    >
+
                     <button type="submit" class="btn">Login To Candidate Portal</button>
                 </form>
 
@@ -440,6 +429,11 @@
 
                     <div class="info-card">
                         <h3>Application Details</h3>
+
+                        <div class="info-row">
+                            <div class="info-label">Application Reference</div>
+                            <div class="info-value" id="applicationReferenceDisplay">N/A</div>
+                        </div>
 
                         <div class="info-row">
                             <div class="info-label">Name</div>
@@ -502,26 +496,6 @@
                             <div class="info-value">
                                 <span id="interviewStatus" class="candidate-status-badge status-neutral">N/A</span>
                             </div>
-                        </div>
-
-                        <div class="info-row">
-                            <div class="info-label">Interview Response</div>
-                            <div class="info-value">
-                                <span id="interviewResponse" class="candidate-status-badge status-neutral">Pending</span>
-                            </div>
-                        </div>
-
-                        <div class="info-row" id="interviewResponseActions">
-                            <div class="info-label">Candidate Action</div>
-                            <div class="info-value interview-actions">
-                                <button type="button" id="acceptInterviewBtn" class="btn">Accept Interview</button>
-                                <button type="button" id="declineInterviewBtn" class="btn btn-danger">Decline Interview</button>
-                            </div>
-                        </div>
-
-                        <div class="info-row">
-                            <div class="info-label">Response Message</div>
-                            <div class="info-value" id="interviewResponseMessage"></div>
                         </div>
                     </div>
 
