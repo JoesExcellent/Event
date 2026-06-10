@@ -1911,6 +1911,9 @@ function cleanCandidateApplication(application) {
         interviewDate: application.interviewDate || "",
         interviewTime: application.interviewTime || "",
         interviewLocation: application.interviewLocation || "",
+        interviewStatus: application.interviewStatus || (application.invitationSent ? "Interview Invitation Sent" : "Not Scheduled"),
+        interviewResponse: application.interviewResponse || "pending",
+        interviewResponseDate: application.interviewResponseDate || "",
         invitationSent: Boolean(application.invitationSent),
         reminderSent: Boolean(application.reminderSent),
         offerResponseStatus: application.offerResponseStatus || "Not Yet Recorded",
@@ -2017,6 +2020,59 @@ app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load candidate profile." });
+    }
+});
+
+
+app.patch("/api/candidate/interview-response", requireCandidateAuth, async (req, res) => {
+    try {
+        const response = clean(req.body.response);
+
+        if (response !== "accepted") {
+            return res.status(400).json({ message: "Invalid interview response." });
+        }
+
+        const ref = db.collection("applications").doc(req.candidate.applicationId);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const application = {
+            id: doc.id,
+            ...doc.data()
+        };
+
+        if ((application.email || "").toLowerCase() !== (req.candidate.email || "").toLowerCase()) {
+            return res.status(403).json({ message: "Candidate profile mismatch." });
+        }
+
+        const updatedAt = nowIso();
+        const updateData = {
+            interviewResponse: "accepted",
+            interviewResponseDate: updatedAt,
+            interviewStatus: "Confirmed By Candidate",
+            lastCommunicationAction: "Candidate confirmed interview attendance.",
+            lastCommunicationAt: updatedAt,
+            updatedAt
+        };
+
+        await ref.update(updateData);
+
+        const updatedDoc = await ref.get();
+        const updatedApplication = {
+            id: updatedDoc.id,
+            ...updatedDoc.data()
+        };
+
+        res.json({
+            message: "Interview attendance confirmed.",
+            candidate: cleanCandidateApplication(updatedApplication)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to confirm interview attendance." });
     }
 });
 
