@@ -2004,11 +2004,6 @@ function cleanCandidateApplication(application) {
         eSignatureStatus: application.eSignatureStatus || "Not Required",
         selfServiceStatus: application.selfServiceStatus || "Not Enabled",
         portalAccessDate: application.portalAccessDate || "",
-        interviewPackUrl: application.interviewPackUrl || "",
-        contractUrl: application.contractUrl || "",
-        welcomePackUrl: application.welcomePackUrl || "",
-        handbookUrl: application.handbookUrl || "",
-        trainingDocsUrl: application.trainingDocsUrl || "",
         portalAccessNotes: application.portalAccessNotes || "",
         lastCommunicationAction: application.lastCommunicationAction || "No recent communication recorded.",
         lastCommunicationAt: application.lastCommunicationAt || ""
@@ -2228,11 +2223,6 @@ async function handlePortalAccessUpdate(req, res) {
         const eSignatureStatus = clean(req.body.eSignatureStatus) || "";
         const selfServiceStatus = clean(req.body.selfServiceStatus) || "";
         const portalAccessDate = clean(req.body.portalAccessDate) || "";
-        const interviewPackUrl = clean(req.body.interviewPackUrl) || "";
-        const contractUrl = clean(req.body.contractUrl) || "";
-        const welcomePackUrl = clean(req.body.welcomePackUrl) || "";
-        const handbookUrl = clean(req.body.handbookUrl) || "";
-        const trainingDocsUrl = clean(req.body.trainingDocsUrl) || "";
         const portalAccessNotes = clean(req.body.portalAccessNotes) || "";
 
         const updateData = {
@@ -2242,11 +2232,6 @@ async function handlePortalAccessUpdate(req, res) {
             eSignatureStatus,
             selfServiceStatus,
             portalAccessDate,
-            interviewPackUrl,
-            contractUrl,
-            welcomePackUrl,
-            handbookUrl,
-            trainingDocsUrl,
             portalAccessNotes,
             portalAccessUpdatedAt: nowIso(),
             lastCommunicationAction: `Portal Access Updated - ${portalAccessStatus || "Recorded"}`,
@@ -2297,11 +2282,6 @@ async function handlePortalInvite(req, res) {
         const eSignatureStatus = clean(req.body.eSignatureStatus) || application.eSignatureStatus || "Pending";
         const selfServiceStatus = clean(req.body.selfServiceStatus) || "Enabled";
         const portalAccessDate = clean(req.body.portalAccessDate) || new Date().toISOString().slice(0, 10);
-        const interviewPackUrl = clean(req.body.interviewPackUrl) || application.interviewPackUrl || "";
-        const contractUrl = clean(req.body.contractUrl) || application.contractUrl || "";
-        const welcomePackUrl = clean(req.body.welcomePackUrl) || application.welcomePackUrl || "";
-        const handbookUrl = clean(req.body.handbookUrl) || application.handbookUrl || "";
-        const trainingDocsUrl = clean(req.body.trainingDocsUrl) || application.trainingDocsUrl || "";
         const portalAccessNotes = clean(req.body.portalAccessNotes) || application.portalAccessNotes || "";
 
         const candidateName = application.fullName || application.name || "Candidate";
@@ -2336,11 +2316,6 @@ Joe's Excellent Events & Management`;
             eSignatureStatus,
             selfServiceStatus,
             portalAccessDate,
-            interviewPackUrl,
-            contractUrl,
-            welcomePackUrl,
-            handbookUrl,
-            trainingDocsUrl,
             portalAccessNotes,
             portalInviteSentAt: nowIso(),
             portalAccessUpdatedAt: nowIso(),
