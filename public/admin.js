@@ -14,6 +14,8 @@ let allVacancies = [];
 let allEmailTemplates = [];
 let allReminderQueue = [];
 let allAuditLogs = [];
+let auditCurrentPage = 1;
+const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
 let selectedEmailTemplateId = null;
 
@@ -58,6 +60,9 @@ const auditTrailMessage = document.getElementById("auditTrailMessage");
 const auditSearchInput = document.getElementById("auditSearchInput");
 const auditFilterSelect = document.getElementById("auditFilterSelect");
 const refreshAuditTrailBtn = document.getElementById("refreshAuditTrailBtn");
+const auditPrevPageBtn = document.getElementById("auditPrevPageBtn");
+const auditNextPageBtn = document.getElementById("auditNextPageBtn");
+const auditPageInfo = document.getElementById("auditPageInfo");
 const auditTotalCount = document.getElementById("auditTotalCount");
 const auditAdminLoginCount = document.getElementById("auditAdminLoginCount");
 const auditCandidateLoginCount = document.getElementById("auditCandidateLoginCount");
@@ -2813,6 +2818,15 @@ function renderAuditTrail() {
     updateAuditSummary();
 
     const records = getFilteredAuditLogs();
+    const totalPages = Math.max(1, Math.ceil(records.length / AUDIT_RECORDS_PER_PAGE));
+
+    if (auditCurrentPage > totalPages) {
+        auditCurrentPage = totalPages;
+    }
+
+    if (auditCurrentPage < 1) {
+        auditCurrentPage = 1;
+    }
 
     if (!records.length) {
         auditTrailTableBody.innerHTML = `
@@ -2820,10 +2834,18 @@ function renderAuditTrail() {
                 <td colspan="6">No audit trail records found.</td>
             </tr>
         `;
+
+        if (auditPageInfo) auditPageInfo.textContent = "Page 1 of 1";
+        if (auditPrevPageBtn) auditPrevPageBtn.disabled = true;
+        if (auditNextPageBtn) auditNextPageBtn.disabled = true;
         return;
     }
 
-    auditTrailTableBody.innerHTML = records.map(log => `
+    const startIndex = (auditCurrentPage - 1) * AUDIT_RECORDS_PER_PAGE;
+    const endIndex = startIndex + AUDIT_RECORDS_PER_PAGE;
+    const pageRecords = records.slice(startIndex, endIndex);
+
+    auditTrailTableBody.innerHTML = pageRecords.map(log => `
         <tr>
             <td>${escapeHtml(formatDateTime(log.createdAt || log.updatedAt || ""))}</td>
             <td><span class="ats-status-badge">${escapeHtml(log.actionType || "N/A")}</span></td>
@@ -2833,9 +2855,22 @@ function renderAuditTrail() {
             <td>${escapeHtml(log.description || "No description recorded.")}</td>
         </tr>
     `).join("");
+
+    if (auditPageInfo) {
+        auditPageInfo.textContent = `Page ${auditCurrentPage} of ${totalPages} — Showing ${startIndex + 1}-${Math.min(endIndex, records.length)} of ${records.length}`;
+    }
+
+    if (auditPrevPageBtn) {
+        auditPrevPageBtn.disabled = auditCurrentPage <= 1;
+    }
+
+    if (auditNextPageBtn) {
+        auditNextPageBtn.disabled = auditCurrentPage >= totalPages;
+    }
 }
 
 async function refreshAuditTrail() {
+    auditCurrentPage = 1;
     await loadAuditLogs();
     renderAuditTrail();
     showToast("Audit trail refreshed.", "success");
@@ -3181,8 +3216,31 @@ window.markContractAccepted = markContractAccepted;
 window.clearPortalAccessForm = clearPortalAccessForm;
 window.renderPortalAccessTable = renderPortalAccessTable;
 
-auditSearchInput?.addEventListener("input", renderAuditTrail);
-auditFilterSelect?.addEventListener("change", renderAuditTrail);
+auditSearchInput?.addEventListener("input", function () {
+    auditCurrentPage = 1;
+    renderAuditTrail();
+});
+
+auditFilterSelect?.addEventListener("change", function () {
+    auditCurrentPage = 1;
+    renderAuditTrail();
+});
+
+auditPrevPageBtn?.addEventListener("click", function () {
+    if (auditCurrentPage > 1) {
+        auditCurrentPage -= 1;
+        renderAuditTrail();
+    }
+});
+
+auditNextPageBtn?.addEventListener("click", function () {
+    const totalPages = Math.max(1, Math.ceil(getFilteredAuditLogs().length / AUDIT_RECORDS_PER_PAGE));
+    if (auditCurrentPage < totalPages) {
+        auditCurrentPage += 1;
+        renderAuditTrail();
+    }
+});
+
 refreshAuditTrailBtn?.addEventListener("click", refreshAuditTrail);
 
 window.loadAuditLogs = loadAuditLogs;

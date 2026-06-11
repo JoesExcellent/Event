@@ -509,6 +509,31 @@
             font-size: 0.9rem;
         }
 
+
+        .audit-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 22px;
+        }
+
+        .audit-pagination-info {
+            color: #ffffff;
+            font-weight: 800;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 176, 0, 0.35);
+            border-radius: 999px;
+            background: #0b2a44;
+        }
+
+        .audit-pagination button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            background: #34495e;
+        }
+
         @media (max-width: 900px) {
             .stats-grid,
             .form-grid,
@@ -1485,6 +1510,12 @@ Joe's Excellent Events & Management</textarea>
                 </table>
             </div>
 
+            <div class="audit-pagination" aria-label="Audit trail pagination">
+                <button id="auditPrevPageBtn" type="button">Previous Page</button>
+                <span id="auditPageInfo" class="audit-pagination-info">Page 1 of 1</span>
+                <button id="auditNextPageBtn" type="button">Next Page</button>
+            </div>
+
             <div id="auditTrailMessage"></div>
         </section>
         </div>
@@ -1606,7 +1637,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=82"></script>
+<script src="admin.js?v=83"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
