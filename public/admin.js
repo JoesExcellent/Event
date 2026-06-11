@@ -14,6 +14,7 @@ let allVacancies = [];
 let allEmailTemplates = [];
 let allReminderQueue = [];
 let allAuditLogs = [];
+let allNotifications = [];
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
@@ -63,6 +64,15 @@ const refreshAuditTrailBtn = document.getElementById("refreshAuditTrailBtn");
 const auditPrevPageBtn = document.getElementById("auditPrevPageBtn");
 const auditNextPageBtn = document.getElementById("auditNextPageBtn");
 const auditPageInfo = document.getElementById("auditPageInfo");
+const notificationsTableBody = document.getElementById("notificationsTableBody");
+const notificationSearchInput = document.getElementById("notificationSearchInput");
+const notificationFilterSelect = document.getElementById("notificationFilterSelect");
+const refreshNotificationsBtn = document.getElementById("refreshNotificationsBtn");
+const notificationsMessage = document.getElementById("notificationsMessage");
+const notificationTotalCount = document.getElementById("notificationTotalCount");
+const notificationUnreadCount = document.getElementById("notificationUnreadCount");
+const notificationPortalCount = document.getElementById("notificationPortalCount");
+const notificationInterviewCount = document.getElementById("notificationInterviewCount");
 const auditTotalCount = document.getElementById("auditTotalCount");
 const auditAdminLoginCount = document.getElementById("auditAdminLoginCount");
 const auditCandidateLoginCount = document.getElementById("auditCandidateLoginCount");
@@ -2734,6 +2744,117 @@ function setAuditTrailMessage(message, isError = false) {
     auditTrailMessage.style.marginTop = "14px";
 }
 
+
+function updateNotificationSummary() {
+    const activeNotifications = allNotifications.filter(notification => !notification.archived);
+    const unreadNotifications = activeNotifications.filter(notification => notification.read === false);
+    const portalNotifications = activeNotifications.filter(notification => String(notification.type || "").includes("PORTAL"));
+    const interviewNotifications = activeNotifications.filter(notification => String(notification.type || "").includes("INTERVIEW"));
+
+    if (notificationTotalCount) notificationTotalCount.textContent = activeNotifications.length;
+    if (notificationUnreadCount) notificationUnreadCount.textContent = unreadNotifications.length;
+    if (notificationPortalCount) notificationPortalCount.textContent = portalNotifications.length;
+    if (notificationInterviewCount) notificationInterviewCount.textContent = interviewNotifications.length;
+
+    if (unreadMessagesCount) {
+        unreadMessagesCount.textContent = unreadNotifications.length;
+    }
+}
+
+function getFilteredNotifications() {
+    const searchTerm = (notificationSearchInput?.value || "").toLowerCase().trim();
+    const filterValue = notificationFilterSelect?.value || "";
+
+    return allNotifications
+        .filter(notification => !notification.archived)
+        .filter(notification => {
+            const type = String(notification.type || "");
+            if (!filterValue) return true;
+            if (filterValue === "UNREAD") return notification.read === false;
+            if (filterValue === "INTERVIEW") return type.includes("INTERVIEW");
+            if (filterValue === "OFFER") return type.includes("OFFER");
+            return type === filterValue;
+        })
+        .filter(notification => {
+            if (!searchTerm) return true;
+
+            const haystack = [
+                notification.type,
+                notification.title,
+                notification.candidateName,
+                notification.candidateEmail,
+                notification.candidatePosition,
+                notification.message,
+                notification.actorEmail
+            ].join(" ").toLowerCase();
+
+            return haystack.includes(searchTerm);
+        });
+}
+
+async function loadNotifications() {
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/notifications`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load notifications.");
+        }
+
+        allNotifications = data.notifications || [];
+    } catch (error) {
+        console.error(error);
+        if (notificationsMessage) {
+            notificationsMessage.textContent = error.message || "Failed to load notifications.";
+        }
+    }
+}
+
+function renderNotifications() {
+    if (!notificationsTableBody) return;
+
+    updateNotificationSummary();
+
+    const notifications = getFilteredNotifications();
+
+    if (!notifications.length) {
+        notificationsTableBody.innerHTML = `
+            <tr>
+                <td colspan="6">No notifications found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    notificationsTableBody.innerHTML = notifications.map(notification => {
+        const isUnread = notification.read === false;
+        const statusClass = isUnread ? "notification-unread" : "notification-read";
+        const statusText = isUnread ? "Unread" : "Read";
+
+        return `
+            <tr>
+                <td>${escapeHtml(formatDateTime(notification.createdAt || notification.updatedAt || ""))}</td>
+                <td><span class="ats-status-badge">${escapeHtml(notification.type || "N/A")}</span></td>
+                <td>${escapeHtml(notification.candidateName || notification.candidateEmail || "-")}</td>
+                <td>${escapeHtml(notification.candidatePosition || "-")}</td>
+                <td>${escapeHtml(notification.message || notification.title || "No message recorded.")}</td>
+                <td><span class="notification-status ${statusClass}">${statusText}</span></td>
+            </tr>
+        `;
+    }).join("");
+}
+
+async function refreshNotifications() {
+    await loadNotifications();
+    renderNotifications();
+}
+
+
 async function loadAuditLogs() {
     if (!authToken) return;
 
@@ -3215,6 +3336,11 @@ window.sendPortalInvite = sendPortalInvite;
 window.markContractAccepted = markContractAccepted;
 window.clearPortalAccessForm = clearPortalAccessForm;
 window.renderPortalAccessTable = renderPortalAccessTable;
+
+
+notificationSearchInput?.addEventListener("input", renderNotifications);
+notificationFilterSelect?.addEventListener("change", renderNotifications);
+refreshNotificationsBtn?.addEventListener("click", refreshNotifications);
 
 auditSearchInput?.addEventListener("input", function () {
     auditCurrentPage = 1;

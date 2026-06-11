@@ -534,6 +534,25 @@
             background: #34495e;
         }
 
+
+        .notification-status {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .notification-unread {
+            background: #ff6a00;
+            color: #ffffff;
+        }
+
+        .notification-read {
+            background: #34495e;
+            color: #ffffff;
+        }
+
         @media (max-width: 900px) {
             .stats-grid,
             .form-grid,
@@ -638,6 +657,7 @@
             <button type="button" class="dashboard-tab-btn" data-admin-tab="analytics">Analytics</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="audit">Audit Trail</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="notes">Admin Notes</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="notifications">Notifications</button>
         </div>
 
         <div id="tab-overview" class="dashboard-tab-content active">
@@ -1523,6 +1543,88 @@ Joe's Excellent Events & Management</textarea>
         </div>
 
 
+        <div id="tab-notifications" class="dashboard-tab-content">
+<section class="ats-panel">
+            <h2>Notification Centre</h2>
+            <p>View recruiter alerts for new applications, candidate portal activity, interview responses and offer responses.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>1</span>
+                    <h3>Total Notifications</h3>
+                    <p id="notificationTotalCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>2</span>
+                    <h3>Unread Notifications</h3>
+                    <p id="notificationUnreadCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>3</span>
+                    <h3>Portal Activity</h3>
+                    <p id="notificationPortalCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>4</span>
+                    <h3>Interview Activity</h3>
+                    <p id="notificationInterviewCount">0</p>
+                </div>
+            </div>
+
+            <div class="ats-filter-box">
+                <div class="ats-filter-grid">
+                    <div>
+                        <label for="notificationSearchInput">Search Notifications</label>
+                        <input type="text" id="notificationSearchInput" placeholder="Search candidate, email, type or message">
+                    </div>
+
+                    <div>
+                        <label for="notificationFilterSelect">Filter Notifications</label>
+                        <select id="notificationFilterSelect">
+                            <option value="">All Notifications</option>
+                            <option value="UNREAD">Unread Only</option>
+                            <option value="NEW_APPLICATION">Applications</option>
+                            <option value="CANDIDATE_PORTAL_LOGIN">Portal Logins</option>
+                            <option value="INTERVIEW">Interviews</option>
+                            <option value="OFFER">Offers</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button id="refreshNotificationsBtn" type="button">Refresh Notifications</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Type</th>
+                            <th>Candidate</th>
+                            <th>Position</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notificationsTableBody">
+                        <tr>
+                            <td colspan="6">Notifications will appear here after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="notificationsMessage"></div>
+        </section>
+        </div>
+
+
+
     </section>
 
 </main>
@@ -1639,7 +1741,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=84"></script>
+<script src="admin.js?v=85"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
