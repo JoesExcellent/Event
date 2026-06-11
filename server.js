@@ -778,6 +778,41 @@ async function logCommunication({
     }
 }
 
+
+async function logAudit({
+    actionType = "",
+    actorType = "SYSTEM",
+    actorEmail = "",
+    candidateId = "",
+    candidateName = "",
+    candidateEmail = "",
+    description = "",
+    extra = {}
+}) {
+    try {
+        const timestamp = nowIso();
+
+        const record = {
+            actionType,
+            actorType,
+            actorEmail,
+            candidateId,
+            candidateName,
+            candidateEmail,
+            description,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            extra
+        };
+
+        await db.collection("auditLogs").add(record);
+        return record;
+    } catch (error) {
+        console.error("Audit logging failed:", error);
+        return null;
+    }
+}
+
 /* =====================================================
    HEALTH CHECK
 ===================================================== */
@@ -830,6 +865,17 @@ async function adminLoginHandler(req, res) {
         if (!user) {
             return res.status(401).json({ message: "Invalid login details." });
         }
+
+        await logAudit({
+            actionType: "ADMIN_LOGIN",
+            actorType: "ADMIN",
+            actorEmail: user.email,
+            description: `Admin login successful for ${user.email}.`,
+            extra: {
+                role: user.role,
+                adminId: user.id
+            }
+        });
 
         res.json({
             message: "Login successful.",
@@ -1333,6 +1379,23 @@ async function handleOfferTrackingUpdate(req, res) {
                 onboardingStatus: updateData.onboardingStatus
             }
         });
+
+        if (offerResponseStatus === "Offer Accepted" || offerResponseStatus === "Offer Declined") {
+            await logAudit({
+                actionType: offerResponseStatus === "Offer Accepted" ? "OFFER_ACCEPTED" : "OFFER_DECLINED",
+                actorType: req.user?.email ? "ADMIN" : "SYSTEM",
+                actorEmail: req.user?.email || "system",
+                candidateId: application.id,
+                candidateName: application.fullName || application.name || "Candidate",
+                candidateEmail: application.email || "",
+                description: `${application.fullName || application.name || "Candidate"} offer response recorded as ${offerResponseStatus}.`,
+                extra: {
+                    candidateStartDate,
+                    contractStatus: updateData.contractStatus,
+                    onboardingStatus: updateData.onboardingStatus
+                }
+            });
+        }
 
         res.json({
             message: "Offer tracking updated successfully.",
@@ -2055,6 +2118,16 @@ app.post("/api/candidate/login", async (req, res) => {
 
         const token = createCandidateToken(application);
 
+        await logAudit({
+            actionType: "CANDIDATE_PORTAL_LOGIN",
+            actorType: "CANDIDATE",
+            actorEmail: application.email || email,
+            candidateId: application.id || applicationReference,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || email,
+            description: `Candidate portal login successful for ${application.fullName || application.name || "Candidate"}.`
+        });
+
         res.json({
             message: "Candidate login successful.",
             token,
@@ -2182,6 +2255,21 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
             }
         });
 
+        await logAudit({
+            actionType: responseValue === "accepted" ? "INTERVIEW_ACCEPTED" : "INTERVIEW_DECLINED",
+            actorType: "CANDIDATE",
+            actorEmail: updatedApplication.email || req.candidate.email || "",
+            candidateId: doc.id,
+            candidateName: updatedApplication.fullName || updatedApplication.name || "Candidate",
+            candidateEmail: updatedApplication.email || "",
+            description: `${updatedApplication.fullName || updatedApplication.name || "Candidate"} ${responseValue === "accepted" ? "accepted" : "declined"} the interview invitation through the Candidate Portal.`,
+            extra: {
+                interviewDate: updatedApplication.interviewDate || "",
+                interviewTime: updatedApplication.interviewTime || "",
+                interviewLocation: updatedApplication.interviewLocation || ""
+            }
+        });
+
 
         try {
             await sendRecruiterInterviewResponseNotification(updatedApplication, responseData, responseValue, timestamp);
@@ -2253,6 +2341,24 @@ async function handlePortalAccessUpdate(req, res) {
             status: "Recorded",
             emailId: "",
             extra: { recruiterEmail: req.user?.email || "system" }
+        });
+
+        await logAudit({
+            actionType: "PORTAL_DOCUMENTS_UPDATED",
+            actorType: req.user?.email ? "ADMIN" : "SYSTEM",
+            actorEmail: req.user?.email || "system",
+            candidateId: application.id,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || "",
+            description: `Portal access and document settings updated for ${application.fullName || application.name || "Candidate"}.`,
+            extra: {
+                portalAccessStatus,
+                documentDownloadStatus,
+                contractAcceptanceStatus,
+                eSignatureStatus,
+                selfServiceStatus,
+                portalAccessDate
+            }
         });
 
         res.json({
