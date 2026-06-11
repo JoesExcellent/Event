@@ -300,6 +300,7 @@ async function refreshDashboard(showMessage = false) {
     await loadReminderQueue();
     await loadVacancies();
     await loadAuditLogs();
+    await loadNotifications();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -309,6 +310,7 @@ async function refreshDashboard(showMessage = false) {
     renderOfferTrackingTable();
     renderPortalAccessTable();
     renderAuditTrail();
+    renderNotifications();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -2793,11 +2795,11 @@ function getFilteredNotifications() {
 }
 
 async function loadNotifications() {
-    if (!token) return;
+    if (!authToken) return;
 
     try {
         const response = await fetch(`${API_BASE}/api/admin/notifications`, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${authToken}` }
         });
 
         const data = await response.json();
