@@ -13,6 +13,7 @@ let allCommunications = [];
 let allVacancies = [];
 let allEmailTemplates = [];
 let allReminderQueue = [];
+let allAuditLogs = [];
 let selectedVacancyId = null;
 let selectedEmailTemplateId = null;
 
@@ -52,6 +53,15 @@ const templatePreviewSubject = document.getElementById("templatePreviewSubject")
 const templatePreviewBody = document.getElementById("templatePreviewBody");
 const reminderQueueTableBody = document.getElementById("reminderQueueTableBody");
 const reminderQueueMessage = document.getElementById("reminderQueueMessage");
+const auditTrailTableBody = document.getElementById("auditTrailTableBody");
+const auditTrailMessage = document.getElementById("auditTrailMessage");
+const auditSearchInput = document.getElementById("auditSearchInput");
+const auditFilterSelect = document.getElementById("auditFilterSelect");
+const refreshAuditTrailBtn = document.getElementById("refreshAuditTrailBtn");
+const auditTotalCount = document.getElementById("auditTotalCount");
+const auditAdminLoginCount = document.getElementById("auditAdminLoginCount");
+const auditCandidateLoginCount = document.getElementById("auditCandidateLoginCount");
+const auditInterviewActionCount = document.getElementById("auditInterviewActionCount");
 const offerCandidateNameInput = document.getElementById("offerCandidateName");
 const offerCandidatePositionInput = document.getElementById("offerCandidatePosition");
 const offerResponseStatusInput = document.getElementById("offerResponseStatus");
@@ -274,6 +284,7 @@ async function refreshDashboard(showMessage = false) {
     await loadEmailTemplates();
     await loadReminderQueue();
     await loadVacancies();
+    await loadAuditLogs();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -282,6 +293,7 @@ async function refreshDashboard(showMessage = false) {
     renderReminderQueue();
     renderOfferTrackingTable();
     renderPortalAccessTable();
+    renderAuditTrail();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -2693,6 +2705,7 @@ function logoutAdmin() {
     allVacancies = [];
     allEmailTemplates = [];
     allReminderQueue = [];
+    allAuditLogs = [];
     selectedVacancyId = null;
     selectedEmailTemplateId = null;
 
@@ -2701,6 +2714,131 @@ function logoutAdmin() {
     setDashboardVisible(false);
 
     showToast("Logged out successfully.", "success");
+}
+
+
+/* =====================================================
+   AUDIT TRAIL VIEWER
+===================================================== */
+
+function setAuditTrailMessage(message, isError = false) {
+    if (!auditTrailMessage) return;
+    auditTrailMessage.textContent = message || "";
+    auditTrailMessage.style.color = isError ? "#ff6a00" : "#ffffff";
+    auditTrailMessage.style.fontWeight = "700";
+    auditTrailMessage.style.marginTop = "14px";
+}
+
+async function loadAuditLogs() {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/audit-logs`, {
+            method: "GET",
+            headers: getAuthHeaders()
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to load audit trail.");
+        }
+
+        allAuditLogs = Array.isArray(result.auditLogs) ? result.auditLogs : [];
+        setAuditTrailMessage("");
+    } catch (error) {
+        console.error(error);
+        allAuditLogs = [];
+        setAuditTrailMessage(error.message || "Failed to load audit trail.", true);
+    }
+}
+
+function getFilteredAuditLogs() {
+    const searchTerm = (auditSearchInput?.value || "").toLowerCase().trim();
+    const filterValue = auditFilterSelect?.value || "";
+
+    return allAuditLogs.filter(log => {
+        const actionType = String(log.actionType || "").toUpperCase();
+        const actorType = String(log.actorType || "").toUpperCase();
+
+        let matchesFilter = true;
+
+        if (filterValue === "ADMIN") {
+            matchesFilter = actorType === "ADMIN" || actionType.includes("ADMIN");
+        } else if (filterValue === "CANDIDATE") {
+            matchesFilter = actorType === "CANDIDATE" || actionType.includes("CANDIDATE");
+        } else if (filterValue === "INTERVIEW") {
+            matchesFilter = actionType.includes("INTERVIEW");
+        } else if (filterValue === "OFFER") {
+            matchesFilter = actionType.includes("OFFER");
+        } else if (filterValue === "PORTAL") {
+            matchesFilter = actionType.includes("PORTAL") || actionType.includes("DOCUMENT");
+        }
+
+        if (!matchesFilter) return false;
+
+        if (!searchTerm) return true;
+
+        const searchable = [
+            log.actionType,
+            log.actorType,
+            log.actorEmail,
+            log.candidateName,
+            log.candidateEmail,
+            log.description
+        ].join(" ").toLowerCase();
+
+        return searchable.includes(searchTerm);
+    });
+}
+
+function updateAuditSummary() {
+    const logs = allAuditLogs || [];
+
+    if (auditTotalCount) auditTotalCount.textContent = logs.length;
+    if (auditAdminLoginCount) {
+        auditAdminLoginCount.textContent = logs.filter(log => log.actionType === "ADMIN_LOGIN").length;
+    }
+    if (auditCandidateLoginCount) {
+        auditCandidateLoginCount.textContent = logs.filter(log => log.actionType === "CANDIDATE_PORTAL_LOGIN").length;
+    }
+    if (auditInterviewActionCount) {
+        auditInterviewActionCount.textContent = logs.filter(log => String(log.actionType || "").includes("INTERVIEW")).length;
+    }
+}
+
+function renderAuditTrail() {
+    if (!auditTrailTableBody) return;
+
+    updateAuditSummary();
+
+    const records = getFilteredAuditLogs();
+
+    if (!records.length) {
+        auditTrailTableBody.innerHTML = `
+            <tr>
+                <td colspan="6">No audit trail records found.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    auditTrailTableBody.innerHTML = records.map(log => `
+        <tr>
+            <td>${escapeHtml(formatDateTime(log.createdAt || log.updatedAt || ""))}</td>
+            <td><span class="ats-status-badge">${escapeHtml(log.actionType || "N/A")}</span></td>
+            <td>${escapeHtml(log.actorType || "N/A")}</td>
+            <td>${escapeHtml(log.actorEmail || "N/A")}</td>
+            <td>${escapeHtml(log.candidateName || log.candidateEmail || "-")}</td>
+            <td>${escapeHtml(log.description || "No description recorded.")}</td>
+        </tr>
+    `).join("");
+}
+
+async function refreshAuditTrail() {
+    await loadAuditLogs();
+    renderAuditTrail();
+    showToast("Audit trail refreshed.", "success");
 }
 
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
@@ -3042,6 +3180,14 @@ window.sendPortalInvite = sendPortalInvite;
 window.markContractAccepted = markContractAccepted;
 window.clearPortalAccessForm = clearPortalAccessForm;
 window.renderPortalAccessTable = renderPortalAccessTable;
+
+auditSearchInput?.addEventListener("input", renderAuditTrail);
+auditFilterSelect?.addEventListener("change", renderAuditTrail);
+refreshAuditTrailBtn?.addEventListener("click", refreshAuditTrail);
+
+window.loadAuditLogs = loadAuditLogs;
+window.renderAuditTrail = renderAuditTrail;
+window.refreshAuditTrail = refreshAuditTrail;
 
 
 if (authToken) {

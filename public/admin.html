@@ -611,6 +611,7 @@
             <button type="button" class="dashboard-tab-btn" data-admin-tab="messages">Messages</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="notes">Notes</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="analytics">Analytics</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="audit">Audit Trail</button>
         </div>
 
         <div id="tab-overview" class="dashboard-tab-content active">
@@ -1407,6 +1408,86 @@ Joe's Excellent Events & Management</textarea>
         </section>
         </div>
 
+        <div id="tab-audit" class="dashboard-tab-content">
+<section class="ats-panel">
+            <h2>Audit Trail</h2>
+            <p>View recent system activity, candidate portal actions, admin logins, interview responses and offer responses.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>1</span>
+                    <h3>Total Audit Records</h3>
+                    <p id="auditTotalCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>2</span>
+                    <h3>Admin Logins</h3>
+                    <p id="auditAdminLoginCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>3</span>
+                    <h3>Candidate Logins</h3>
+                    <p id="auditCandidateLoginCount">0</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>4</span>
+                    <h3>Interview Actions</h3>
+                    <p id="auditInterviewActionCount">0</p>
+                </div>
+            </div>
+
+            <div class="ats-filter-box">
+                <div class="ats-filter-grid">
+                    <div>
+                        <label for="auditSearchInput">Search Audit Trail</label>
+                        <input type="text" id="auditSearchInput" placeholder="Search candidate, email, action or description">
+                    </div>
+
+                    <div>
+                        <label for="auditFilterSelect">Filter Audit Trail</label>
+                        <select id="auditFilterSelect">
+                            <option value="">All Activities</option>
+                            <option value="ADMIN">Admin Actions</option>
+                            <option value="CANDIDATE">Candidate Actions</option>
+                            <option value="INTERVIEW">Interview Actions</option>
+                            <option value="OFFER">Offer Actions</option>
+                            <option value="PORTAL">Portal Actions</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button id="refreshAuditTrailBtn" type="button">Refresh Audit Trail</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date / Time</th>
+                            <th>Action Type</th>
+                            <th>Actor Type</th>
+                            <th>Actor Email</th>
+                            <th>Candidate</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTrailTableBody">
+                        <tr>
+                            <td colspan="6">Audit trail records will appear here after login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="auditTrailMessage"></div>
+        </section>
+        </div>
+
 
     </section>
 
@@ -1524,7 +1605,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=80"></script>
+<script src="admin.js?v=81"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
