@@ -1010,6 +1010,29 @@ app.get("/api/admin/applications", requireAuth, listApplicationsHandler);
 app.get("/api/applications", requireAuth, listApplicationsHandler);
 
 
+
+async function listAuditLogsHandler(req, res) {
+    try {
+        const snapshot = await db
+            .collection("auditLogs")
+            .orderBy("createdAt", "desc")
+            .limit(50)
+            .get();
+
+        const auditLogs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        res.json({ auditLogs });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load audit trail records." });
+    }
+}
+
+app.get("/api/admin/audit-logs", requireAuth, listAuditLogsHandler);
+
 async function listCommunicationsHandler(req, res) {
     try {
         const snapshot = await db
