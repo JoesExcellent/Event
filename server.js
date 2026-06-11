@@ -580,6 +580,66 @@ async function sendEmail({ to, subject, html }) {
     return result;
 }
 
+function getRecruiterNotificationEmail() {
+    return process.env.RECRUITER_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com";
+}
+
+function maskApplicationReference(reference) {
+    const ref = String(reference || "").trim();
+
+    if (!ref) {
+        return "N/A";
+    }
+
+    if (ref.length <= 4) {
+        return "****";
+    }
+
+    const visibleEnding = ref.slice(-4);
+    const maskedLength = Math.max(ref.length - 4, 4);
+
+    return `${"*".repeat(maskedLength)}${visibleEnding}`;
+}
+
+async function sendRecruiterInterviewResponseNotification(application, responseData, responseValue, timestamp) {
+    const recruiterEmail = getRecruiterNotificationEmail();
+    const candidateName = application.fullName || application.name || "Candidate";
+    const candidateEmail = application.email || "N/A";
+    const position = application.position || "N/A";
+    const interviewDate = application.interviewDate || "N/A";
+    const interviewTime = application.interviewTime || "N/A";
+    const interviewLocation = application.interviewLocation || "N/A";
+    const maskedReference = maskApplicationReference(application.id || application.applicationReference || "");
+    const responseLabel = responseValue === "declined" ? "Declined" : "Accepted";
+
+    const subject = `Candidate Interview ${responseLabel} - ${candidateName}`;
+
+    const body = `A candidate has responded to an interview invitation through the Candidate Portal.
+
+Candidate Name: ${candidateName}
+Candidate Email: ${candidateEmail}
+Position: ${position}
+Application Reference: ${maskedReference}
+Interview Date: ${interviewDate}
+Interview Time: ${interviewTime}
+Interview Location: ${interviewLocation}
+Candidate Response: ${responseData.interviewResponse}
+Response Recorded At: ${timestamp}
+
+Please review the candidate record in the admin dashboard.
+
+Kind regards,
+
+Candidate Portal
+Joe's Excellent Events & Management`;
+
+    return sendEmail({
+        to: recruiterEmail,
+        subject,
+        html: buildEmailHtml(`Candidate Interview ${responseLabel}`, "Recruitment Team", body)
+    });
+}
+
 
 function formatInterviewDate(value) {
     const raw = clean(value);
@@ -2121,6 +2181,13 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
                 followUp: responseValue === "declined" ? "Candidate declined interview. Recruiter follow-up required." : "Candidate accepted interview."
             }
         });
+
+
+        try {
+            await sendRecruiterInterviewResponseNotification(updatedApplication, responseData, responseValue, timestamp);
+        } catch (notificationError) {
+            console.error("Recruiter interview response notification failed:", notificationError);
+        }
 
         res.json({
             message: responseData.confirmationMessage,
