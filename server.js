@@ -813,6 +813,49 @@ async function logAudit({
     }
 }
 
+
+async function createNotification({
+    type = "",
+    title = "",
+    candidateId = "",
+    candidateName = "",
+    candidateEmail = "",
+    candidatePosition = "",
+    message = "",
+    actorType = "SYSTEM",
+    actorEmail = "",
+    source = "system",
+    extra = {}
+}) {
+    try {
+        const timestamp = nowIso();
+
+        const record = {
+            type,
+            title: title || type,
+            candidateId,
+            candidateName,
+            candidateEmail,
+            candidatePosition,
+            message,
+            actorType,
+            actorEmail,
+            source,
+            read: false,
+            archived: false,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            extra
+        };
+
+        await db.collection("notifications").add(record);
+        return record;
+    } catch (error) {
+        console.error("Notification creation failed:", error);
+        return null;
+    }
+}
+
 /* =====================================================
    HEALTH CHECK
 ===================================================== */
@@ -957,6 +1000,24 @@ async function applicationSubmitHandler(req, res) {
                 console.error("Application received email failed:", emailError);
             }
 
+
+            await createNotification({
+                type: "NEW_APPLICATION",
+                title: "New Application Received",
+                candidateId: docRef.id,
+                candidateName: application.fullName || application.name || "Candidate",
+                candidateEmail: application.email || "",
+                candidatePosition: application.position || "",
+                message: `${application.fullName || application.name || "Candidate"} applied for ${application.position || "a role"}.`,
+                actorType: "CANDIDATE",
+                actorEmail: application.email || "",
+                source: "Application Form",
+                extra: {
+                    phone: application.phone || "",
+                    availability: application.availability || ""
+                }
+            });
+
             res.json({
                 message: "Application submitted successfully.",
                 id: docRef.id
@@ -1032,6 +1093,30 @@ async function listAuditLogsHandler(req, res) {
 }
 
 app.get("/api/admin/audit-logs", requireAuth, listAuditLogsHandler);
+
+
+async function listNotificationsHandler(req, res) {
+    try {
+        const snapshot = await db
+            .collection("notifications")
+            .orderBy("createdAt", "desc")
+            .limit(50)
+            .get();
+
+        const notifications = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        res.json({ notifications });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load notifications." });
+    }
+}
+
+app.get("/api/admin/notifications", requireAuth, listNotificationsHandler);
+
 
 async function listCommunicationsHandler(req, res) {
     try {
@@ -1418,6 +1503,25 @@ async function handleOfferTrackingUpdate(req, res) {
                     onboardingStatus: updateData.onboardingStatus
                 }
             });
+
+            await createNotification({
+                type: offerResponseStatus === "Offer Accepted" ? "OFFER_ACCEPTED" : "OFFER_DECLINED",
+                title: offerResponseStatus,
+                candidateId: application.id,
+                candidateName: application.fullName || application.name || "Candidate",
+                candidateEmail: application.email || "",
+                candidatePosition: application.position || "",
+                message: `${application.fullName || application.name || "Candidate"} offer response recorded as ${offerResponseStatus}.`,
+                actorType: req.user?.email ? "ADMIN" : "SYSTEM",
+                actorEmail: req.user?.email || "system",
+                source: "Admin Dashboard",
+                extra: {
+                    candidateStartDate,
+                    contractStatus: updateData.contractStatus,
+                    onboardingStatus: updateData.onboardingStatus
+                }
+            });
+
         }
 
         res.json({
@@ -2151,6 +2255,20 @@ app.post("/api/candidate/login", async (req, res) => {
             description: `Candidate portal login successful for ${application.fullName || application.name || "Candidate"}.`
         });
 
+
+        await createNotification({
+            type: "CANDIDATE_PORTAL_LOGIN",
+            title: "Candidate Portal Login",
+            candidateId: application.id || applicationReference,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || email,
+            candidatePosition: application.position || "",
+            message: `${application.fullName || application.name || "Candidate"} logged into the Candidate Portal.`,
+            actorType: "CANDIDATE",
+            actorEmail: application.email || email,
+            source: "Candidate Portal"
+        });
+
         res.json({
             message: "Candidate login successful.",
             token,
@@ -2293,6 +2411,25 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
             }
         });
 
+
+
+        await createNotification({
+            type: responseValue === "accepted" ? "INTERVIEW_ACCEPTED" : "INTERVIEW_DECLINED",
+            title: responseValue === "accepted" ? "Interview Accepted" : "Interview Declined",
+            candidateId: doc.id,
+            candidateName: updatedApplication.fullName || updatedApplication.name || "Candidate",
+            candidateEmail: updatedApplication.email || "",
+            candidatePosition: updatedApplication.position || "",
+            message: `${updatedApplication.fullName || updatedApplication.name || "Candidate"} ${responseValue === "accepted" ? "accepted" : "declined"} the interview invitation.`,
+            actorType: "CANDIDATE",
+            actorEmail: updatedApplication.email || req.candidate.email || "",
+            source: "Candidate Portal",
+            extra: {
+                interviewDate: updatedApplication.interviewDate || "",
+                interviewTime: updatedApplication.interviewTime || "",
+                interviewLocation: updatedApplication.interviewLocation || ""
+            }
+        });
 
         try {
             await sendRecruiterInterviewResponseNotification(updatedApplication, responseData, responseValue, timestamp);
