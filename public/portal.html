@@ -261,6 +261,22 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
+        .document-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .document-links .btn {
+            margin-top: 0;
+        }
+
+        .documents-empty-message {
+            color: #f2f2f2;
+            margin-bottom: 0;
+        }
+
         .support-section {
             background: #0b2a44;
             padding: 80px 7%;
@@ -634,6 +650,16 @@
                             <div class="info-label">Access Date</div>
                             <div class="info-value" id="portalAccessDate">N/A</div>
                         </div>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Documents & Downloads</h3>
+
+                        <p id="documentsEmptyMessage" class="documents-empty-message">
+                            No documents available at this time.
+                        </p>
+
+                        <div id="candidateDocumentLinks" class="document-links"></div>
                     </div>
 
                     <div class="info-card">

@@ -2820,6 +2820,11 @@ function fillPortalAccessForm(application) {
         eSignatureStatus: application.eSignatureStatus || "",
         selfServiceStatus: application.selfServiceStatus || "",
         portalAccessDate: application.portalAccessDate || "",
+        interviewPackUrl: application.interviewPackUrl || "",
+        contractUrl: application.contractUrl || "",
+        welcomePackUrl: application.welcomePackUrl || "",
+        handbookUrl: application.handbookUrl || "",
+        trainingDocsUrl: application.trainingDocsUrl || "",
         portalAccessNotes: application.portalAccessNotes || ""
     };
 
@@ -2839,6 +2844,11 @@ function clearPortalAccessForm() {
         "eSignatureStatus",
         "selfServiceStatus",
         "portalAccessDate",
+        "interviewPackUrl",
+        "contractUrl",
+        "welcomePackUrl",
+        "handbookUrl",
+        "trainingDocsUrl",
         "portalAccessNotes"
     ].forEach(id => {
         const element = document.getElementById(id);
@@ -2856,6 +2866,11 @@ function getPortalAccessPayload(overrides = {}) {
         eSignatureStatus: overrides.eSignatureStatus !== undefined ? overrides.eSignatureStatus : (document.getElementById("eSignatureStatus")?.value || ""),
         selfServiceStatus: overrides.selfServiceStatus !== undefined ? overrides.selfServiceStatus : (document.getElementById("selfServiceStatus")?.value || ""),
         portalAccessDate: overrides.portalAccessDate !== undefined ? overrides.portalAccessDate : (document.getElementById("portalAccessDate")?.value || ""),
+        interviewPackUrl: overrides.interviewPackUrl !== undefined ? overrides.interviewPackUrl : (document.getElementById("interviewPackUrl")?.value || ""),
+        contractUrl: overrides.contractUrl !== undefined ? overrides.contractUrl : (document.getElementById("contractUrl")?.value || ""),
+        welcomePackUrl: overrides.welcomePackUrl !== undefined ? overrides.welcomePackUrl : (document.getElementById("welcomePackUrl")?.value || ""),
+        handbookUrl: overrides.handbookUrl !== undefined ? overrides.handbookUrl : (document.getElementById("handbookUrl")?.value || ""),
+        trainingDocsUrl: overrides.trainingDocsUrl !== undefined ? overrides.trainingDocsUrl : (document.getElementById("trainingDocsUrl")?.value || ""),
         portalAccessNotes: overrides.portalAccessNotes !== undefined ? overrides.portalAccessNotes : (document.getElementById("portalAccessNotes")?.value || "")
     };
 }
@@ -3008,7 +3023,12 @@ function renderPortalAccessTable() {
                app.documentDownloadStatus ||
                app.contractAcceptanceStatus ||
                app.eSignatureStatus ||
-               app.selfServiceStatus;
+               app.selfServiceStatus ||
+               app.interviewPackUrl ||
+               app.contractUrl ||
+               app.welcomePackUrl ||
+               app.handbookUrl ||
+               app.trainingDocsUrl;
     });
 
     if (!records.length) {

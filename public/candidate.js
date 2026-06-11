@@ -53,6 +53,44 @@ function statusClass(value) {
     return "status-neutral";
 }
 
+
+function safeDocumentUrl(value) {
+    const url = String(value || "").trim();
+
+    if (!url) return "";
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+    }
+
+    return "";
+}
+
+function renderDocumentLinks(candidate) {
+    const linksBox = document.getElementById("candidateDocumentLinks");
+    const emptyMessage = document.getElementById("documentsEmptyMessage");
+
+    if (!linksBox) return;
+
+    const documents = [
+        { label: "View Interview Pack", url: safeDocumentUrl(candidate.interviewPackUrl) },
+        { label: "View Contract", url: safeDocumentUrl(candidate.contractUrl) },
+        { label: "View Welcome Pack", url: safeDocumentUrl(candidate.welcomePackUrl) },
+        { label: "View Employee Handbook", url: safeDocumentUrl(candidate.handbookUrl) },
+        { label: "View Training Documents", url: safeDocumentUrl(candidate.trainingDocsUrl) }
+    ].filter(documentItem => documentItem.url);
+
+    linksBox.innerHTML = documents.map(documentItem => `
+        <a href="${documentItem.url}" class="btn" target="_blank" rel="noopener noreferrer">
+            ${documentItem.label}
+        </a>
+    `).join("");
+
+    if (emptyMessage) {
+        emptyMessage.style.display = documents.length ? "none" : "block";
+    }
+}
+
 function formatDate(value) {
     if (!value) return "N/A";
 
@@ -263,6 +301,7 @@ function renderCandidate(candidate) {
     setStatus("eSignatureStatus", candidate.eSignatureStatus || "Not Required");
     setStatus("selfServiceStatus", candidate.selfServiceStatus || "Not Enabled");
     setText("portalAccessDate", formatDate(candidate.portalAccessDate));
+    renderDocumentLinks(candidate);
     setText("portalAccessNotes", candidate.portalAccessNotes || "No portal notes have been added yet.");
 
     setText("lastCommunicationAction", candidate.lastCommunicationAction || "No recent communication recorded.");
