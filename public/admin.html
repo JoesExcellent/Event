@@ -606,10 +606,10 @@
         <div class="dashboard-tabs" aria-label="Admin dashboard sections">
             <button type="button" class="dashboard-tab-btn active" data-admin-tab="overview">Overview</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="candidates">Candidates</button>
-            <button type="button" class="dashboard-tab-btn" data-admin-tab="vacancies">Vacancies</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="interviews">Interviews</button>
-            <button type="button" class="dashboard-tab-btn" data-admin-tab="messages">Messages</button>
-            <button type="button" class="dashboard-tab-btn" data-admin-tab="notes">Notes</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="communications">Communications</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="onboarding">Onboarding</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="documents">Portal Documents</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="analytics">Analytics</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="audit">Audit Trail</button>
         </div>
@@ -761,6 +761,38 @@
         </section>
         </div>
 
+        
+<section class="notes-card">
+            <h2>Admin Notes</h2>
+            <p>Add internal notes, rating and candidate updates for recruitment management.</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="selectedCandidate">Candidate Name</label>
+                    <input type="text" id="selectedCandidate" placeholder="Selected candidate">
+                </div>
+
+                <div class="form-group">
+                    <label for="starRating">Star Rating</label>
+                    <select id="starRating">
+                        <option value="">Select rating</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+
+                <div class="form-group full">
+                    <label for="candidateNotes">Candidate Notes</label>
+                    <textarea id="candidateNotes" placeholder="Add internal notes here"></textarea>
+                </div>
+            </div>
+
+            <button id="saveNotesBtn" type="button">Save Notes</button>
+        </section>
+        
         <div id="tab-vacancies" class="dashboard-tab-content">
 <section class="application-card">
             <h2>Live Vacancy Management System</h2>
@@ -934,7 +966,7 @@ Joe's Excellent Events & Management</textarea>
         </section>
         </div>
 
-        <div id="tab-messages" class="dashboard-tab-content">
+        <div id="tab-communications" class="dashboard-tab-content">
 <section class="application-card">
             <h2>Contact Messages</h2>
             <p>View and manage messages submitted through the Contact Us page.</p>
@@ -1199,7 +1231,8 @@ Joe's Excellent Events & Management</textarea>
 
         </div>
 
-        
+
+        <div id="tab-onboarding" class="dashboard-tab-content">
 <section class="ats-panel">
 <h2>Candidate Onboarding Centre</h2>
 <p>Manage onboarding progress, compliance checks, induction preparation and employment readiness for successful candidates.</p>
@@ -1222,8 +1255,9 @@ Joe's Excellent Events & Management</textarea>
 <button type="button" id="clearOnboardingBtn">Clear Onboarding Form</button>
 </div>
 </section>
+        </div>
 
-
+        <div id="tab-documents" class="dashboard-tab-content">
 <section class="ats-panel">
     <h2>Candidate Portal & Document Access Centre</h2>
     <p>Manage candidate portal access, document downloads, contract acceptance and employee self-service readiness.</p>
@@ -1336,42 +1370,9 @@ Joe's Excellent Events & Management</textarea>
 
     <div id="portalAccessMessage"></div>
 </section>
-
-
-<div id="tab-notes" class="dashboard-tab-content">
-<section class="notes-card">
-            <h2>Admin Notes</h2>
-            <p>Add internal notes, rating and candidate updates for recruitment management.</p>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="selectedCandidate">Candidate Name</label>
-                    <input type="text" id="selectedCandidate" placeholder="Selected candidate">
-                </div>
-
-                <div class="form-group">
-                    <label for="starRating">Star Rating</label>
-                    <select id="starRating">
-                        <option value="">Select rating</option>
-                        <option value="1">1 Star</option>
-                        <option value="2">2 Stars</option>
-                        <option value="3">3 Stars</option>
-                        <option value="4">4 Stars</option>
-                        <option value="5">5 Stars</option>
-                    </select>
-                </div>
-
-                <div class="form-group full">
-                    <label for="candidateNotes">Candidate Notes</label>
-                    <textarea id="candidateNotes" placeholder="Add internal notes here"></textarea>
-                </div>
-            </div>
-
-            <button id="saveNotesBtn" type="button">Save Notes</button>
-        </section>
         </div>
 
-        <div id="tab-analytics" class="dashboard-tab-content">
+<div id="tab-analytics" class="dashboard-tab-content">
 <section class="analytics-card">
             <h2>Recruitment Analytics</h2>
             <p>Track application activity, status breakdown and recruitment pipeline progress.</p>
@@ -1605,7 +1606,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=81"></script>
+<script src="admin.js?v=82"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
