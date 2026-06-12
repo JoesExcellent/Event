@@ -1118,6 +1118,44 @@ async function listNotificationsHandler(req, res) {
 app.get("/api/admin/notifications", requireAuth, listNotificationsHandler);
 
 
+async function updateNotificationStatusHandler(req, res) {
+    try {
+        const { id } = req.params;
+        const { read, archived } = req.body || {};
+
+        if (!id) {
+            return res.status(400).json({ message: "Notification ID is required." });
+        }
+
+        const updateData = { updatedAt: nowIso() };
+
+        if (typeof read === "boolean") updateData.read = read;
+        if (typeof archived === "boolean") updateData.archived = archived;
+
+        await db.collection("notifications").doc(id).update(updateData);
+
+        await logAudit({
+            actionType: "NOTIFICATION_UPDATED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId: id,
+            candidateName: "Notification Centre",
+            candidateEmail: "",
+            description: "Notification status updated from the Admin Dashboard.",
+            metadata: updateData
+        });
+
+        res.json({ message: "Notification updated successfully.", id, updateData });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to update notification." });
+    }
+}
+
+app.patch("/api/admin/notifications/:id", requireAuth, updateNotificationStatusHandler);
+
+
+
 async function listCommunicationsHandler(req, res) {
     try {
         const snapshot = await db
