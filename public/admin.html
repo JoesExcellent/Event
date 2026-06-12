@@ -553,6 +553,27 @@
             color: #ffffff;
         }
 
+
+        .notification-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .notification-action-group button {
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            margin: 0;
+        }
+
+        .notification-archive-btn {
+            background: #7f8c8d;
+        }
+
+        .notification-archive-btn:hover {
+            background: #95a5a6;
+        }
+
         @media (max-width: 900px) {
             .stats-grid,
             .form-grid,
@@ -1586,6 +1607,8 @@ Joe's Excellent Events & Management</textarea>
                         <select id="notificationFilterSelect">
                             <option value="">All Notifications</option>
                             <option value="UNREAD">Unread Only</option>
+                            <option value="READ">Read Only</option>
+                            <option value="ARCHIVED">Archived</option>
                             <option value="NEW_APPLICATION">Applications</option>
                             <option value="CANDIDATE_PORTAL_LOGIN">Portal Logins</option>
                             <option value="INTERVIEW">Interviews</option>
@@ -1595,6 +1618,8 @@ Joe's Excellent Events & Management</textarea>
 
                     <div>
                         <button id="refreshNotificationsBtn" type="button">Refresh Notifications</button>
+                        <button id="markAllNotificationsReadBtn" type="button">Mark All Read</button>
+                        <button id="archiveReadNotificationsBtn" type="button">Archive Read</button>
                     </div>
                 </div>
             </div>
@@ -1609,11 +1634,12 @@ Joe's Excellent Events & Management</textarea>
                             <th>Position</th>
                             <th>Message</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="notificationsTableBody">
                         <tr>
-                            <td colspan="6">Notifications will appear here after login.</td>
+                            <td colspan="7">Notifications will appear here after login.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1741,7 +1767,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=86"></script>
+<script src="admin.js?v=87"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

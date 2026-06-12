@@ -68,6 +68,8 @@ const notificationsTableBody = document.getElementById("notificationsTableBody")
 const notificationSearchInput = document.getElementById("notificationSearchInput");
 const notificationFilterSelect = document.getElementById("notificationFilterSelect");
 const refreshNotificationsBtn = document.getElementById("refreshNotificationsBtn");
+const markAllNotificationsReadBtn = document.getElementById("markAllNotificationsReadBtn");
+const archiveReadNotificationsBtn = document.getElementById("archiveReadNotificationsBtn");
 const notificationsMessage = document.getElementById("notificationsMessage");
 const notificationTotalCount = document.getElementById("notificationTotalCount");
 const notificationUnreadCount = document.getElementById("notificationUnreadCount");
@@ -2768,11 +2770,15 @@ function getFilteredNotifications() {
     const filterValue = notificationFilterSelect?.value || "";
 
     return allNotifications
-        .filter(notification => !notification.archived)
+        .filter(notification => {
+            if (filterValue === "ARCHIVED") return notification.archived === true;
+            return !notification.archived;
+        })
         .filter(notification => {
             const type = String(notification.type || "");
-            if (!filterValue) return true;
+            if (!filterValue || filterValue === "ARCHIVED") return true;
             if (filterValue === "UNREAD") return notification.read === false;
+            if (filterValue === "READ") return notification.read === true;
             if (filterValue === "INTERVIEW") return type.includes("INTERVIEW");
             if (filterValue === "OFFER") return type.includes("OFFER");
             return type === filterValue;
@@ -2827,7 +2833,7 @@ function renderNotifications() {
     if (!notifications.length) {
         notificationsTableBody.innerHTML = `
             <tr>
-                <td colspan="6">No notifications found.</td>
+                <td colspan="7">No notifications found.</td>
             </tr>
         `;
         return;
@@ -2836,7 +2842,10 @@ function renderNotifications() {
     notificationsTableBody.innerHTML = notifications.map(notification => {
         const isUnread = notification.read === false;
         const statusClass = isUnread ? "notification-unread" : "notification-read";
-        const statusText = isUnread ? "Unread" : "Read";
+        const statusText = notification.archived ? "Archived" : (isUnread ? "Unread" : "Read");
+        const readButtonLabel = isUnread ? "Mark Read" : "Mark Unread";
+        const readButtonValue = isUnread ? "true" : "false";
+        const notificationId = escapeHtml(notification.id || "");
 
         return `
             <tr>
@@ -2846,10 +2855,83 @@ function renderNotifications() {
                 <td>${escapeHtml(notification.candidatePosition || "-")}</td>
                 <td>${escapeHtml(notification.message || notification.title || "No message recorded.")}</td>
                 <td><span class="notification-status ${statusClass}">${statusText}</span></td>
+                <td>
+                    <div class="notification-action-group">
+                        <button type="button" onclick="updateNotificationReadStatus('${notificationId}', ${readButtonValue})">${readButtonLabel}</button>
+                        <button type="button" class="notification-archive-btn" onclick="archiveNotification('${notificationId}')">Archive</button>
+                    </div>
+                </td>
             </tr>
         `;
     }).join("");
 }
+
+
+async function updateNotificationRecord(notificationId, updateData) {
+    if (!authToken || !notificationId) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/notifications/${notificationId}`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`
+            },
+            body: JSON.stringify(updateData)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to update notification.");
+        }
+
+        await refreshNotifications();
+        showToast(data.message || "Notification updated successfully.", "success");
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to update notification.", "error");
+    }
+}
+
+function updateNotificationReadStatus(notificationId, readValue) {
+    updateNotificationRecord(notificationId, { read: readValue });
+}
+
+function archiveNotification(notificationId) {
+    updateNotificationRecord(notificationId, { archived: true, read: true });
+}
+
+async function markAllNotificationsRead() {
+    const unreadNotifications = allNotifications.filter(notification => !notification.archived && notification.read === false);
+
+    if (!unreadNotifications.length) {
+        showToast("There are no unread notifications to mark as read.", "info");
+        return;
+    }
+
+    for (const notification of unreadNotifications) {
+        await updateNotificationRecord(notification.id, { read: true });
+    }
+
+    await refreshNotifications();
+}
+
+async function archiveReadNotifications() {
+    const readNotifications = allNotifications.filter(notification => !notification.archived && notification.read === true);
+
+    if (!readNotifications.length) {
+        showToast("There are no read notifications to archive.", "info");
+        return;
+    }
+
+    for (const notification of readNotifications) {
+        await updateNotificationRecord(notification.id, { archived: true });
+    }
+
+    await refreshNotifications();
+}
+
 
 async function refreshNotifications() {
     await loadNotifications();
@@ -3343,6 +3425,8 @@ window.renderPortalAccessTable = renderPortalAccessTable;
 notificationSearchInput?.addEventListener("input", renderNotifications);
 notificationFilterSelect?.addEventListener("change", renderNotifications);
 refreshNotificationsBtn?.addEventListener("click", refreshNotifications);
+markAllNotificationsReadBtn?.addEventListener("click", markAllNotificationsRead);
+archiveReadNotificationsBtn?.addEventListener("click", archiveReadNotifications);
 
 auditSearchInput?.addEventListener("input", function () {
     auditCurrentPage = 1;
@@ -3382,3 +3466,5 @@ if (authToken) {
     refreshDashboard();
     startAutoRefresh();
 }
+window.updateNotificationReadStatus = updateNotificationReadStatus;
+window.archiveNotification = archiveNotification;
