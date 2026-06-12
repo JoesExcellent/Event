@@ -162,6 +162,52 @@ function escapeQuotes(value) {
         .replace(/\r/g, "");
 }
 
+
+function looksLikeBadCandidateName(value) {
+    const text = String(value || "").trim();
+
+    if (!text) return true;
+    if (text.length > 70) return true;
+
+    const badFragments = [
+        "uploaded to github",
+        "deployed to railway",
+        "backed up to",
+        "cloud accounts",
+        "fully uploaded",
+        "fully deployed",
+        "candidate portal",
+        "interview invitation",
+        "notification",
+        "audit trail"
+    ];
+
+    return badFragments.some(fragment => text.toLowerCase().includes(fragment));
+}
+
+function getCandidateDisplayName(application) {
+    if (!application) return "Candidate";
+
+    const possibleNames = [
+        getCandidateDisplayName(application),
+        application.name,
+        application.candidateName,
+        application.applicantName
+    ];
+
+    for (const value of possibleNames) {
+        if (!looksLikeBadCandidateName(value)) {
+            return String(value).trim();
+        }
+    }
+
+    if (application.email) {
+        return application.email;
+    }
+
+    return "Candidate";
+}
+
 function formatDate(dateString) {
     if (!dateString) return "N/A";
 
@@ -453,10 +499,11 @@ function renderApplications(applications) {
         const tr = document.createElement("tr");
 
         const id = escapeQuotes(application.id);
-        const fullName = escapeQuotes(application.fullName);
+        const displayName = getCandidateDisplayName(application);
+        const fullName = escapeQuotes(displayName);
 
         tr.innerHTML = `
-            <td>${escapeHtml(application.fullName || "")}</td>
+            <td>${escapeHtml(displayName)}</td>
             <td>${escapeHtml(application.email || "")}</td>
             <td>${escapeHtml(application.position || "")}</td>
             <td>${formatDate(application.createdAt)}</td>
@@ -501,7 +548,7 @@ function openCandidateModal(id) {
     const score = calculateATSScore(application);
     const rating = application.rating || "0";
 
-    document.getElementById("modalCandidateName").textContent = application.fullName || "Candidate Profile";
+    document.getElementById("modalCandidateName").textContent = getCandidateDisplayName(application);
     document.getElementById("modalCandidateEmail").textContent = application.email || "N/A";
     document.getElementById("modalCandidatePhone").textContent = application.phone || "N/A";
     document.getElementById("modalCandidateAddress").textContent = application.address || "N/A";
@@ -768,7 +815,7 @@ function selectCandidateFromModal() {
         return;
     }
 
-    selectCandidate(application.id, application.fullName || "Candidate");
+    selectCandidate(application.id, getCandidateDisplayName(application));
     closeCandidateModal();
 }
 
@@ -899,7 +946,7 @@ async function shortlistCandidate(id) {
     }
 
     const application = allApplications.find(app => app.id === id);
-    const candidateName = application?.fullName || "this candidate";
+    const candidateName = application ? getCandidateDisplayName(application) : "this candidate";
 
     if (!confirm(`Add ${candidateName} to the shortlist?`)) {
         return;
@@ -922,7 +969,7 @@ async function markCandidateHired(id) {
     }
 
     const application = allApplications.find(app => app.id === id);
-    const candidateName = application?.fullName || "this candidate";
+    const candidateName = application ? getCandidateDisplayName(application) : "this candidate";
 
     if (!confirm(`Mark ${candidateName} as hired and send employment confirmation email?`)) {
         return;
@@ -964,7 +1011,7 @@ async function sendOfferEmail(id) {
     }
 
     const application = allApplications.find(app => app.id === id);
-    const candidateName = application?.fullName || "this candidate";
+    const candidateName = application ? getCandidateDisplayName(application) : "this candidate";
 
     if (!confirm(`Send an offer email to ${candidateName}?`)) {
         return;
@@ -1587,7 +1634,7 @@ function renderActivityFeed() {
         .slice(0, 8)
         .forEach(app => {
             activities.push({
-                title: `${app.fullName || "Candidate"} - ${normaliseStatus(app.status)}`,
+                title: `${getCandidateDisplayName(app)} - ${normaliseStatus(app.status)}`,
                 text: `Role: ${app.position || "N/A"} | Updated: ${formatDateTime(app.updatedAt || app.createdAt)}`
             });
         });
@@ -1628,7 +1675,7 @@ function renderRecruiterTasks() {
         .forEach(app => {
             tasks.push({
                 title: "Review New Application",
-                text: `${app.fullName || "Candidate"} applied for ${app.position || "a role"}.`
+                text: `${getCandidateDisplayName(app)} applied for ${app.position || "a role"}.`
             });
         });
 
@@ -1638,7 +1685,7 @@ function renderRecruiterTasks() {
         .forEach(app => {
             tasks.push({
                 title: "Confirm Interview Details",
-                text: `${app.fullName || "Candidate"} has been invited but interview details may need checking.`
+                text: `${getCandidateDisplayName(app)} has been invited but interview details may need checking.`
             });
         });
 
@@ -1949,7 +1996,7 @@ function getSelectedOfferApplication() {
 function fillOfferTrackingForm(application) {
     if (!application) return;
 
-    if (offerCandidateNameInput) offerCandidateNameInput.value = application.fullName || "";
+    if (offerCandidateNameInput) offerCandidateNameInput.value = getCandidateDisplayName(application);
     if (offerCandidatePositionInput) offerCandidatePositionInput.value = application.position || "";
     if (offerResponseStatusInput) offerResponseStatusInput.value = application.offerResponseStatus || (normaliseStatus(application.status) === "Offer Made" ? "Offer Pending" : "");
     if (candidateStartDateInput) candidateStartDateInput.value = application.candidateStartDate || "";
@@ -2129,7 +2176,7 @@ function renderOfferTrackingTable() {
 
     offerTrackingTableBody.innerHTML = records.map(app => `
         <tr>
-            <td>${escapeHtml(app.fullName || "Candidate")}</td>
+            <td>${escapeHtml(getCandidateDisplayName(app))}</td>
             <td>${escapeHtml(app.position || "N/A")}</td>
             <td>${escapeHtml(app.offerResponseStatus || (normaliseStatus(app.status) === "Offer Made" ? "Offer Pending" : ""))}</td>
             <td>${escapeHtml(formatDate(app.candidateStartDate || ""))}</td>
@@ -3190,7 +3237,7 @@ function fillPortalAccessForm(application) {
     if (!application) return;
 
     const map = {
-        portalCandidateName: application.fullName || "",
+        portalCandidateName: getCandidateDisplayName(application),
         portalCandidateEmail: application.email || "",
         portalAccessStatus: application.portalAccessStatus || "",
         documentDownloadStatus: application.documentDownloadStatus || "",
@@ -3304,7 +3351,7 @@ async function sendPortalInvite() {
         return;
     }
 
-    if (!confirm(`Send portal access invite to ${application.fullName || "this candidate"}?`)) {
+    if (!confirm(`Send portal access invite to ${getCandidateDisplayName(application)}?`)) {
         return;
     }
 
@@ -3400,7 +3447,7 @@ function renderPortalAccessTable() {
 
     tableBody.innerHTML = records.map(app => `
         <tr>
-            <td>${escapeHtml(app.fullName || "Candidate")}</td>
+            <td>${escapeHtml(getCandidateDisplayName(app))}</td>
             <td>${escapeHtml(app.email || "")}</td>
             <td>${escapeHtml(app.portalAccessStatus || "")}</td>
             <td>${escapeHtml(app.documentDownloadStatus || "")}</td>
