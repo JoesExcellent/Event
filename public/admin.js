@@ -1,5 +1,23 @@
 const API_BASE = "";
 
+
+const vacancyTitleInput = document.getElementById("vacancyTitle");
+const vacancyLocationInput = document.getElementById("vacancyLocation");
+const vacancyTypeInput = document.getElementById("vacancyType");
+const vacancyCategoryInput = document.getElementById("vacancyCategory");
+const vacancySalaryMinInput = document.getElementById("vacancySalaryMin");
+const vacancySalaryMaxInput = document.getElementById("vacancySalaryMax");
+const vacancyClosingDateInput = document.getElementById("vacancyClosingDate");
+const vacancyStatusInput = document.getElementById("vacancyStatus");
+const vacancyDescriptionInput = document.getElementById("vacancyDescription");
+const vacancyResponsibilitiesInput = document.getElementById("vacancyResponsibilities");
+const vacancyRequirementsInput = document.getElementById("vacancyRequirements");
+const createVacancyBtn = document.getElementById("createVacancyBtn");
+const updateVacancyBtn = document.getElementById("updateVacancyBtn");
+const clearVacancyFormBtn = document.getElementById("clearVacancyFormBtn");
+const vacanciesTableBody = document.getElementById("vacanciesTableBody");
+const vacancyMessage = document.getElementById("vacancyMessage");
+
 let authToken = localStorage.getItem("adminToken") || "";
 let adminRole = localStorage.getItem("adminRole") || "";
 let selectedApplicationId = null;
@@ -15,6 +33,8 @@ let allEmailTemplates = [];
 let allReminderQueue = [];
 let allAuditLogs = [];
 let allNotifications = [];
+let vacancies = [];
+let editingVacancyId = null;
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
@@ -404,6 +424,7 @@ async function refreshDashboard(showMessage = false) {
     renderPortalAccessTable();
     renderAuditTrail();
     renderNotifications();
+        renderVacancies();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -3560,3 +3581,8 @@ if (authToken) {
 }
 window.updateNotificationReadStatus = updateNotificationReadStatus;
 window.archiveNotification = archiveNotification;
+
+
+createVacancyBtn?.addEventListener("click", createVacancy);
+updateVacancyBtn?.addEventListener("click", updateVacancy);
+clearVacancyFormBtn?.addEventListener("click", clearVacancyForm);
