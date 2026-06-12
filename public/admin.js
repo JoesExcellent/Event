@@ -189,7 +189,7 @@ function getCandidateDisplayName(application) {
     if (!application) return "Candidate";
 
     const possibleNames = [
-        getCandidateDisplayName(application),
+        application.fullName,
         application.name,
         application.candidateName,
         application.applicantName
@@ -438,7 +438,7 @@ function getFilteredApplications() {
         const status = normaliseStatus(application.status).toLowerCase();
 
         const searchableText = [
-            application.fullName,
+            getCandidateDisplayName(application),
             application.email,
             application.phone,
             application.address,
