@@ -976,6 +976,15 @@ async function applicationSubmitHandler(req, res) {
                 return res.status(400).json({ message: "Please complete all required fields." });
             }
 
+            const matchedVacancy = await findVacancyForApplication(application.position);
+
+            if (matchedVacancy) {
+                application.vacancyId = matchedVacancy.id;
+                application.vacancyTitle = matchedVacancy.title || application.position;
+                application.vacancyCategory = matchedVacancy.category || "General";
+                application.vacancyStatusAtApplication = matchedVacancy.status || "Published";
+            }
+
             const docRef = await db.collection("applications").add(application);
 
             try {
@@ -1049,6 +1058,79 @@ function normaliseApplicationForClient(doc) {
 
 function normaliseVacancyForClient(doc) {
     return { id: doc.id, ...doc.data() };
+}
+
+function vacancyMatchKey(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+}
+
+function getApplicationStatusBucket(application) {
+    return String(application.status || "New").trim();
+}
+
+function applicationBelongsToVacancy(application, vacancy) {
+    if (!application || !vacancy) return false;
+
+    if (application.vacancyId && vacancy.id && String(application.vacancyId) === String(vacancy.id)) {
+        return true;
+    }
+
+    const applicationPosition = vacancyMatchKey(application.position || application.vacancyTitle || application.role);
+    const vacancyTitle = vacancyMatchKey(vacancy.title);
+
+    return Boolean(applicationPosition && vacancyTitle && applicationPosition === vacancyTitle);
+}
+
+function buildVacancyIntelligence(vacancies = [], applications = []) {
+    return vacancies.map(vacancy => {
+        const matchedApplications = applications.filter(application => applicationBelongsToVacancy(application, vacancy));
+
+        const intelligence = {
+            applicationsReceived: matchedApplications.length,
+            shortlisted: matchedApplications.filter(app => app.shortlisted === true || getApplicationStatusBucket(app) === "Shortlisted").length,
+            interviewInvited: matchedApplications.filter(app => {
+                const status = getApplicationStatusBucket(app);
+                return status === "Interview Invited" || status === "Interview Completed" || status === "To Be Interviewed";
+            }).length,
+            offerMade: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Offer Made" || app.offerSent === true).length,
+            hired: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Hired").length,
+            rejected: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Rejected").length
+        };
+
+        intelligence.conversionRate = intelligence.applicationsReceived
+            ? Number(((intelligence.hired / intelligence.applicationsReceived) * 100).toFixed(1))
+            : 0;
+
+        return {
+            ...vacancy,
+            intelligence
+        };
+    });
+}
+
+async function findVacancyForApplication(position) {
+    const cleanPosition = clean(position);
+
+    if (!cleanPosition) return null;
+
+    try {
+        const snapshot = await db
+            .collection("vacancies")
+            .where("title", "==", cleanPosition)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
+        return normaliseVacancyForClient(doc);
+    } catch (error) {
+        console.error("Vacancy lookup failed:", error);
+        return null;
+    }
 }
 
 /* =====================================================
