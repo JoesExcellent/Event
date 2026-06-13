@@ -673,6 +673,7 @@
             <button type="button" class="dashboard-tab-btn" data-admin-tab="candidates">Candidates</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="vacancies">Vacancies</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="interviews">Interviews</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="offer-hiring">Offer & Hiring</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="communications">Communications</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="onboarding">Onboarding</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="documents">Portal Documents</button>
@@ -1265,9 +1266,40 @@ Joe's Excellent Events & Management</textarea>
         </section>
 
 
+        </div>
+
+
+        <div id="tab-offer-hiring" class="dashboard-tab-content">
         <section class="ats-panel">
-            <h2>Phase 4A UI — Offer Response & Start Date Tracking</h2>
-            <p>Track offer responses, planned start dates and onboarding preparation for candidates who reach the offer stage.</p>
+            <h2>Offer & Hiring Centre</h2>
+            <p>Manage offer decisions, candidate responses, start dates, contract progress and hiring readiness from one dedicated recruitment centre.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>1</span>
+                    <h3>Offers Sent / Pending</h3>
+                    <p id="offerCentrePending">0</p>
+                </div>
+                <div class="stat-card">
+                    <span>2</span>
+                    <h3>Offers Accepted</h3>
+                    <p id="offerCentreAccepted">0</p>
+                </div>
+                <div class="stat-card">
+                    <span>3</span>
+                    <h3>Offers Declined</h3>
+                    <p id="offerCentreDeclined">0</p>
+                </div>
+                <div class="stat-card">
+                    <span>4</span>
+                    <h3>Hired Candidates</h3>
+                    <p id="offerCentreHired">0</p>
+                </div>
+            </div>
+
+            <div class="vacancy-management-note">
+                <p>Open a candidate from the candidate list, or use Select in the offer table below. Then record the offer response, start date, contract status and onboarding status.</p>
+            </div>
 
             <div class="form-grid">
                 <div class="form-group">
@@ -1342,12 +1374,13 @@ Joe's Excellent Events & Management</textarea>
                             <th>Start Date</th>
                             <th>Contract Status</th>
                             <th>Onboarding Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
                     <tbody id="offerTrackingTableBody">
                         <tr>
-                            <td colspan="6">Offer response and start date records will appear here after Phase 4A logic is connected.</td>
+                            <td colspan="7">Offer response and start date records will appear here after Phase 4A logic is connected.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1827,7 +1860,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=94"></script>
+<script src="admin.js?v=95"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

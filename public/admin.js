@@ -94,6 +94,10 @@ const onboardingStatusInput = document.getElementById("onboardingStatus");
 const offerOnboardingNotesInput = document.getElementById("offerOnboardingNotes");
 const offerTrackingTableBody = document.getElementById("offerTrackingTableBody");
 const offerTrackingMessage = document.getElementById("offerTrackingMessage");
+const offerCentrePending = document.getElementById("offerCentrePending");
+const offerCentreAccepted = document.getElementById("offerCentreAccepted");
+const offerCentreDeclined = document.getElementById("offerCentreDeclined");
+const offerCentreHired = document.getElementById("offerCentreHired");
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -406,6 +410,7 @@ async function refreshDashboard(showMessage = false) {
     renderRecruiterTasks();
     renderCommunicationCentre();
     renderReminderQueue();
+    renderOfferHiringCentre();
     renderOfferTrackingTable();
     renderPortalAccessTable();
     renderAuditTrail();
@@ -2235,22 +2240,43 @@ async function confirmStartDate() {
     }
 }
 
-function renderOfferTrackingTable() {
-    if (!offerTrackingTableBody) return;
-
-    const records = allApplications.filter(app => {
+function getOfferCentreRecords() {
+    return allApplications.filter(app => {
         return normaliseStatus(app.status) === "Offer Made" ||
                normaliseStatus(app.status) === "Hired" ||
+               app.offerSent ||
                app.offerResponseStatus ||
                app.candidateStartDate ||
                app.contractStatus ||
                app.onboardingStatus;
     });
+}
+
+function renderOfferHiringCentre() {
+    const records = getOfferCentreRecords();
+    const pending = records.filter(app => {
+        const response = String(app.offerResponseStatus || "").toLowerCase();
+        return normaliseStatus(app.status) === "Offer Made" || response.includes("pending") || app.offerSent;
+    }).length;
+    const accepted = records.filter(app => String(app.offerResponseStatus || "").toLowerCase().includes("accepted")).length;
+    const declined = records.filter(app => String(app.offerResponseStatus || "").toLowerCase().includes("declined")).length;
+    const hired = allApplications.filter(app => normaliseStatus(app.status) === "Hired").length;
+
+    if (offerCentrePending) offerCentrePending.textContent = pending;
+    if (offerCentreAccepted) offerCentreAccepted.textContent = accepted;
+    if (offerCentreDeclined) offerCentreDeclined.textContent = declined;
+    if (offerCentreHired) offerCentreHired.textContent = hired;
+}
+
+function renderOfferTrackingTable() {
+    if (!offerTrackingTableBody) return;
+
+    const records = getOfferCentreRecords();
 
     if (!records.length) {
         offerTrackingTableBody.innerHTML = `
             <tr>
-                <td colspan="6">No offer response or start date records found yet.</td>
+                <td colspan="7">No offer or hiring records found yet.</td>
             </tr>
         `;
         return;
@@ -2264,8 +2290,26 @@ function renderOfferTrackingTable() {
             <td>${escapeHtml(formatDate(app.candidateStartDate || ""))}</td>
             <td>${escapeHtml(app.contractStatus || "")}</td>
             <td>${escapeHtml(app.onboardingStatus || "")}</td>
+            <td>
+                <button type="button" onclick="openOfferCandidate('${app.id}')">Select</button>
+                <button type="button" onclick="sendOfferEmail('${app.id}')">Send Offer</button>
+                <button type="button" onclick="markCandidateHired('${app.id}')">Mark Hired</button>
+            </td>
         </tr>
     `).join("");
+}
+
+function openOfferCandidate(id) {
+    const application = allApplications.find(app => app.id === id);
+    if (!application) {
+        showToast("Candidate record could not be found.", "error");
+        return;
+    }
+
+    selectedApplicationId = id;
+    modalApplicationId = null;
+    fillOfferTrackingForm(application);
+    showToast(`Offer & Hiring Centre ready for ${getCandidateDisplayName(application)}.`, "success");
 }
 
 
@@ -3624,7 +3668,9 @@ window.saveOfferTracking = saveOfferTracking;
 window.clearOfferTrackingForm = clearOfferTrackingForm;
 window.setOfferWorkflowStatus = setOfferWorkflowStatus;
 window.confirmStartDate = confirmStartDate;
+window.renderOfferHiringCentre = renderOfferHiringCentre;
 window.renderOfferTrackingTable = renderOfferTrackingTable;
+window.openOfferCandidate = openOfferCandidate;
 window.scheduleInterviewRemindersForSelectedCandidate = scheduleInterviewRemindersForSelectedCandidate;
 window.processDueReminders = processDueReminders;
 window.sendQueuedReminder = sendQueuedReminder;
