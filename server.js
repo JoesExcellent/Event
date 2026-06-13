@@ -2470,10 +2470,13 @@ app.post("/api/candidate/login", async (req, res) => {
             source: "Candidate Portal"
         });
 
+        const candidatePayload = cleanCandidateApplication(application);
+        candidatePayload.employmentDocumentAssignment = await getEmploymentDocumentAssignmentForCandidate(application.id);
+
         res.json({
             message: "Candidate login successful.",
             token,
-            candidate: cleanCandidateApplication(application)
+            candidate: candidatePayload
         });
     } catch (error) {
         console.error(error);
@@ -2498,8 +2501,11 @@ app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
             return res.status(403).json({ message: "Candidate profile mismatch." });
         }
 
+        const candidatePayload = cleanCandidateApplication(application);
+        candidatePayload.employmentDocumentAssignment = await getEmploymentDocumentAssignmentForCandidate(application.id);
+
         res.json({
-            candidate: cleanCandidateApplication(application)
+            candidate: candidatePayload
         });
     } catch (error) {
         console.error(error);
@@ -3007,6 +3013,199 @@ async function deleteEmploymentDocumentHandler(req, res) {
         res.status(500).json({ message: "Failed to delete employment document." });
     }
 }
+
+
+
+/* =====================================================
+   EMPLOYMENT DOCUMENT ASSIGNMENTS
+===================================================== */
+
+function normaliseEmploymentDocumentAssignmentForClient(doc) {
+    const data = doc.data ? doc.data() : doc;
+
+    return {
+        id: doc.id || data.id || data.candidateId || "",
+        candidateId: data.candidateId || doc.id || "",
+        candidateName: data.candidateName || "Candidate",
+        candidateEmail: data.candidateEmail || "",
+        position: data.position || "",
+        employmentContractDocumentId: data.employmentContractDocumentId || data.employmentContract || "",
+        welcomePackDocumentId: data.welcomePackDocumentId || data.welcomePack || "",
+        handbookDocumentId: data.handbookDocumentId || data.employeeHandbook || data.handbook || "",
+        inductionPackDocumentId: data.inductionPackDocumentId || data.inductionPack || "",
+        companyPoliciesDocumentId: data.companyPoliciesDocumentId || data.companyPolicies || "",
+        assignedBy: data.assignedBy || "Unknown Admin",
+        assignedAt: data.assignedAt || data.createdAt || "",
+        updatedAt: data.updatedAt || "",
+        active: data.active !== false
+    };
+}
+
+async function getEmploymentDocumentAssignmentForCandidate(candidateId) {
+    const id = clean(candidateId);
+    if (!id) return null;
+
+    const doc = await db.collection("employmentDocumentAssignments").doc(id).get();
+    if (!doc.exists) return null;
+
+    return normaliseEmploymentDocumentAssignmentForClient(doc);
+}
+
+async function listEmploymentDocumentAssignmentsHandler(req, res) {
+    try {
+        const snapshot = await db
+            .collection("employmentDocumentAssignments")
+            .orderBy("updatedAt", "desc")
+            .get();
+
+        const assignments = snapshot.docs.map(normaliseEmploymentDocumentAssignmentForClient);
+        res.json({ assignments });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load employment document assignments." });
+    }
+}
+
+async function getEmploymentDocumentAssignmentHandler(req, res) {
+    try {
+        const candidateId = clean(req.params.candidateId);
+
+        if (!candidateId) {
+            return res.status(400).json({ message: "Candidate ID is required." });
+        }
+
+        const assignment = await getEmploymentDocumentAssignmentForCandidate(candidateId);
+        res.json({ assignment });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load employment document assignment." });
+    }
+}
+
+async function saveEmploymentDocumentAssignmentHandler(req, res) {
+    try {
+        const candidateId = clean(req.body.candidateId);
+
+        if (!candidateId) {
+            return res.status(400).json({ message: "Candidate is required before documents can be assigned." });
+        }
+
+        const candidateDoc = await db.collection("applications").doc(candidateId).get();
+        if (!candidateDoc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const candidate = { id: candidateDoc.id, ...candidateDoc.data() };
+        const candidateName = clean(req.body.candidateName) || candidate.fullName || candidate.name || "Candidate";
+        const candidateEmail = clean(req.body.candidateEmail) || candidate.email || "";
+        const position = clean(req.body.position) || candidate.position || "";
+
+        const assignmentRecord = {
+            candidateId,
+            candidateName,
+            candidateEmail,
+            position,
+            employmentContractDocumentId: clean(req.body.employmentContractDocumentId),
+            welcomePackDocumentId: clean(req.body.welcomePackDocumentId),
+            handbookDocumentId: clean(req.body.handbookDocumentId),
+            inductionPackDocumentId: clean(req.body.inductionPackDocumentId),
+            companyPoliciesDocumentId: clean(req.body.companyPoliciesDocumentId),
+            assignedBy: req.user?.email || "Unknown Admin",
+            assignedAt: req.body.assignedAt || nowIso(),
+            updatedAt: nowIso(),
+            active: true
+        };
+
+        await db.collection("employmentDocumentAssignments").doc(candidateId).set(assignmentRecord, { merge: true });
+
+        await db.collection("applications").doc(candidateId).set({
+            documentDownloadStatus: "Available",
+            employmentDocumentsAssigned: true,
+            employmentDocumentsUpdatedAt: nowIso(),
+            updatedAt: nowIso()
+        }, { merge: true });
+
+        await logAudit({
+            actionType: "EMPLOYMENT_DOCUMENTS_ASSIGNED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId,
+            candidateName,
+            candidateEmail,
+            description: `Employment documents assigned to ${candidateName}.`,
+            metadata: assignmentRecord
+        });
+
+        await createNotification({
+            type: "EMPLOYMENT_DOCUMENTS_ASSIGNED",
+            title: "Employment Documents Assigned",
+            candidateId,
+            candidateName,
+            candidateEmail,
+            candidatePosition: position,
+            message: `Employment documents have been assigned to ${candidateName}.`,
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            source: "Employment Documents Centre"
+        });
+
+        res.json({
+            message: "Employment documents assigned successfully.",
+            assignment: { id: candidateId, ...assignmentRecord }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to assign employment documents." });
+    }
+}
+
+async function deleteEmploymentDocumentAssignmentHandler(req, res) {
+    try {
+        const candidateId = clean(req.params.candidateId);
+
+        if (!candidateId) {
+            return res.status(400).json({ message: "Candidate ID is required." });
+        }
+
+        const ref = db.collection("employmentDocumentAssignments").doc(candidateId);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Employment document assignment not found." });
+        }
+
+        const assignment = normaliseEmploymentDocumentAssignmentForClient(doc);
+        await ref.delete();
+
+        await db.collection("applications").doc(candidateId).set({
+            documentDownloadStatus: "Not Available",
+            employmentDocumentsAssigned: false,
+            employmentDocumentsUpdatedAt: nowIso(),
+            updatedAt: nowIso()
+        }, { merge: true });
+
+        await logAudit({
+            actionType: "EMPLOYMENT_DOCUMENT_ASSIGNMENT_CLEARED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId,
+            candidateName: assignment.candidateName,
+            candidateEmail: assignment.candidateEmail,
+            description: `Employment document assignment cleared for ${assignment.candidateName}.`,
+            metadata: assignment
+        });
+
+        res.json({ message: "Employment document assignment cleared successfully.", candidateId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to clear employment document assignment." });
+    }
+}
+
+app.get("/api/admin/employment-document-assignments", requireAuth, listEmploymentDocumentAssignmentsHandler);
+app.get("/api/admin/employment-document-assignments/:candidateId", requireAuth, getEmploymentDocumentAssignmentHandler);
+app.post("/api/admin/employment-document-assignments", requireAuth, requireEditor, saveEmploymentDocumentAssignmentHandler);
+app.delete("/api/admin/employment-document-assignments/:candidateId", requireAuth, requireEditor, deleteEmploymentDocumentAssignmentHandler);
 
 app.get("/api/admin/employment-documents", requireAuth, listEmploymentDocumentsHandler);
 app.get("/api/employment-documents", requireAuth, listEmploymentDocumentsHandler);
