@@ -950,6 +950,65 @@
             <button id="updateVacancyBtn" type="button">Update Vacancy</button>
             <button id="clearVacancyFormBtn" type="button">Clear Vacancy Form</button>
 
+            <div class="ats-panel" id="vacancyIntelligencePanel" style="margin-top: 26px;">
+                <h2>Vacancy Application Intelligence</h2>
+                <p>
+                    Live recruitment performance by vacancy. This panel links candidate applications to each vacancy and shows
+                    how many candidates are moving through shortlist, interview, offer, hired and rejected stages.
+                </p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span>1</span>
+                        <h3>Linked Applications</h3>
+                        <p id="vacancyIntelApplications">0</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>2</span>
+                        <h3>Shortlisted</h3>
+                        <p id="vacancyIntelShortlisted">0</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>3</span>
+                        <h3>Interview Stage</h3>
+                        <p id="vacancyIntelInterview">0</p>
+                    </div>
+
+                    <div class="stat-card">
+                        <span>4</span>
+                        <h3>Hired</h3>
+                        <p id="vacancyIntelHired">0</p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Vacancy</th>
+                                <th>Applications</th>
+                                <th>Shortlisted</th>
+                                <th>Interview</th>
+                                <th>Offer</th>
+                                <th>Hired</th>
+                                <th>Rejected</th>
+                                <th>Conversion</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="vacancyIntelligenceTableBody">
+                            <tr>
+                                <td colspan="9">Vacancy intelligence will appear here after the dashboard loads.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
             <div class="table-wrapper">
                 <table>
                     <thead>
@@ -1768,7 +1827,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=93"></script>
+<script src="admin.js?v=94"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

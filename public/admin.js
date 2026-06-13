@@ -43,6 +43,11 @@ const applicationsTableBody = document.getElementById("applicationsTableBody");
 const contactMessagesTableBody = document.getElementById("contactMessagesTableBody");
 const communicationTableBody = document.getElementById("communicationTableBody");
 const vacanciesTableBody = document.getElementById("vacanciesTableBody");
+const vacancyIntelligenceTableBody = document.getElementById("vacancyIntelligenceTableBody");
+const vacancyIntelApplications = document.getElementById("vacancyIntelApplications");
+const vacancyIntelShortlisted = document.getElementById("vacancyIntelShortlisted");
+const vacancyIntelInterview = document.getElementById("vacancyIntelInterview");
+const vacancyIntelHired = document.getElementById("vacancyIntelHired");
 const vacancyMessage = document.getElementById("vacancyMessage");
 
 const emailTemplatesTableBody = document.getElementById("emailTemplatesTableBody");
@@ -2883,11 +2888,80 @@ async function loadVacancies() {
     }
 }
 
+
+function renderVacancyIntelligencePanel(vacancies = []) {
+    const intelligenceRows = (vacancies || []).map(vacancy => {
+        const intelligence = getVacancyIntelligence(vacancy);
+        return {
+            id: vacancy.id,
+            title: vacancy.title || "Untitled Vacancy",
+            category: vacancy.category || "General",
+            applicationsReceived: Number(intelligence.applicationsReceived || 0),
+            shortlisted: Number(intelligence.shortlisted || 0),
+            interviewInvited: Number(intelligence.interviewInvited || 0),
+            offerMade: Number(intelligence.offerMade || 0),
+            hired: Number(intelligence.hired || 0),
+            rejected: Number(intelligence.rejected || 0),
+            conversionRate: Number(intelligence.conversionRate || 0)
+        };
+    });
+
+    const totals = intelligenceRows.reduce((summary, row) => {
+        summary.applicationsReceived += row.applicationsReceived;
+        summary.shortlisted += row.shortlisted;
+        summary.interviewInvited += row.interviewInvited;
+        summary.hired += row.hired;
+        return summary;
+    }, {
+        applicationsReceived: 0,
+        shortlisted: 0,
+        interviewInvited: 0,
+        hired: 0
+    });
+
+    if (vacancyIntelApplications) vacancyIntelApplications.textContent = totals.applicationsReceived;
+    if (vacancyIntelShortlisted) vacancyIntelShortlisted.textContent = totals.shortlisted;
+    if (vacancyIntelInterview) vacancyIntelInterview.textContent = totals.interviewInvited;
+    if (vacancyIntelHired) vacancyIntelHired.textContent = totals.hired;
+
+    if (!vacancyIntelligenceTableBody) return;
+
+    if (!intelligenceRows.length) {
+        vacancyIntelligenceTableBody.innerHTML = `
+            <tr>
+                <td colspan="9">No vacancy intelligence is available yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    vacancyIntelligenceTableBody.innerHTML = intelligenceRows.map(row => `
+        <tr>
+            <td>
+                <strong>${escapeHtml(row.title)}</strong><br>
+                <span style="color: rgba(255,255,255,0.75);">${escapeHtml(row.category)}</span>
+            </td>
+            <td>${row.applicationsReceived}</td>
+            <td>${row.shortlisted}</td>
+            <td>${row.interviewInvited}</td>
+            <td>${row.offerMade}</td>
+            <td>${row.hired}</td>
+            <td>${row.rejected}</td>
+            <td>${row.conversionRate}%</td>
+            <td>
+                <button type="button" onclick="filterCandidatesByVacancy('${escapeQuotes(row.id)}')">View Candidates</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+
 function renderVacancies(vacancies) {
     if (!vacanciesTableBody) return;
 
     injectVacancyShellStyles();
     updateVacancyShellSummary(vacancies);
+    renderVacancyIntelligencePanel(vacancies);
 
     if (!vacancies.length) {
         vacanciesTableBody.innerHTML = `
