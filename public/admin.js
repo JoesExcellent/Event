@@ -913,11 +913,32 @@ async function updateApplicationStatus(id, status) {
         return;
     }
 
+    const syncPayload = { status };
+    if (status === "Offer Made") {
+        syncPayload.offerResponseStatus = "Offer Pending";
+        syncPayload.contractStatus = "Sent";
+        syncPayload.onboardingStatus = "Not Started";
+    }
+    if (status === "Offer Accepted") {
+        syncPayload.offerResponseStatus = "Offer Accepted";
+        syncPayload.contractStatus = "Sent";
+        syncPayload.onboardingStatus = "In Progress";
+    }
+    if (status === "Offer Declined") {
+        syncPayload.offerResponseStatus = "Offer Declined";
+        syncPayload.onboardingStatus = "Not Started";
+    }
+    if (status === "Hired") {
+        syncPayload.offerResponseStatus = "Offer Accepted";
+        syncPayload.contractStatus = "Completed";
+        syncPayload.onboardingStatus = "In Progress";
+    }
+
     try {
         const response = await fetch(`${API_BASE}/api/applications/${id}`, {
             method: "PATCH",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ status })
+            body: JSON.stringify(syncPayload)
         });
 
         const result = await response.json();
@@ -958,7 +979,7 @@ async function moveModalCandidateToOffer() {
             await saveOfferTrackingForApplication(application.id, {
                 offerResponseStatus: application.offerResponseStatus || "Offer Pending",
                 candidateStartDate: application.candidateStartDate || "",
-                contractStatus: application.contractStatus || "Not Sent",
+                contractStatus: application.contractStatus || "Sent",
                 onboardingStatus: application.onboardingStatus || "Not Started",
                 offerOnboardingNotes: application.offerOnboardingNotes || ""
             }, false);
@@ -2254,12 +2275,21 @@ function getOfferCentreRecords() {
 
 function renderOfferHiringCentre() {
     const records = getOfferCentreRecords();
-    const pending = records.filter(app => {
+
+    const getOfferState = app => {
+        const status = normaliseStatus(app.status);
         const response = String(app.offerResponseStatus || "").toLowerCase();
-        return normaliseStatus(app.status) === "Offer Made" || response.includes("pending") || app.offerSent;
-    }).length;
-    const accepted = records.filter(app => String(app.offerResponseStatus || "").toLowerCase().includes("accepted")).length;
-    const declined = records.filter(app => String(app.offerResponseStatus || "").toLowerCase().includes("declined")).length;
+
+        if (status === "Hired") return "accepted";
+        if (response.includes("accepted") || status === "Offer Accepted") return "accepted";
+        if (response.includes("declined") || status === "Offer Declined") return "declined";
+        if (response.includes("pending") || status === "Offer Made" || app.offerSent) return "pending";
+        return "";
+    };
+
+    const pending = records.filter(app => getOfferState(app) === "pending").length;
+    const accepted = records.filter(app => getOfferState(app) === "accepted").length;
+    const declined = records.filter(app => getOfferState(app) === "declined").length;
     const hired = allApplications.filter(app => normaliseStatus(app.status) === "Hired").length;
 
     if (offerCentrePending) offerCentrePending.textContent = pending;
@@ -2286,7 +2316,7 @@ function renderOfferTrackingTable() {
         <tr>
             <td>${escapeHtml(getCandidateDisplayName(app))}</td>
             <td>${escapeHtml(app.position || "N/A")}</td>
-            <td>${escapeHtml(app.offerResponseStatus || (normaliseStatus(app.status) === "Offer Made" ? "Offer Pending" : ""))}</td>
+            <td>${escapeHtml(app.offerResponseStatus || (normaliseStatus(app.status) === "Hired" ? "Offer Accepted" : (normaliseStatus(app.status) === "Offer Made" ? "Offer Pending" : "")))}</td>
             <td>${escapeHtml(formatDate(app.candidateStartDate || ""))}</td>
             <td>${escapeHtml(app.contractStatus || "")}</td>
             <td>${escapeHtml(app.onboardingStatus || "")}</td>
