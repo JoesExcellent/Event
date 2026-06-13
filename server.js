@@ -1788,10 +1788,14 @@ function vacancyPayload(body) {
 
 app.get("/api/admin/vacancies", requireAuth, async (req, res) => {
     try {
-        const snapshot = await db.collection("vacancies").orderBy("createdAt", "desc").get();
-        const vacancies = snapshot.docs.map(normaliseVacancyForClient);
+        const vacancySnapshot = await db.collection("vacancies").orderBy("createdAt", "desc").get();
+        const applicationSnapshot = await db.collection("applications").get();
 
-        res.json({ vacancies });
+        const vacancies = vacancySnapshot.docs.map(normaliseVacancyForClient);
+        const applications = applicationSnapshot.docs.map(normaliseApplicationForClient);
+        const vacanciesWithIntelligence = buildVacancyIntelligence(vacancies, applications);
+
+        res.json({ vacancies: vacanciesWithIntelligence });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to load vacancies." });
