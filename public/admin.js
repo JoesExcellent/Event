@@ -18,6 +18,7 @@ let allNotifications = [];
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
+let activeVacancyCandidateFilter = null;
 let selectedEmailTemplateId = null;
 
 const ATS_STATUSES = [
@@ -496,14 +497,16 @@ function getFilteredApplications() {
 
         const matchesSearch = !searchValue || searchableText.includes(searchValue);
         const matchesStatus = !statusValue || status === statusValue;
+        const matchesVacancy = !activeVacancyCandidateFilter || applicationMatchesVacancy(application, activeVacancyCandidateFilter);
 
-        return matchesSearch && matchesStatus;
+        return matchesSearch && matchesStatus && matchesVacancy;
     });
 }
 
 function applyCandidateFilters() {
     const filteredApplications = getFilteredApplications();
 
+    renderVacancyCandidateFilterBanner(filteredApplications.length);
     renderApplications(filteredApplications);
     updateStats(filteredApplications);
 
@@ -519,11 +522,40 @@ function applyCandidateFilters() {
 }
 
 function clearCandidateFilters() {
+    activeVacancyCandidateFilter = null;
     if (candidateSearchInput) candidateSearchInput.value = "";
     if (statusFilterSelect) statusFilterSelect.value = "";
 
     applyCandidateFilters();
     showToast("Candidate filters cleared.", "info");
+}
+
+function renderVacancyCandidateFilterBanner(count) {
+    const candidatesPanel = document.getElementById("tab-candidates");
+    if (!candidatesPanel) return;
+
+    let banner = document.getElementById("vacancyCandidateFilterBanner");
+
+    if (!activeVacancyCandidateFilter) {
+        if (banner) banner.remove();
+        return;
+    }
+
+    if (!banner) {
+        banner = document.createElement("div");
+        banner.id = "vacancyCandidateFilterBanner";
+        banner.className = "vacancy-filter-banner";
+        const firstCard = candidatesPanel.querySelector(".application-card");
+        firstCard?.insertBefore(banner, firstCard.firstElementChild?.nextSibling || firstCard.firstChild);
+    }
+
+    banner.innerHTML = `
+        <div>
+            <strong>Vacancy filter active:</strong> ${escapeHtml(activeVacancyCandidateFilter.title || "Selected vacancy")}
+            — showing ${count} candidate record${count === 1 ? "" : "s"}.
+        </div>
+        <button type="button" onclick="clearVacancyCandidateFilter()">Clear Vacancy Filter</button>
+    `;
 }
 
 function renderApplications(applications) {
@@ -2590,6 +2622,52 @@ function injectVacancyShellStyles() {
         .vacancy-action-group button:hover { filter: brightness(1.08); }
         .vacancy-action-group .secondary-action { background: rgba(255,255,255,0.16); }
         .vacancy-action-group .danger-action { background: #b83232; }
+
+        .vacancy-title-filter-btn {
+            background: transparent;
+            border: 0;
+            color: #ffffff;
+            padding: 0;
+            margin: 0 0 8px 0;
+            text-align: left;
+            font-size: inherit;
+            font-weight: 800;
+            text-decoration: underline;
+            text-decoration-color: rgba(255,106,0,0.8);
+            cursor: pointer;
+        }
+
+        .vacancy-intelligence-lines {
+            margin-top: 8px;
+            display: grid;
+            gap: 5px;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.84);
+        }
+
+        .vacancy-intelligence-lines strong {
+            color: #ff6a00;
+        }
+
+        .vacancy-filter-banner {
+            background: rgba(255,106,0,0.14);
+            border: 1px solid rgba(255,176,0,0.35);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin: 0 0 18px;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .vacancy-filter-banner button {
+            padding: 8px 12px;
+            margin: 0;
+            border-radius: 8px;
+        }
     `;
 
     document.head.appendChild(style);
@@ -2614,10 +2692,18 @@ function updateVacancyShellSummary(vacancies = []) {
     const published = vacancies.filter(v => String(v.status || "").toLowerCase() === "published").length;
     const draft = vacancies.filter(v => String(v.status || "").toLowerCase() === "draft").length;
     const closed = vacancies.filter(v => String(v.status || "").toLowerCase() === "closed").length;
+    const linkedApplications = vacancies.reduce((sum, vacancy) => {
+        return sum + Number(getVacancyIntelligence(vacancy).applicationsReceived || 0);
+    }, 0);
+    const hired = vacancies.reduce((sum, vacancy) => {
+        return sum + Number(getVacancyIntelligence(vacancy).hired || 0);
+    }, 0);
 
     summary.innerHTML = `
         <div class="vacancy-shell-card"><span>Total vacancies</span><strong>${total}</strong></div>
         <div class="vacancy-shell-card"><span>Published</span><strong>${published}</strong></div>
+        <div class="vacancy-shell-card"><span>Applications linked</span><strong>${linkedApplications}</strong></div>
+        <div class="vacancy-shell-card"><span>Hires from vacancies</span><strong>${hired}</strong></div>
         <div class="vacancy-shell-card"><span>Draft</span><strong>${draft}</strong></div>
         <div class="vacancy-shell-card"><span>Closed</span><strong>${closed}</strong></div>
     `;
@@ -2686,6 +2772,88 @@ function salaryText(vacancy) {
     return vacancy.salaryMin || vacancy.salaryMax || "N/A";
 }
 
+function getVacancyIntelligence(vacancy) {
+    const matchedApplications = (allApplications || []).filter(application => applicationMatchesVacancy(application, {
+        id: vacancy?.id,
+        title: vacancy?.title
+    }));
+
+    const serverIntelligence = vacancy?.intelligence || {};
+
+    const intelligence = {
+        applicationsReceived: matchedApplications.length || Number(serverIntelligence.applicationsReceived || 0),
+        shortlisted: matchedApplications.filter(app => app.shortlisted === true || normaliseStatus(app.status) === "Shortlisted").length || Number(serverIntelligence.shortlisted || 0),
+        interviewInvited: matchedApplications.filter(app => {
+            const status = normaliseStatus(app.status);
+            return status === "Interview Invited" || status === "Interview Completed" || status === "To Be Interviewed";
+        }).length || Number(serverIntelligence.interviewInvited || 0),
+        offerMade: matchedApplications.filter(app => normaliseStatus(app.status) === "Offer Made" || app.offerSent === true).length || Number(serverIntelligence.offerMade || 0),
+        hired: matchedApplications.filter(app => normaliseStatus(app.status) === "Hired").length || Number(serverIntelligence.hired || 0),
+        rejected: matchedApplications.filter(app => normaliseStatus(app.status) === "Rejected").length || Number(serverIntelligence.rejected || 0)
+    };
+
+    intelligence.conversionRate = intelligence.applicationsReceived
+        ? Number(((intelligence.hired / intelligence.applicationsReceived) * 100).toFixed(1))
+        : Number(serverIntelligence.conversionRate || 0);
+
+    return intelligence;
+}
+
+function applicationMatchesVacancy(application, vacancyFilter) {
+    if (!application || !vacancyFilter) return true;
+
+    if (vacancyFilter.id && application.vacancyId && String(application.vacancyId) === String(vacancyFilter.id)) {
+        return true;
+    }
+
+    const applicationPosition = String(application.position || application.vacancyTitle || "")
+        .trim()
+        .toLowerCase();
+    const vacancyTitle = String(vacancyFilter.title || "")
+        .trim()
+        .toLowerCase();
+
+    return Boolean(applicationPosition && vacancyTitle && applicationPosition === vacancyTitle);
+}
+
+function switchAdminTab(tabName) {
+    document.querySelectorAll(".dashboard-tab-btn").forEach(button => {
+        button.classList.toggle("active", button.dataset.adminTab === tabName);
+    });
+
+    document.querySelectorAll(".dashboard-tab-content").forEach(panel => {
+        panel.classList.toggle("active", panel.id === `tab-${tabName}`);
+    });
+}
+
+function filterCandidatesByVacancy(id) {
+    const vacancy = allVacancies.find(item => String(item.id) === String(id));
+
+    if (!vacancy) {
+        showToast("Vacancy could not be found for candidate filtering.", "error");
+        return;
+    }
+
+    activeVacancyCandidateFilter = {
+        id: vacancy.id,
+        title: vacancy.title || ""
+    };
+
+    if (candidateSearchInput) candidateSearchInput.value = vacancy.title || "";
+    if (statusFilterSelect) statusFilterSelect.value = "";
+
+    switchAdminTab("candidates");
+    applyCandidateFilters();
+    showToast(`Showing candidates for ${vacancy.title || "selected vacancy"}.`, "info");
+}
+
+function clearVacancyCandidateFilter() {
+    activeVacancyCandidateFilter = null;
+    if (candidateSearchInput) candidateSearchInput.value = "";
+    applyCandidateFilters();
+    showToast("Vacancy candidate filter cleared.", "info");
+}
+
 async function loadVacancies() {
     try {
         const response = await fetch(`${API_BASE}/api/admin/vacancies`, {
@@ -2735,9 +2903,21 @@ function renderVacancies(vacancies) {
     vacancies.forEach(vacancy => {
         const tr = document.createElement("tr");
         const id = escapeQuotes(vacancy.id);
+        const intelligence = getVacancyIntelligence(vacancy);
+        const applicationsReceived = Number(intelligence.applicationsReceived || 0);
+        const conversionRate = Number(intelligence.conversionRate || 0);
 
         tr.innerHTML = `
-            <td><strong>${escapeHtml(vacancy.title || "Untitled Vacancy")}</strong></td>
+            <td>
+                <button type="button" class="vacancy-title-filter-btn" onclick="filterCandidatesByVacancy('${id}')">
+                    ${escapeHtml(vacancy.title || "Untitled Vacancy")}
+                </button>
+                <div class="vacancy-intelligence-lines">
+                    <span><strong>${applicationsReceived}</strong> application${applicationsReceived === 1 ? "" : "s"} received</span>
+                    <span><strong>${Number(intelligence.shortlisted || 0)}</strong> shortlisted · <strong>${Number(intelligence.interviewInvited || 0)}</strong> interview · <strong>${Number(intelligence.offerMade || 0)}</strong> offer</span>
+                    <span><strong>${Number(intelligence.hired || 0)}</strong> hired · <strong>${Number(intelligence.rejected || 0)}</strong> rejected · <strong>${conversionRate}%</strong> hire conversion</span>
+                </div>
+            </td>
             <td>${escapeHtml(vacancy.category || "General")}</td>
             <td>${escapeHtml(vacancy.location || "")}</td>
             <td>${escapeHtml(salaryText(vacancy))}</td>
@@ -3359,6 +3539,8 @@ window.editVacancy = editVacancy;
 window.updateVacancy = updateVacancy;
 window.setVacancyStatus = setVacancyStatus;
 window.deleteVacancy = deleteVacancy;
+window.filterCandidatesByVacancy = filterCandidatesByVacancy;
+window.clearVacancyCandidateFilter = clearVacancyCandidateFilter;
 window.editEmailTemplate = editEmailTemplate;
 window.previewEmailTemplate = previewEmailTemplate;
 window.saveEmailTemplate = saveEmailTemplate;
