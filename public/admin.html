@@ -674,6 +674,7 @@
             <button type="button" class="dashboard-tab-btn" data-admin-tab="vacancies">Vacancies</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="interviews">Interviews</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="offer-hiring">Offer & Hiring</button>
+            <button type="button" class="dashboard-tab-btn" data-admin-tab="employment-documents">Employment Documents</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="communications">Communications</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="onboarding">Onboarding</button>
             <button type="button" class="dashboard-tab-btn" data-admin-tab="documents">Portal Documents</button>
@@ -1390,6 +1391,189 @@ Joe's Excellent Events & Management</textarea>
         </section>
 
 
+        </div>
+
+
+        <div id="tab-employment-documents" class="dashboard-tab-content">
+<section class="ats-panel">
+    <h2>Employment Documents Centre</h2>
+    <p>Prepare employment documents for hired candidates. This visual shell creates the secure structure for contracts, welcome packs, handbooks, induction packs and company policies before Firestore document records are connected in the next phase.</p>
+
+    <div class="vacancy-management-note">
+        <p>
+            Phase 6E.9A is a visual shell only. Uploads, assignments, downloads and Firestore document records will be connected in Phase 6E.9B and later phases.
+        </p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span>1</span>
+            <h3>Employment Contract</h3>
+            <p id="documentContractStatus">N/A</p>
+        </div>
+
+        <div class="stat-card">
+            <span>2</span>
+            <h3>Welcome Pack</h3>
+            <p id="documentWelcomePackStatus">N/A</p>
+        </div>
+
+        <div class="stat-card">
+            <span>3</span>
+            <h3>Handbook</h3>
+            <p id="documentHandbookStatus">N/A</p>
+        </div>
+
+        <div class="stat-card">
+            <span>4</span>
+            <h3>Policies</h3>
+            <p id="documentPoliciesStatus">N/A</p>
+        </div>
+    </div>
+
+    <section class="ats-panel">
+        <h2>Document Library</h2>
+        <p>These document types will be available for secure upload and candidate assignment when the backend is connected.</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Document Type</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th>Next Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Employment Contract</td>
+                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
+                        <td>N/A</td>
+                        <td>Firestore connection in Phase 6E.9B</td>
+                    </tr>
+                    <tr>
+                        <td>Welcome Pack</td>
+                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
+                        <td>N/A</td>
+                        <td>Firestore connection in Phase 6E.9B</td>
+                    </tr>
+                    <tr>
+                        <td>Employee Handbook</td>
+                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
+                        <td>N/A</td>
+                        <td>Firestore connection in Phase 6E.9B</td>
+                    </tr>
+                    <tr>
+                        <td>Induction Pack</td>
+                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
+                        <td>N/A</td>
+                        <td>Firestore connection in Phase 6E.9B</td>
+                    </tr>
+                    <tr>
+                        <td>Company Policies</td>
+                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
+                        <td>N/A</td>
+                        <td>Firestore connection in Phase 6E.9B</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="ats-panel">
+        <h2>Candidate Document Assignment</h2>
+        <p>Select the documents that will later be assigned to a hired candidate. These controls are intentionally disabled until the Firestore assignment layer is connected.</p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="employmentDocumentCandidateName">Candidate Name</label>
+                <input type="text" id="employmentDocumentCandidateName" placeholder="Selected hired candidate" disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="employmentDocumentCandidatePosition">Position</label>
+                <input type="text" id="employmentDocumentCandidatePosition" placeholder="Candidate position" disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="employmentContractAvailable">Employment Contract</label>
+                <select id="employmentContractAvailable" disabled>
+                    <option>Not Available</option>
+                    <option>Available</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="welcomePackAvailable">Welcome Pack</label>
+                <select id="welcomePackAvailable" disabled>
+                    <option>Not Available</option>
+                    <option>Available</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="handbookAvailable">Employee Handbook</label>
+                <select id="handbookAvailable" disabled>
+                    <option>Not Available</option>
+                    <option>Available</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="inductionPackAvailable">Induction Pack</label>
+                <select id="inductionPackAvailable" disabled>
+                    <option>Not Available</option>
+                    <option>Available</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="companyPoliciesAvailable">Company Policies</label>
+                <select id="companyPoliciesAvailable" disabled>
+                    <option>Not Available</option>
+                    <option>Available</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="employmentDocumentsLastUpdated">Last Updated</label>
+                <input type="text" id="employmentDocumentsLastUpdated" value="N/A" disabled>
+            </div>
+        </div>
+
+        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Assign Documents — Phase 6E.9B</button>
+        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Clear Assignment — Phase 6E.9B</button>
+    </section>
+
+    <section class="ats-panel">
+        <h2>Document Tracking Table</h2>
+        <p>Candidate document readiness will appear here after Firestore employment document records are connected.</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Position</th>
+                        <th>Contract</th>
+                        <th>Welcome Pack</th>
+                        <th>Handbook</th>
+                        <th>Induction Pack</th>
+                        <th>Policies</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="employmentDocumentsTableBody">
+                    <tr>
+                        <td colspan="9">Employment document records will appear here after Phase 6E.9B is connected.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
         </div>
 
 
