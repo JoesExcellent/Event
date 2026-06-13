@@ -1721,25 +1721,44 @@ async function handleHireEmail(req, res) {
 
         const { ref, application } = found;
 
+        const hireTimestamp = nowIso();
+        const hireDate = new Date().toISOString().slice(0, 10);
+        const existingEmploymentNotes = clean(application.employmentNotes || "");
+        const hiredNote = "Candidate marked as hired. Employment confirmation email sent.";
+        const employmentNotes = existingEmploymentNotes
+            ? `${existingEmploymentNotes}\n${hiredNote}`
+            : hiredNote;
+
         const updatedApplication = {
             ...application,
-            status: "Hired"
+            status: "Hired",
+            offerResponseStatus: "Offer Accepted",
+            employmentStatus: "Hired",
+            employmentConfirmationStatus: "Confirmation Sent",
+            hireDate
         };
 
         const emailResult = await sendTemplateEmail("hiredEmail", updatedApplication);
 
         await ref.update({
             status: "Hired",
-            hiredAt: nowIso(),
+            hiredAt: hireTimestamp,
+            hireDate,
             hiredEmailSent: true,
-            hiredEmailSentAt: nowIso(),
+            hiredEmailSentAt: hireTimestamp,
             hiredEmailId: emailResult.id || "",
             offerResponseStatus: "Offer Accepted",
-            contractStatus: application.contractStatus || "Completed",
-            onboardingStatus: application.onboardingStatus || "In Progress",
+            contractStatus: application.contractStatus || "Sent",
+            onboardingStatus: "Completed",
+            readyToStart: "Yes",
+            contractAcceptanceStatus: application.contractAcceptanceStatus === "Accepted" ? "Accepted" : "Sent",
+            eSignatureStatus: application.eSignatureStatus === "Signed" ? "Signed" : "Sent",
+            employmentStatus: "Hired",
+            employmentConfirmationStatus: "Confirmation Sent",
+            employmentNotes,
             lastCommunicationAction: "Employment Confirmation Email Sent",
-            lastCommunicationAt: nowIso(),
-            updatedAt: nowIso()
+            lastCommunicationAt: hireTimestamp,
+            updatedAt: hireTimestamp
         });
 
         await logCommunication({
@@ -2373,6 +2392,10 @@ function cleanCandidateApplication(application) {
         selfServiceStatus: application.selfServiceStatus || "Not Enabled",
         portalAccessDate: application.portalAccessDate || "",
         portalAccessNotes: application.portalAccessNotes || "",
+        employmentStatus: application.employmentStatus || (application.status === "Hired" ? "Hired" : "Pending"),
+        employmentConfirmationStatus: application.employmentConfirmationStatus || (application.hiredEmailSent ? "Confirmation Sent" : "Awaiting Confirmation"),
+        hireDate: application.hireDate || application.hiredAt || "",
+        employmentNotes: application.employmentNotes || "",
         lastCommunicationAction: application.lastCommunicationAction || "No recent communication recorded.",
         lastCommunicationAt: application.lastCommunicationAt || ""
     };
