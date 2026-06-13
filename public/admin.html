@@ -1485,67 +1485,65 @@ Joe's Excellent Events & Management</textarea>
 
     <section class="ats-panel">
         <h2>Candidate Document Assignment</h2>
-        <p>Candidate assignment remains protected until Phase 6E.9C-R2, after the document library has been verified.</p>
+        <p>Assign uploaded employment document records to hired candidates. This makes documents appear as Available in the Candidate Portal. Secure downloads will be connected in the next phase.</p>
 
         <div class="form-grid">
             <div class="form-group">
-                <label for="employmentDocumentCandidateName">Candidate Name</label>
-                <input type="text" id="employmentDocumentCandidateName" placeholder="Selected hired candidate" disabled>
+                <label for="employmentDocumentCandidateId">Candidate</label>
+                <select id="employmentDocumentCandidateId">
+                    <option value="">Select hired candidate</option>
+                </select>
             </div>
 
             <div class="form-group">
                 <label for="employmentDocumentCandidatePosition">Position</label>
-                <input type="text" id="employmentDocumentCandidatePosition" placeholder="Candidate position" disabled>
+                <input type="text" id="employmentDocumentCandidatePosition" placeholder="Candidate position" readonly>
             </div>
 
             <div class="form-group">
-                <label for="employmentContractAvailable">Employment Contract</label>
-                <select id="employmentContractAvailable" disabled>
-                    <option>Not Available</option>
-                    <option>Available</option>
+                <label for="employmentContractDocumentId">Employment Contract</label>
+                <select id="employmentContractDocumentId">
+                    <option value="">Not Available</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="welcomePackAvailable">Welcome Pack</label>
-                <select id="welcomePackAvailable" disabled>
-                    <option>Not Available</option>
-                    <option>Available</option>
+                <label for="welcomePackDocumentId">Welcome Pack</label>
+                <select id="welcomePackDocumentId">
+                    <option value="">Not Available</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="handbookAvailable">Employee Handbook</label>
-                <select id="handbookAvailable" disabled>
-                    <option>Not Available</option>
-                    <option>Available</option>
+                <label for="handbookDocumentId">Employee Handbook</label>
+                <select id="handbookDocumentId">
+                    <option value="">Not Available</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="inductionPackAvailable">Induction Pack</label>
-                <select id="inductionPackAvailable" disabled>
-                    <option>Not Available</option>
-                    <option>Available</option>
+                <label for="inductionPackDocumentId">Induction Pack</label>
+                <select id="inductionPackDocumentId">
+                    <option value="">Not Available</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="companyPoliciesAvailable">Company Policies</label>
-                <select id="companyPoliciesAvailable" disabled>
-                    <option>Not Available</option>
-                    <option>Available</option>
+                <label for="companyPoliciesDocumentId">Company Policies</label>
+                <select id="companyPoliciesDocumentId">
+                    <option value="">Not Available</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="employmentDocumentsLastUpdated">Last Updated</label>
-                <input type="text" id="employmentDocumentsLastUpdated" value="N/A" disabled>
+                <input type="text" id="employmentDocumentsLastUpdated" value="N/A" readonly>
             </div>
         </div>
 
-        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Assign Documents — Phase 6E.9C-R2</button>
-        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Clear Assignment — Phase 6E.9C-R2</button>
+        <button type="button" id="assignEmploymentDocumentsBtn">Assign Documents</button>
+        <button type="button" id="clearEmploymentDocumentsAssignmentBtn">Clear Assignment</button>
+        <div id="employmentDocumentAssignmentMessage"></div>
     </section>
 
     <section class="ats-panel">
@@ -2046,7 +2044,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=96"></script>
+<script src="admin.js?v=97"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

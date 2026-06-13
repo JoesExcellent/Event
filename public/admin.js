@@ -16,6 +16,7 @@ let allReminderQueue = [];
 let allAuditLogs = [];
 let allNotifications = [];
 let allEmploymentDocuments = [];
+let allEmploymentDocumentAssignments = [];
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
@@ -108,6 +109,16 @@ const documentContractStatus = document.getElementById("documentContractStatus")
 const documentWelcomePackStatus = document.getElementById("documentWelcomePackStatus");
 const documentHandbookStatus = document.getElementById("documentHandbookStatus");
 const documentPoliciesStatus = document.getElementById("documentPoliciesStatus");
+const employmentDocumentCandidateIdInput = document.getElementById("employmentDocumentCandidateId");
+const employmentDocumentCandidatePositionInput = document.getElementById("employmentDocumentCandidatePosition");
+const employmentContractDocumentIdInput = document.getElementById("employmentContractDocumentId");
+const welcomePackDocumentIdInput = document.getElementById("welcomePackDocumentId");
+const handbookDocumentIdInput = document.getElementById("handbookDocumentId");
+const inductionPackDocumentIdInput = document.getElementById("inductionPackDocumentId");
+const companyPoliciesDocumentIdInput = document.getElementById("companyPoliciesDocumentId");
+const employmentDocumentsLastUpdatedInput = document.getElementById("employmentDocumentsLastUpdated");
+const employmentDocumentsTableBody = document.getElementById("employmentDocumentsTableBody");
+const employmentDocumentAssignmentMessage = document.getElementById("employmentDocumentAssignmentMessage");
 
 
 const totalApplications = document.getElementById("totalApplications");
@@ -416,6 +427,7 @@ async function refreshDashboard(showMessage = false) {
     await loadAuditLogs();
     await loadNotifications();
     await loadEmploymentDocuments();
+    await loadEmploymentDocumentAssignments();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -428,6 +440,8 @@ async function refreshDashboard(showMessage = false) {
     renderAuditTrail();
     renderNotifications();
     renderEmploymentDocuments();
+    renderEmploymentDocumentAssignmentControls();
+    renderEmploymentDocumentAssignments();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -3860,6 +3874,263 @@ async function deleteEmploymentDocument(id) {
     }
 }
 
+
+
+function getEmploymentDocumentTypeOptions(type, selectedId = "") {
+    const filteredDocuments = allEmploymentDocuments.filter(documentRecord => {
+        return documentRecord.active !== false && String(documentRecord.documentType || "").toLowerCase() === String(type || "").toLowerCase();
+    });
+
+    const options = [`<option value="">Not Available</option>`];
+
+    filteredDocuments.forEach(documentRecord => {
+        const selected = String(documentRecord.id || "") === String(selectedId || "") ? " selected" : "";
+        options.push(`<option value="${escapeHtml(documentRecord.id)}"${selected}>${escapeHtml(documentRecord.documentName || "Untitled Document")}</option>`);
+    });
+
+    return options.join("");
+}
+
+function getEmploymentDocumentNameById(id) {
+    const documentRecord = allEmploymentDocuments.find(item => String(item.id || "") === String(id || ""));
+    return documentRecord ? (documentRecord.documentName || "Available") : "Available";
+}
+
+function getEmploymentDocumentStatusBadge(documentId) {
+    if (!documentId) {
+        return `<span class="ats-status-badge status-archived">Not Available</span>`;
+    }
+
+    return `<span class="ats-status-badge status-hired">Available</span><br><small>${escapeHtml(getEmploymentDocumentNameById(documentId))}</small>`;
+}
+
+function getAssignableCandidates() {
+    return allApplications.filter(candidate => {
+        const status = String(candidate.status || "").toLowerCase();
+        const offerResponse = String(candidate.offerResponseStatus || candidate.offerResponse || "").toLowerCase();
+        const employmentStatus = String(candidate.employmentStatus || "").toLowerCase();
+
+        return status === "hired" || employmentStatus === "hired" || status === "offer accepted" || offerResponse === "offer accepted";
+    });
+}
+
+function renderEmploymentDocumentCandidateOptions(selectedId = "") {
+    if (!employmentDocumentCandidateIdInput) return;
+
+    const candidates = getAssignableCandidates();
+    const options = [`<option value="">Select hired candidate</option>`];
+
+    candidates.forEach(candidate => {
+        const selected = String(candidate.id || "") === String(selectedId || "") ? " selected" : "";
+        options.push(`<option value="${escapeHtml(candidate.id)}"${selected}>${escapeHtml(getCandidateDisplayName(candidate))} — ${escapeHtml(candidate.position || "No position recorded")}</option>`);
+    });
+
+    employmentDocumentCandidateIdInput.innerHTML = options.join("");
+}
+
+function renderEmploymentDocumentSelectors(assignment = {}) {
+    if (employmentContractDocumentIdInput) employmentContractDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employment Contract", assignment.employmentContractDocumentId);
+    if (welcomePackDocumentIdInput) welcomePackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Welcome Pack", assignment.welcomePackDocumentId);
+    if (handbookDocumentIdInput) handbookDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employee Handbook", assignment.handbookDocumentId);
+    if (inductionPackDocumentIdInput) inductionPackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Induction Pack", assignment.inductionPackDocumentId);
+    if (companyPoliciesDocumentIdInput) companyPoliciesDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Company Policies", assignment.companyPoliciesDocumentId);
+}
+
+function renderEmploymentDocumentAssignmentControls() {
+    const selectedId = employmentDocumentCandidateIdInput ? employmentDocumentCandidateIdInput.value : "";
+    renderEmploymentDocumentCandidateOptions(selectedId);
+    renderEmploymentDocumentSelectors(getEmploymentDocumentAssignmentForCandidate(selectedId) || {});
+    updateEmploymentDocumentAssignmentFormFromCandidate(selectedId);
+}
+
+function getEmploymentDocumentAssignmentForCandidate(candidateId) {
+    return allEmploymentDocumentAssignments.find(assignment => String(assignment.candidateId || assignment.id || "") === String(candidateId || ""));
+}
+
+function updateEmploymentDocumentAssignmentFormFromCandidate(candidateId) {
+    const candidate = allApplications.find(item => String(item.id || "") === String(candidateId || ""));
+    const assignment = getEmploymentDocumentAssignmentForCandidate(candidateId) || {};
+
+    if (employmentDocumentCandidatePositionInput) {
+        employmentDocumentCandidatePositionInput.value = candidate ? (candidate.position || "") : "";
+    }
+
+    if (employmentDocumentsLastUpdatedInput) {
+        employmentDocumentsLastUpdatedInput.value = formatEmploymentDocumentDate(assignment.updatedAt || assignment.assignedAt || "");
+    }
+
+    if (employmentContractDocumentIdInput) employmentContractDocumentIdInput.value = assignment.employmentContractDocumentId || "";
+    if (welcomePackDocumentIdInput) welcomePackDocumentIdInput.value = assignment.welcomePackDocumentId || "";
+    if (handbookDocumentIdInput) handbookDocumentIdInput.value = assignment.handbookDocumentId || "";
+    if (inductionPackDocumentIdInput) inductionPackDocumentIdInput.value = assignment.inductionPackDocumentId || "";
+    if (companyPoliciesDocumentIdInput) companyPoliciesDocumentIdInput.value = assignment.companyPoliciesDocumentId || "";
+}
+
+async function loadEmploymentDocumentAssignments() {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-document-assignments`, {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load employment document assignments.");
+        }
+
+        allEmploymentDocumentAssignments = Array.isArray(data.assignments) ? data.assignments : [];
+    } catch (error) {
+        console.error(error);
+        allEmploymentDocumentAssignments = [];
+        if (employmentDocumentAssignmentMessage) {
+            employmentDocumentAssignmentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to load employment document assignments.")}</p>`;
+        }
+    }
+}
+
+function renderEmploymentDocumentAssignments() {
+    if (!employmentDocumentsTableBody) return;
+
+    if (!allEmploymentDocumentAssignments.length) {
+        employmentDocumentsTableBody.innerHTML = `<tr><td colspan="9">No candidate document assignments have been saved yet.</td></tr>`;
+        return;
+    }
+
+    employmentDocumentsTableBody.innerHTML = allEmploymentDocumentAssignments.map(assignment => `
+        <tr>
+            <td>${escapeHtml(assignment.candidateName || "Candidate")}</td>
+            <td>${escapeHtml(assignment.position || "")}</td>
+            <td>${getEmploymentDocumentStatusBadge(assignment.employmentContractDocumentId)}</td>
+            <td>${getEmploymentDocumentStatusBadge(assignment.welcomePackDocumentId)}</td>
+            <td>${getEmploymentDocumentStatusBadge(assignment.handbookDocumentId)}</td>
+            <td>${getEmploymentDocumentStatusBadge(assignment.inductionPackDocumentId)}</td>
+            <td>${getEmploymentDocumentStatusBadge(assignment.companyPoliciesDocumentId)}</td>
+            <td>${escapeHtml(formatEmploymentDocumentDate(assignment.updatedAt || assignment.assignedAt))}</td>
+            <td>
+                <button type="button" onclick="selectEmploymentDocumentAssignment('${escapeHtml(assignment.candidateId || assignment.id)}')">Select</button>
+                <button type="button" onclick="clearEmploymentDocumentAssignment('${escapeHtml(assignment.candidateId || assignment.id)}')">Clear</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function selectEmploymentDocumentAssignment(candidateId) {
+    if (employmentDocumentCandidateIdInput) {
+        employmentDocumentCandidateIdInput.value = candidateId || "";
+    }
+
+    updateEmploymentDocumentAssignmentFormFromCandidate(candidateId);
+    showToast("Employment document assignment selected.", "info");
+}
+
+async function saveEmploymentDocumentAssignment() {
+    const candidateId = employmentDocumentCandidateIdInput ? employmentDocumentCandidateIdInput.value.trim() : "";
+
+    if (!candidateId) {
+        showToast("Please select a hired candidate first.", "error");
+        return;
+    }
+
+    const candidate = allApplications.find(item => String(item.id || "") === String(candidateId));
+
+    if (!candidate) {
+        showToast("Selected candidate could not be found in the loaded applications.", "error");
+        return;
+    }
+
+    const payload = {
+        candidateId,
+        candidateName: getCandidateDisplayName(candidate),
+        candidateEmail: candidate.email || "",
+        position: candidate.position || "",
+        employmentContractDocumentId: employmentContractDocumentIdInput ? employmentContractDocumentIdInput.value : "",
+        welcomePackDocumentId: welcomePackDocumentIdInput ? welcomePackDocumentIdInput.value : "",
+        handbookDocumentId: handbookDocumentIdInput ? handbookDocumentIdInput.value : "",
+        inductionPackDocumentId: inductionPackDocumentIdInput ? inductionPackDocumentIdInput.value : "",
+        companyPoliciesDocumentId: companyPoliciesDocumentIdInput ? companyPoliciesDocumentIdInput.value : ""
+    };
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-document-assignments`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to assign employment documents.");
+        }
+
+        if (employmentDocumentAssignmentMessage) {
+            employmentDocumentAssignmentMessage.innerHTML = `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment documents assigned successfully.")}</p>`;
+        }
+
+        showToast(data.message || "Employment documents assigned successfully.", "success");
+        await loadApplications();
+        await loadEmploymentDocumentAssignments();
+        renderEmploymentDocumentAssignmentControls();
+        renderEmploymentDocumentAssignments();
+        await loadAuditLogs();
+        renderAuditTrail();
+        await loadNotifications();
+        renderNotifications();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to assign employment documents.", "error");
+        if (employmentDocumentAssignmentMessage) {
+            employmentDocumentAssignmentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to assign employment documents.")}</p>`;
+        }
+    }
+}
+
+async function clearEmploymentDocumentAssignment(candidateIdOverride = "") {
+    const candidateId = candidateIdOverride || (employmentDocumentCandidateIdInput ? employmentDocumentCandidateIdInput.value.trim() : "");
+
+    if (!candidateId) {
+        showToast("Please select an assignment to clear.", "error");
+        return;
+    }
+
+    if (!confirm("Clear this candidate's employment document assignment? Uploaded document records will not be deleted.")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-document-assignments/${encodeURIComponent(candidateId)}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to clear employment document assignment.");
+        }
+
+        showToast(data.message || "Employment document assignment cleared successfully.", "success");
+        await loadApplications();
+        await loadEmploymentDocumentAssignments();
+        renderEmploymentDocumentAssignmentControls();
+        renderEmploymentDocumentAssignments();
+        await loadAuditLogs();
+        renderAuditTrail();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to clear employment document assignment.", "error");
+    }
+}
+
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
 document.getElementById("send7DayReminderBtn")?.addEventListener("click", function () {
     sendReminder("7day", this);
@@ -3888,6 +4159,13 @@ document.getElementById("restoreTemplateBtn")?.addEventListener("click", functio
 document.getElementById("clearTemplateEditorBtn")?.addEventListener("click", clearEmailTemplateEditor);
 document.getElementById("uploadEmploymentDocumentBtn")?.addEventListener("click", uploadEmploymentDocument);
 document.getElementById("clearEmploymentDocumentBtn")?.addEventListener("click", clearEmploymentDocumentForm);
+document.getElementById("assignEmploymentDocumentsBtn")?.addEventListener("click", saveEmploymentDocumentAssignment);
+document.getElementById("clearEmploymentDocumentsAssignmentBtn")?.addEventListener("click", function () {
+    clearEmploymentDocumentAssignment();
+});
+employmentDocumentCandidateIdInput?.addEventListener("change", function () {
+    updateEmploymentDocumentAssignmentFormFromCandidate(this.value);
+});
 document.getElementById("saveOfferTrackingBtn")?.addEventListener("click", saveOfferTracking);
 document.getElementById("markOfferAcceptedBtn")?.addEventListener("click", function () {
     setOfferWorkflowStatus("Offer Accepted");
@@ -3913,6 +4191,8 @@ manualRefreshBtn?.addEventListener("click", () => refreshDashboard(true));
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
 window.deleteEmploymentDocument = deleteEmploymentDocument;
+window.selectEmploymentDocumentAssignment = selectEmploymentDocumentAssignment;
+window.clearEmploymentDocumentAssignment = clearEmploymentDocumentAssignment;
 window.selectCandidate = selectCandidate;
 window.openCandidateModal = openCandidateModal;
 window.closeCandidateModal = closeCandidateModal;

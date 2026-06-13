@@ -274,6 +274,26 @@ function renderCandidate(candidate) {
     setText("hireDate", formatDate(candidate.hireDate || candidate.hiredAt));
     setText("employmentNotes", candidate.employmentNotes || "Employment notes will appear here after hiring confirmation.");
 
+
+    const employmentDocumentAssignment = candidate.employmentDocumentAssignment || {};
+    const hasEmploymentContract = Boolean(employmentDocumentAssignment.employmentContractDocumentId || employmentDocumentAssignment.employmentContract);
+    const hasWelcomePack = Boolean(employmentDocumentAssignment.welcomePackDocumentId || employmentDocumentAssignment.welcomePack);
+    const hasHandbook = Boolean(employmentDocumentAssignment.handbookDocumentId || employmentDocumentAssignment.employeeHandbook || employmentDocumentAssignment.handbook);
+    const hasInductionPack = Boolean(employmentDocumentAssignment.inductionPackDocumentId || employmentDocumentAssignment.inductionPack);
+    const hasCompanyPolicies = Boolean(employmentDocumentAssignment.companyPoliciesDocumentId || employmentDocumentAssignment.companyPolicies);
+
+    setStatus("candidateEmploymentContractStatus", hasEmploymentContract ? "Available" : "Not Available");
+    setStatus("candidateWelcomePackStatus", hasWelcomePack ? "Available" : "Not Available");
+    setStatus("candidateHandbookStatus", hasHandbook ? "Available" : "Not Available");
+    setStatus("candidateInductionPackStatus", hasInductionPack ? "Available" : "Not Available");
+    setStatus("candidatePoliciesStatus", hasCompanyPolicies ? "Available" : "Not Available");
+
+    const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasInductionPack, hasCompanyPolicies].filter(Boolean).length;
+    const documentNote = availableDocumentCount
+        ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. Secure downloads will be added in the next phase.`
+        : "Employment documents have not yet been assigned by the recruitment team.";
+    setText("candidateEmploymentDocumentNote", documentNote);
+
     setText("lastCommunicationAction", candidate.lastCommunicationAction || "No recent communication recorded.");
     setText("lastCommunicationAt", formatDate(candidate.lastCommunicationAt));
 }
