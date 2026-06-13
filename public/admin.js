@@ -2520,6 +2520,115 @@ function exportApplicationsCSV() {
 }
 
 
+function injectVacancyShellStyles() {
+    if (document.getElementById("vacancyShellStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "vacancyShellStyles";
+    style.textContent = `
+        .vacancy-shell-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+
+        .vacancy-shell-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,106,0,0.35);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        }
+
+        .vacancy-shell-card span {
+            display: block;
+            font-size: 0.82rem;
+            color: rgba(255,255,255,0.78);
+            margin-bottom: 6px;
+        }
+
+        .vacancy-shell-card strong {
+            display: block;
+            font-size: 1.6rem;
+            color: #ff6a00;
+            line-height: 1.1;
+        }
+
+        .vacancy-status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .vacancy-status-draft { background: rgba(255,255,255,0.12); color: #ffffff; }
+        .vacancy-status-published { background: rgba(76,217,100,0.18); color: #78f09a; border-color: rgba(76,217,100,0.4); }
+        .vacancy-status-closed { background: rgba(255,107,107,0.18); color: #ff9b9b; border-color: rgba(255,107,107,0.4); }
+
+        .vacancy-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .vacancy-action-group button {
+            border: 0;
+            border-radius: 10px;
+            padding: 8px 10px;
+            cursor: pointer;
+            font-weight: 700;
+            background: #ff6a00;
+            color: #ffffff;
+        }
+
+        .vacancy-action-group button:hover { filter: brightness(1.08); }
+        .vacancy-action-group .secondary-action { background: rgba(255,255,255,0.16); }
+        .vacancy-action-group .danger-action { background: #b83232; }
+    `;
+
+    document.head.appendChild(style);
+}
+
+function updateVacancyShellSummary(vacancies = []) {
+    injectVacancyShellStyles();
+
+    const table = vacanciesTableBody?.closest("table");
+    const host = document.getElementById("vacancyShellSummary") || table?.parentElement;
+    if (!host) return;
+
+    let summary = document.getElementById("vacancyShellSummary");
+    if (!summary) {
+        summary = document.createElement("div");
+        summary.id = "vacancyShellSummary";
+        summary.className = "vacancy-shell-summary";
+        table?.parentElement?.insertBefore(summary, table);
+    }
+
+    const total = vacancies.length;
+    const published = vacancies.filter(v => String(v.status || "").toLowerCase() === "published").length;
+    const draft = vacancies.filter(v => String(v.status || "").toLowerCase() === "draft").length;
+    const closed = vacancies.filter(v => String(v.status || "").toLowerCase() === "closed").length;
+
+    summary.innerHTML = `
+        <div class="vacancy-shell-card"><span>Total vacancies</span><strong>${total}</strong></div>
+        <div class="vacancy-shell-card"><span>Published</span><strong>${published}</strong></div>
+        <div class="vacancy-shell-card"><span>Draft</span><strong>${draft}</strong></div>
+        <div class="vacancy-shell-card"><span>Closed</span><strong>${closed}</strong></div>
+    `;
+}
+
+function vacancyStatusBadge(status) {
+    const cleanStatus = status || "Draft";
+    const className = `vacancy-status-${String(cleanStatus).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    return `<span class="vacancy-status-badge ${className}">${escapeHtml(cleanStatus)}</span>`;
+}
+
 function getVacancyFormData() {
     return {
         title: document.getElementById("vacancyTitle")?.value.trim() || "",
@@ -2609,6 +2718,9 @@ async function loadVacancies() {
 function renderVacancies(vacancies) {
     if (!vacanciesTableBody) return;
 
+    injectVacancyShellStyles();
+    updateVacancyShellSummary(vacancies);
+
     if (!vacancies.length) {
         vacanciesTableBody.innerHTML = `
             <tr>
@@ -2625,18 +2737,20 @@ function renderVacancies(vacancies) {
         const id = escapeQuotes(vacancy.id);
 
         tr.innerHTML = `
-            <td>${escapeHtml(vacancy.title || "")}</td>
+            <td><strong>${escapeHtml(vacancy.title || "Untitled Vacancy")}</strong></td>
             <td>${escapeHtml(vacancy.category || "General")}</td>
             <td>${escapeHtml(vacancy.location || "")}</td>
             <td>${escapeHtml(salaryText(vacancy))}</td>
-            <td>${escapeHtml(vacancy.status || "Draft")}</td>
+            <td>${vacancyStatusBadge(vacancy.status || "Draft")}</td>
             <td>${vacancy.closingDate ? formatDate(vacancy.closingDate) : "N/A"}</td>
             <td>
-                <button onclick="editVacancy('${id}')">Edit</button>
-                <button onclick="setVacancyStatus('${id}', 'Draft')">Draft</button>
-                <button onclick="setVacancyStatus('${id}', 'Published')">Publish</button>
-                <button onclick="setVacancyStatus('${id}', 'Closed')">Close</button>
-                <button onclick="deleteVacancy('${id}')">Delete</button>
+                <div class="vacancy-action-group">
+                    <button type="button" onclick="editVacancy('${id}')">Edit</button>
+                    <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Draft')">Draft</button>
+                    <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Published')">Publish</button>
+                    <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Closed')">Close</button>
+                    <button type="button" class="danger-action" onclick="deleteVacancy('${id}')">Delete</button>
+                </div>
             </td>
         `;
 
