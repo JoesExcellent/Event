@@ -1095,7 +1095,11 @@ function buildVacancyIntelligence(vacancies = [], applications = []) {
                 const status = getApplicationStatusBucket(app);
                 return status === "Interview Invited" || status === "Interview Completed" || status === "To Be Interviewed";
             }).length,
-            offerMade: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Offer Made" || app.offerSent === true).length,
+            offerMade: matchedApplications.filter(app => {
+                const status = getApplicationStatusBucket(app);
+                const response = String(app.offerResponseStatus || "");
+                return ["Offer Made", "Offer Accepted", "Offer Declined", "Hired"].includes(status) || response.includes("Offer") || app.offerSent === true;
+            }).length,
             hired: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Hired").length,
             rejected: matchedApplications.filter(app => getApplicationStatusBucket(app) === "Rejected").length
         };
@@ -1258,6 +1262,44 @@ async function listCommunicationsHandler(req, res) {
 app.get("/api/admin/communications", requireAuth, listCommunicationsHandler);
 app.get("/api/communications", requireAuth, listCommunicationsHandler);
 
+
+function applyOfferStateSynchronisation(updateData, application = {}) {
+    const nextStatus = clean(updateData.status || application.status || "");
+    const nextOfferResponse = clean(updateData.offerResponseStatus || application.offerResponseStatus || "");
+
+    if (nextStatus === "Offer Made") {
+        updateData.offerResponseStatus = nextOfferResponse && nextOfferResponse !== "Not Yet Recorded" ? nextOfferResponse : "Offer Pending";
+        if (!updateData.contractStatus && !application.contractStatus) updateData.contractStatus = "Sent";
+        if (!updateData.onboardingStatus && !application.onboardingStatus) updateData.onboardingStatus = "Not Started";
+        if (!application.offerTrackingCreatedAt && !updateData.offerTrackingCreatedAt) updateData.offerTrackingCreatedAt = nowIso();
+    }
+
+    if (nextStatus === "Offer Accepted" || nextOfferResponse === "Offer Accepted") {
+        updateData.status = nextStatus === "Hired" ? "Hired" : "Offer Accepted";
+        updateData.offerResponseStatus = "Offer Accepted";
+        if (!updateData.contractStatus && !application.contractStatus) updateData.contractStatus = "Sent";
+        if (!updateData.onboardingStatus && !application.onboardingStatus) updateData.onboardingStatus = "In Progress";
+        if (!application.offerTrackingCreatedAt && !updateData.offerTrackingCreatedAt) updateData.offerTrackingCreatedAt = nowIso();
+    }
+
+    if (nextStatus === "Offer Declined" || nextOfferResponse === "Offer Declined") {
+        updateData.status = "Offer Declined";
+        updateData.offerResponseStatus = "Offer Declined";
+        updateData.onboardingStatus = updateData.onboardingStatus || application.onboardingStatus || "Not Started";
+        if (!application.offerTrackingCreatedAt && !updateData.offerTrackingCreatedAt) updateData.offerTrackingCreatedAt = nowIso();
+    }
+
+    if (nextStatus === "Hired") {
+        updateData.status = "Hired";
+        updateData.offerResponseStatus = "Offer Accepted";
+        updateData.contractStatus = updateData.contractStatus || application.contractStatus || "Completed";
+        updateData.onboardingStatus = updateData.onboardingStatus || application.onboardingStatus || "In Progress";
+        if (!application.offerTrackingCreatedAt && !updateData.offerTrackingCreatedAt) updateData.offerTrackingCreatedAt = nowIso();
+    }
+
+    return updateData;
+}
+
 async function updateApplicationHandler(req, res) {
     try {
         const id = req.params.id;
@@ -1279,6 +1321,8 @@ async function updateApplicationHandler(req, res) {
         };
 
         delete updateData.id;
+
+        applyOfferStateSynchronisation(updateData, application);
 
         await ref.update(updateData);
 
@@ -1518,7 +1562,7 @@ async function handleOfferEmail(req, res) {
             offerSent: true,
             offerSentAt: nowIso(),
             offerEmailId: emailResult.id || "",
-            offerResponseStatus: application.offerResponseStatus || "Offer Pending",
+            offerResponseStatus: ["Offer Accepted", "Offer Declined"].includes(application.offerResponseStatus) ? application.offerResponseStatus : "Offer Pending",
             contractStatus: application.contractStatus || "Sent",
             onboardingStatus: application.onboardingStatus || "Not Started",
             offerTrackingCreatedAt: application.offerTrackingCreatedAt || nowIso(),
@@ -1576,17 +1620,26 @@ async function handleOfferTrackingUpdate(req, res) {
             updatedAt: nowIso()
         };
 
+        if (offerResponseStatus === "Offer Pending") {
+            updateData.status = application.status || "Offer Made";
+        }
+
+        if (offerResponseStatus === "Offer Accepted") {
+            updateData.status = application.status === "Hired" ? "Hired" : "Offer Accepted";
+            updateData.onboardingStatus = onboardingStatus || application.onboardingStatus || "In Progress";
+            updateData.contractStatus = contractStatus || application.contractStatus || "Sent";
+        }
+
+        if (offerResponseStatus === "Offer Declined") {
+            updateData.status = "Offer Declined";
+            updateData.onboardingStatus = onboardingStatus || application.onboardingStatus || "Not Started";
+        }
+
         if (!application.offerTrackingCreatedAt) {
             updateData.offerTrackingCreatedAt = nowIso();
         }
 
-        if (offerResponseStatus === "Offer Accepted" && !onboardingStatus) {
-            updateData.onboardingStatus = "In Progress";
-        }
-
-        if (offerResponseStatus === "Offer Declined") {
-            updateData.onboardingStatus = onboardingStatus || "Not Started";
-        }
+        applyOfferStateSynchronisation(updateData, application);
 
         await ref.update(updateData);
 
@@ -1681,7 +1734,8 @@ async function handleHireEmail(req, res) {
             hiredEmailSent: true,
             hiredEmailSentAt: nowIso(),
             hiredEmailId: emailResult.id || "",
-            offerResponseStatus: application.offerResponseStatus || "Offer Accepted",
+            offerResponseStatus: "Offer Accepted",
+            contractStatus: application.contractStatus || "Completed",
             onboardingStatus: application.onboardingStatus || "In Progress",
             lastCommunicationAction: "Employment Confirmation Email Sent",
             lastCommunicationAt: nowIso(),
