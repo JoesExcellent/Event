@@ -451,6 +451,60 @@ function updateLastRefreshTime() {
     })}. Auto-refresh is active.`;
 }
 
+
+function normaliseOfferApplicationFields(application = {}) {
+    const status = normaliseStatus(application.status);
+    const offerResponseStatus = application.offerResponseStatus || application.offerResponse || application.offerStatus || application.offerDecision || "";
+    const candidateStartDate = application.candidateStartDate || application.startDate || application.offerStartDate || application.confirmedStartDate || "";
+    const contractStatus = application.contractStatus || application.contract || application.contractProgress || "";
+    const onboardingStatus = application.onboardingStatus || application.onboarding || application.onboardingProgress || "";
+
+    let mappedOfferResponse = offerResponseStatus;
+
+    if (!mappedOfferResponse) {
+        if (status === "Hired" || status === "Offer Accepted") mappedOfferResponse = "Offer Accepted";
+        if (status === "Offer Declined") mappedOfferResponse = "Offer Declined";
+        if (status === "Offer Made") mappedOfferResponse = "Offer Pending";
+    }
+
+    return {
+        ...application,
+        offerResponseStatus: mappedOfferResponse,
+        candidateStartDate,
+        contractStatus,
+        onboardingStatus
+    };
+}
+
+function mergeOfferApplicationUpdate(id, update = {}) {
+    if (!id) return;
+
+    allApplications = allApplications.map(application => {
+        if (application.id !== id) return application;
+        return normaliseOfferApplicationFields({
+            ...application,
+            ...update
+        });
+    });
+}
+
+function getOfferResponseForDisplay(application = {}) {
+    const app = normaliseOfferApplicationFields(application);
+    const status = normaliseStatus(app.status);
+
+    if (status === "Hired") return "Offer Accepted";
+    if (app.offerResponseStatus) return app.offerResponseStatus;
+    if (status === "Offer Accepted") return "Offer Accepted";
+    if (status === "Offer Declined") return "Offer Declined";
+    if (status === "Offer Made") return "Offer Pending";
+    return "";
+}
+
+function getStartDateForDisplay(application = {}) {
+    const app = normaliseOfferApplicationFields(application);
+    return app.candidateStartDate || "";
+}
+
 async function loadApplications() {
     try {
         const response = await fetch(`${API_BASE}/api/applications`, {
@@ -463,7 +517,7 @@ async function loadApplications() {
             throw new Error(result.message || "Failed to load applications.");
         }
 
-        allApplications = result.applications || [];
+        allApplications = (result.applications || []).map(normaliseOfferApplicationFields);
         applyCandidateFilters();
 
     } catch (error) {
@@ -2104,13 +2158,15 @@ function getSelectedOfferApplication() {
 function fillOfferTrackingForm(application) {
     if (!application) return;
 
-    if (offerCandidateNameInput) offerCandidateNameInput.value = getCandidateDisplayName(application);
-    if (offerCandidatePositionInput) offerCandidatePositionInput.value = application.position || "";
-    if (offerResponseStatusInput) offerResponseStatusInput.value = application.offerResponseStatus || (normaliseStatus(application.status) === "Offer Made" ? "Offer Pending" : "");
-    if (candidateStartDateInput) candidateStartDateInput.value = application.candidateStartDate || "";
-    if (contractStatusInput) contractStatusInput.value = application.contractStatus || "";
-    if (onboardingStatusInput) onboardingStatusInput.value = application.onboardingStatus || "";
-    if (offerOnboardingNotesInput) offerOnboardingNotesInput.value = application.offerOnboardingNotes || "";
+    const app = normaliseOfferApplicationFields(application);
+
+    if (offerCandidateNameInput) offerCandidateNameInput.value = getCandidateDisplayName(app);
+    if (offerCandidatePositionInput) offerCandidatePositionInput.value = app.position || "";
+    if (offerResponseStatusInput) offerResponseStatusInput.value = getOfferResponseForDisplay(app) || "";
+    if (candidateStartDateInput) candidateStartDateInput.value = app.candidateStartDate || "";
+    if (contractStatusInput) contractStatusInput.value = app.contractStatus || "";
+    if (onboardingStatusInput) onboardingStatusInput.value = app.onboardingStatus || "";
+    if (offerOnboardingNotesInput) offerOnboardingNotesInput.value = app.offerOnboardingNotes || "";
 }
 
 function clearOfferTrackingForm() {
@@ -2150,6 +2206,20 @@ async function saveOfferTrackingForApplication(id, payload, showSuccess = true) 
     if (!response.ok) {
         throw new Error(result.message || "Failed to save offer tracking.");
     }
+
+    mergeOfferApplicationUpdate(id, {
+        ...payload,
+        offerResponseStatus: result.offerResponseStatus || payload.offerResponseStatus,
+        candidateStartDate: result.candidateStartDate || payload.candidateStartDate,
+        contractStatus: result.contractStatus || payload.contractStatus,
+        onboardingStatus: result.onboardingStatus || payload.onboardingStatus,
+        status: result.status || undefined
+    });
+
+    renderOfferHiringCentre();
+    renderOfferTrackingTable();
+    renderPortalAccessTable();
+    renderVacancyIntelligence();
 
     if (showSuccess) {
         showToast(result.message || "Offer tracking saved.", "success");
@@ -2278,7 +2348,7 @@ function renderOfferHiringCentre() {
 
     const getOfferState = app => {
         const status = normaliseStatus(app.status);
-        const response = String(app.offerResponseStatus || "").toLowerCase();
+        const response = String(getOfferResponseForDisplay(app) || "").toLowerCase();
 
         if (status === "Hired") return "accepted";
         if (response.includes("accepted") || status === "Offer Accepted") return "accepted";
@@ -2312,21 +2382,23 @@ function renderOfferTrackingTable() {
         return;
     }
 
-    offerTrackingTableBody.innerHTML = records.map(app => `
+    offerTrackingTableBody.innerHTML = records.map(rawApp => {
+        const app = normaliseOfferApplicationFields(rawApp);
+        return `
         <tr>
             <td>${escapeHtml(getCandidateDisplayName(app))}</td>
             <td>${escapeHtml(app.position || "N/A")}</td>
-            <td>${escapeHtml(app.offerResponseStatus || (normaliseStatus(app.status) === "Hired" ? "Offer Accepted" : (normaliseStatus(app.status) === "Offer Made" ? "Offer Pending" : "")))}</td>
-            <td>${escapeHtml(formatDate(app.candidateStartDate || ""))}</td>
-            <td>${escapeHtml(app.contractStatus || "")}</td>
-            <td>${escapeHtml(app.onboardingStatus || "")}</td>
+            <td>${escapeHtml(getOfferResponseForDisplay(app) || "N/A")}</td>
+            <td>${escapeHtml(formatDate(getStartDateForDisplay(app)))}</td>
+            <td>${escapeHtml(app.contractStatus || "N/A")}</td>
+            <td>${escapeHtml(app.onboardingStatus || "N/A")}</td>
             <td>
                 <button type="button" onclick="openOfferCandidate('${app.id}')">Select</button>
                 <button type="button" onclick="sendOfferEmail('${app.id}')">Send Offer</button>
                 <button type="button" onclick="markCandidateHired('${app.id}')">Mark Hired</button>
             </td>
-        </tr>
-    `).join("");
+        </tr>`;
+    }).join("");
 }
 
 function openOfferCandidate(id) {
