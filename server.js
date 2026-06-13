@@ -2890,6 +2890,131 @@ app.delete("/api/contact-messages/:id", requireAuth, requireEditor, deleteContac
 app.patch("/api/admin/contact-messages/:id", requireAuth, requireEditor, updateContactMessageHandler);
 app.delete("/api/admin/contact-messages/:id", requireAuth, requireEditor, deleteContactMessageHandler);
 
+
+
+/* =====================================================
+   EMPLOYMENT DOCUMENTS CENTRE
+===================================================== */
+
+function normaliseEmploymentDocumentForClient(doc) {
+    const data = doc.data ? doc.data() : doc;
+
+    return {
+        id: doc.id || data.id || "",
+        documentType: data.documentType || "Employment Document",
+        documentName: data.documentName || "Untitled Document",
+        uploadedBy: data.uploadedBy || "Unknown Admin",
+        uploadedAt: data.uploadedAt || data.createdAt || "",
+        updatedAt: data.updatedAt || "",
+        active: data.active !== false
+    };
+}
+
+async function listEmploymentDocumentsHandler(req, res) {
+    try {
+        const snapshot = await db
+            .collection("employmentDocuments")
+            .orderBy("uploadedAt", "desc")
+            .get();
+
+        const documents = snapshot.docs.map(normaliseEmploymentDocumentForClient);
+
+        res.json({ documents });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load employment documents." });
+    }
+}
+
+async function createEmploymentDocumentHandler(req, res) {
+    try {
+        const documentType = clean(req.body.documentType);
+        const documentName = clean(req.body.documentName);
+
+        if (!documentType) {
+            return res.status(400).json({ message: "Document type is required." });
+        }
+
+        if (!documentName) {
+            return res.status(400).json({ message: "Document name is required." });
+        }
+
+        const documentRecord = {
+            documentType,
+            documentName,
+            uploadedBy: req.user?.email || "Unknown Admin",
+            uploadedAt: nowIso(),
+            updatedAt: nowIso(),
+            active: true
+        };
+
+        const ref = await db.collection("employmentDocuments").add(documentRecord);
+        const savedDocument = { id: ref.id, ...documentRecord };
+
+        await logAudit({
+            actionType: "EMPLOYMENT_DOCUMENT_CREATED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId: ref.id,
+            candidateName: "Employment Documents Centre",
+            candidateEmail: "",
+            description: `${documentType} employment document record created: ${documentName}.`,
+            metadata: savedDocument
+        });
+
+        res.json({
+            message: "Employment document saved successfully.",
+            document: savedDocument
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to save employment document." });
+    }
+}
+
+async function deleteEmploymentDocumentHandler(req, res) {
+    try {
+        const id = clean(req.params.id);
+
+        if (!id) {
+            return res.status(400).json({ message: "Employment document ID is required." });
+        }
+
+        const ref = db.collection("employmentDocuments").doc(id);
+        const doc = await ref.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Employment document not found." });
+        }
+
+        const documentData = normaliseEmploymentDocumentForClient(doc);
+        await ref.delete();
+
+        await logAudit({
+            actionType: "EMPLOYMENT_DOCUMENT_DELETED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId: id,
+            candidateName: "Employment Documents Centre",
+            candidateEmail: "",
+            description: `${documentData.documentType} employment document record deleted: ${documentData.documentName}.`,
+            metadata: documentData
+        });
+
+        res.json({ message: "Employment document deleted successfully.", id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to delete employment document." });
+    }
+}
+
+app.get("/api/admin/employment-documents", requireAuth, listEmploymentDocumentsHandler);
+app.get("/api/employment-documents", requireAuth, listEmploymentDocumentsHandler);
+app.post("/api/admin/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
+app.post("/api/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
+app.delete("/api/admin/employment-documents/:id", requireAuth, requireEditor, deleteEmploymentDocumentHandler);
+app.delete("/api/employment-documents/:id", requireAuth, requireEditor, deleteEmploymentDocumentHandler);
+
 /* =====================================================
    FALLBACK
 ===================================================== */
