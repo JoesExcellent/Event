@@ -224,11 +224,15 @@ function renderCandidate(candidate) {
     setText("applicationAvailability", candidate.availability);
     setText("applicationDate", formatDate(candidate.createdAt));
     const mainApplicationStatus =
-        candidate.interviewResponse === "Interview Accepted" || candidate.interviewResponse === "Interview Declined"
-            ? candidate.interviewResponse
-            : candidate.interviewStatus === "Interview Accepted" || candidate.interviewStatus === "Interview Declined"
-                ? candidate.interviewStatus
-                : candidate.status;
+        candidate.status === "Hired" || candidate.employmentStatus === "Hired"
+            ? "Hired"
+            : candidate.status === "Offer Accepted" || candidate.offerResponseStatus === "Offer Accepted"
+                ? "Offer Accepted"
+                : candidate.interviewResponse === "Interview Accepted" || candidate.interviewResponse === "Interview Declined"
+                    ? candidate.interviewResponse
+                    : candidate.interviewStatus === "Interview Accepted" || candidate.interviewStatus === "Interview Declined"
+                        ? candidate.interviewStatus
+                        : candidate.status;
 
     setStatus("applicationStatus", mainApplicationStatus);
 
@@ -264,6 +268,11 @@ function renderCandidate(candidate) {
     setStatus("selfServiceStatus", candidate.selfServiceStatus || "Not Enabled");
     setText("portalAccessDate", formatDate(candidate.portalAccessDate));
     setText("portalAccessNotes", candidate.portalAccessNotes || "No portal notes have been added yet.");
+
+    setStatus("employmentStatus", candidate.employmentStatus || (candidate.status === "Hired" ? "Hired" : "Pending"));
+    setStatus("employmentConfirmationStatus", candidate.employmentConfirmationStatus || (candidate.hiredEmailSent ? "Confirmation Sent" : "Awaiting Confirmation"));
+    setText("hireDate", formatDate(candidate.hireDate || candidate.hiredAt));
+    setText("employmentNotes", candidate.employmentNotes || "Employment notes will appear here after hiring confirmation.");
 
     setText("lastCommunicationAction", candidate.lastCommunicationAction || "No recent communication recorded.");
     setText("lastCommunicationAt", formatDate(candidate.lastCommunicationAt));
