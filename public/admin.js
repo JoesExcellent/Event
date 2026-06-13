@@ -15,6 +15,7 @@ let allEmailTemplates = [];
 let allReminderQueue = [];
 let allAuditLogs = [];
 let allNotifications = [];
+let allEmploymentDocuments = [];
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
@@ -98,6 +99,16 @@ const offerCentrePending = document.getElementById("offerCentrePending");
 const offerCentreAccepted = document.getElementById("offerCentreAccepted");
 const offerCentreDeclined = document.getElementById("offerCentreDeclined");
 const offerCentreHired = document.getElementById("offerCentreHired");
+
+const employmentDocumentTypeInput = document.getElementById("employmentDocumentType");
+const employmentDocumentNameInput = document.getElementById("employmentDocumentName");
+const employmentDocumentLibraryTableBody = document.getElementById("employmentDocumentLibraryTableBody");
+const employmentDocumentMessage = document.getElementById("employmentDocumentMessage");
+const documentContractStatus = document.getElementById("documentContractStatus");
+const documentWelcomePackStatus = document.getElementById("documentWelcomePackStatus");
+const documentHandbookStatus = document.getElementById("documentHandbookStatus");
+const documentPoliciesStatus = document.getElementById("documentPoliciesStatus");
+
 
 const totalApplications = document.getElementById("totalApplications");
 const newApplications = document.getElementById("newApplications");
@@ -404,6 +415,7 @@ async function refreshDashboard(showMessage = false) {
     await loadVacancies();
     await loadAuditLogs();
     await loadNotifications();
+    await loadEmploymentDocuments();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -415,6 +427,7 @@ async function refreshDashboard(showMessage = false) {
     renderPortalAccessTable();
     renderAuditTrail();
     renderNotifications();
+    renderEmploymentDocuments();
     updateLastRefreshTime();
 
     if (showMessage) {
@@ -3541,7 +3554,9 @@ async function archiveReadNotifications() {
 
 async function refreshNotifications() {
     await loadNotifications();
+    await loadEmploymentDocuments();
     renderNotifications();
+    renderEmploymentDocuments();
 }
 
 
@@ -3687,6 +3702,164 @@ async function refreshAuditTrail() {
     showToast("Audit trail refreshed.", "success");
 }
 
+
+
+async function loadEmploymentDocuments() {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-documents`, {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load employment documents.");
+        }
+
+        allEmploymentDocuments = Array.isArray(data.documents) ? data.documents : [];
+    } catch (error) {
+        console.error(error);
+        allEmploymentDocuments = [];
+        if (employmentDocumentMessage) {
+            employmentDocumentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to load employment documents.")}</p>`;
+        }
+    }
+}
+
+function formatEmploymentDocumentDate(value) {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function countEmploymentDocumentsByType(type) {
+    return allEmploymentDocuments.filter(documentRecord => {
+        return String(documentRecord.documentType || "").toLowerCase() === String(type || "").toLowerCase();
+    }).length;
+}
+
+function renderEmploymentDocumentStats() {
+    if (documentContractStatus) documentContractStatus.textContent = countEmploymentDocumentsByType("Employment Contract");
+    if (documentWelcomePackStatus) documentWelcomePackStatus.textContent = countEmploymentDocumentsByType("Welcome Pack");
+    if (documentHandbookStatus) documentHandbookStatus.textContent = countEmploymentDocumentsByType("Employee Handbook");
+    if (documentPoliciesStatus) documentPoliciesStatus.textContent = countEmploymentDocumentsByType("Company Policies");
+}
+
+function renderEmploymentDocuments() {
+    renderEmploymentDocumentStats();
+
+    if (!employmentDocumentLibraryTableBody) return;
+
+    if (!allEmploymentDocuments.length) {
+        employmentDocumentLibraryTableBody.innerHTML = `<tr><td colspan="5">No employment document records have been uploaded yet.</td></tr>`;
+        return;
+    }
+
+    employmentDocumentLibraryTableBody.innerHTML = allEmploymentDocuments.map(documentRecord => {
+        const statusClass = documentRecord.active === false ? "status-archived" : "status-hired";
+        const statusText = documentRecord.active === false ? "Inactive" : "Active";
+
+        return `
+            <tr>
+                <td>${escapeHtml(documentRecord.documentType || "Employment Document")}</td>
+                <td>${escapeHtml(documentRecord.documentName || "Untitled Document")}</td>
+                <td>${escapeHtml(formatEmploymentDocumentDate(documentRecord.uploadedAt))}</td>
+                <td><span class="ats-status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button type="button" onclick="deleteEmploymentDocument('${escapeHtml(documentRecord.id)}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function clearEmploymentDocumentForm() {
+    if (employmentDocumentTypeInput) employmentDocumentTypeInput.value = "";
+    if (employmentDocumentNameInput) employmentDocumentNameInput.value = "";
+    if (employmentDocumentMessage) employmentDocumentMessage.innerHTML = "";
+}
+
+async function uploadEmploymentDocument() {
+    const documentType = employmentDocumentTypeInput ? employmentDocumentTypeInput.value.trim() : "";
+    const documentName = employmentDocumentNameInput ? employmentDocumentNameInput.value.trim() : "";
+
+    if (!documentType || !documentName) {
+        showToast("Please choose a document type and enter a document name.", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-documents`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ documentType, documentName })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to save employment document.");
+        }
+
+        if (employmentDocumentMessage) {
+            employmentDocumentMessage.innerHTML = `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment document saved successfully.")}</p>`;
+        }
+
+        showToast(data.message || "Employment document saved successfully.", "success");
+        clearEmploymentDocumentForm();
+        await loadEmploymentDocuments();
+        renderEmploymentDocuments();
+        await loadAuditLogs();
+        renderAuditTrail();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to save employment document.", "error");
+        if (employmentDocumentMessage) {
+            employmentDocumentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to save employment document.")}</p>`;
+        }
+    }
+}
+
+async function deleteEmploymentDocument(id) {
+    if (!id) return;
+
+    if (!confirm("Delete this employment document record?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/employment-documents/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to delete employment document.");
+        }
+
+        showToast(data.message || "Employment document deleted successfully.", "success");
+        await loadEmploymentDocuments();
+        renderEmploymentDocuments();
+        await loadAuditLogs();
+        renderAuditTrail();
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "Failed to delete employment document.", "error");
+    }
+}
+
 document.getElementById("sendInvitationBtn")?.addEventListener("click", sendInvitation);
 document.getElementById("send7DayReminderBtn")?.addEventListener("click", function () {
     sendReminder("7day", this);
@@ -3713,6 +3886,8 @@ document.getElementById("restoreTemplateBtn")?.addEventListener("click", functio
     restoreEmailTemplate();
 });
 document.getElementById("clearTemplateEditorBtn")?.addEventListener("click", clearEmailTemplateEditor);
+document.getElementById("uploadEmploymentDocumentBtn")?.addEventListener("click", uploadEmploymentDocument);
+document.getElementById("clearEmploymentDocumentBtn")?.addEventListener("click", clearEmploymentDocumentForm);
 document.getElementById("saveOfferTrackingBtn")?.addEventListener("click", saveOfferTracking);
 document.getElementById("markOfferAcceptedBtn")?.addEventListener("click", function () {
     setOfferWorkflowStatus("Offer Accepted");
@@ -3737,6 +3912,7 @@ manualRefreshBtn?.addEventListener("click", () => refreshDashboard(true));
 
 window.loginAdmin = loginAdmin;
 window.deleteApplication = deleteApplication;
+window.deleteEmploymentDocument = deleteEmploymentDocument;
 window.selectCandidate = selectCandidate;
 window.openCandidateModal = openCandidateModal;
 window.closeCandidateModal = closeCandidateModal;

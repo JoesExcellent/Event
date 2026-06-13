@@ -1397,11 +1397,11 @@ Joe's Excellent Events & Management</textarea>
         <div id="tab-employment-documents" class="dashboard-tab-content">
 <section class="ats-panel">
     <h2>Employment Documents Centre</h2>
-    <p>Prepare employment documents for hired candidates. This visual shell creates the secure structure for contracts, welcome packs, handbooks, induction packs and company policies before Firestore document records are connected in the next phase.</p>
+    <p>Create employment document records for contracts, welcome packs, handbooks, induction packs and company policies before candidate assignment and secure downloads are connected.</p>
 
     <div class="vacancy-management-note">
         <p>
-            Phase 6E.9A is a visual shell only. Uploads, assignments, downloads and Firestore document records will be connected in Phase 6E.9B and later phases.
+            Phase 6E.9C-R1 connects the Employment Documents Centre to Firestore records. This stage saves document metadata only. Candidate assignment, secure PDF storage and portal downloads will follow in the next phases.
         </p>
     </div>
 
@@ -1409,72 +1409,74 @@ Joe's Excellent Events & Management</textarea>
         <div class="stat-card">
             <span>1</span>
             <h3>Employment Contract</h3>
-            <p id="documentContractStatus">N/A</p>
+            <p id="documentContractStatus">0</p>
         </div>
 
         <div class="stat-card">
             <span>2</span>
             <h3>Welcome Pack</h3>
-            <p id="documentWelcomePackStatus">N/A</p>
+            <p id="documentWelcomePackStatus">0</p>
         </div>
 
         <div class="stat-card">
             <span>3</span>
             <h3>Handbook</h3>
-            <p id="documentHandbookStatus">N/A</p>
+            <p id="documentHandbookStatus">0</p>
         </div>
 
         <div class="stat-card">
             <span>4</span>
             <h3>Policies</h3>
-            <p id="documentPoliciesStatus">N/A</p>
+            <p id="documentPoliciesStatus">0</p>
         </div>
     </div>
 
     <section class="ats-panel">
-        <h2>Document Library</h2>
-        <p>These document types will be available for secure upload and candidate assignment when the backend is connected.</p>
+        <h2>Upload Employment Document Record</h2>
+        <p>Add a document record to the Employment Documents library. File upload and secure download handling will be connected after this Firestore foundation is confirmed stable.</p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="employmentDocumentType">Document Type</label>
+                <select id="employmentDocumentType">
+                    <option value="">Select document type</option>
+                    <option value="Employment Contract">Employment Contract</option>
+                    <option value="Welcome Pack">Welcome Pack</option>
+                    <option value="Employee Handbook">Employee Handbook</option>
+                    <option value="Induction Pack">Induction Pack</option>
+                    <option value="Company Policies">Company Policies</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="employmentDocumentName">Document Name</label>
+                <input type="text" id="employmentDocumentName" placeholder="Example: Chief Composer Contract.pdf">
+            </div>
+        </div>
+
+        <button id="uploadEmploymentDocumentBtn" type="button">Upload Document Record</button>
+        <button id="clearEmploymentDocumentBtn" type="button">Clear Document Form</button>
+        <div id="employmentDocumentMessage"></div>
+    </section>
+
+    <section class="ats-panel">
+        <h2>Uploaded Documents Library</h2>
+        <p>Employment document records saved to Firestore will appear below and remain available after dashboard refresh.</p>
 
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
                         <th>Document Type</th>
+                        <th>Document Name</th>
+                        <th>Uploaded</th>
                         <th>Status</th>
-                        <th>Last Updated</th>
-                        <th>Next Action</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="employmentDocumentLibraryTableBody">
                     <tr>
-                        <td>Employment Contract</td>
-                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
-                        <td>N/A</td>
-                        <td>Firestore connection in Phase 6E.9B</td>
-                    </tr>
-                    <tr>
-                        <td>Welcome Pack</td>
-                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
-                        <td>N/A</td>
-                        <td>Firestore connection in Phase 6E.9B</td>
-                    </tr>
-                    <tr>
-                        <td>Employee Handbook</td>
-                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
-                        <td>N/A</td>
-                        <td>Firestore connection in Phase 6E.9B</td>
-                    </tr>
-                    <tr>
-                        <td>Induction Pack</td>
-                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
-                        <td>N/A</td>
-                        <td>Firestore connection in Phase 6E.9B</td>
-                    </tr>
-                    <tr>
-                        <td>Company Policies</td>
-                        <td><span class="ats-status-badge status-archived">Not Connected</span></td>
-                        <td>N/A</td>
-                        <td>Firestore connection in Phase 6E.9B</td>
+                        <td colspan="5">Employment document records will appear here after upload.</td>
                     </tr>
                 </tbody>
             </table>
@@ -1483,7 +1485,7 @@ Joe's Excellent Events & Management</textarea>
 
     <section class="ats-panel">
         <h2>Candidate Document Assignment</h2>
-        <p>Select the documents that will later be assigned to a hired candidate. These controls are intentionally disabled until the Firestore assignment layer is connected.</p>
+        <p>Candidate assignment remains protected until Phase 6E.9C-R2, after the document library has been verified.</p>
 
         <div class="form-grid">
             <div class="form-group">
@@ -1542,13 +1544,13 @@ Joe's Excellent Events & Management</textarea>
             </div>
         </div>
 
-        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Assign Documents — Phase 6E.9B</button>
-        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Clear Assignment — Phase 6E.9B</button>
+        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Assign Documents — Phase 6E.9C-R2</button>
+        <button type="button" disabled style="opacity:0.5; cursor:not-allowed;">Clear Assignment — Phase 6E.9C-R2</button>
     </section>
 
     <section class="ats-panel">
         <h2>Document Tracking Table</h2>
-        <p>Candidate document readiness will appear here after Firestore employment document records are connected.</p>
+        <p>Candidate document assignment records will appear here after Phase 6E.9C-R2 is connected.</p>
 
         <div class="table-wrapper">
             <table>
@@ -1567,7 +1569,7 @@ Joe's Excellent Events & Management</textarea>
                 </thead>
                 <tbody id="employmentDocumentsTableBody">
                     <tr>
-                        <td colspan="9">Employment document records will appear here after Phase 6E.9B is connected.</td>
+                        <td colspan="9">Candidate document assignment records will appear here in Phase 6E.9C-R2.</td>
                     </tr>
                 </tbody>
             </table>
@@ -2044,7 +2046,7 @@ Joe's Excellent Events & Management</textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="charts.js?v=29"></script>
-<script src="admin.js?v=95"></script>
+<script src="admin.js?v=96"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
