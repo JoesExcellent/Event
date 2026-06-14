@@ -3255,6 +3255,46 @@ function normaliseEmploymentDocumentAssignmentForClient(doc) {
     };
 }
 
+async function getEmploymentDocumentRecordById(documentId) {
+    const id = clean(documentId);
+    if (!id) return null;
+
+    const doc = await db.collection("employmentDocuments").doc(id).get();
+    if (!doc.exists) return null;
+
+    const documentRecord = normaliseEmploymentDocumentForClient(doc);
+    return documentRecord.active === false ? null : documentRecord;
+}
+
+async function resolveEmploymentDocumentRecordsForAssignment(assignment) {
+    if (!assignment) return null;
+
+    const [
+        employmentContract,
+        welcomePack,
+        employeeHandbook,
+        inductionPack,
+        companyPolicies
+    ] = await Promise.all([
+        getEmploymentDocumentRecordById(assignment.employmentContractDocumentId),
+        getEmploymentDocumentRecordById(assignment.welcomePackDocumentId),
+        getEmploymentDocumentRecordById(assignment.handbookDocumentId),
+        getEmploymentDocumentRecordById(assignment.inductionPackDocumentId),
+        getEmploymentDocumentRecordById(assignment.companyPoliciesDocumentId)
+    ]);
+
+    return {
+        ...assignment,
+        assignedDocuments: {
+            employmentContract,
+            welcomePack,
+            employeeHandbook,
+            inductionPack,
+            companyPolicies
+        }
+    };
+}
+
 async function getEmploymentDocumentAssignmentForCandidate(candidateId) {
     const id = clean(candidateId);
     if (!id) return null;
@@ -3262,7 +3302,8 @@ async function getEmploymentDocumentAssignmentForCandidate(candidateId) {
     const doc = await db.collection("employmentDocumentAssignments").doc(id).get();
     if (!doc.exists) return null;
 
-    return normaliseEmploymentDocumentAssignmentForClient(doc);
+    const assignment = normaliseEmploymentDocumentAssignmentForClient(doc);
+    return resolveEmploymentDocumentRecordsForAssignment(assignment);
 }
 
 async function listEmploymentDocumentAssignmentsHandler(req, res) {
