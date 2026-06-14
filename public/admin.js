@@ -4075,16 +4075,30 @@ async function saveEmploymentDocumentAssignment() {
         return;
     }
 
+    const existingAssignment = allEmploymentDocumentAssignments.find(assignment =>
+        String(assignment.candidateId || assignment.id || "") === String(candidateId)
+    ) || {};
+
     const payload = {
         candidateId,
         candidateName: getCandidateDisplayName(candidate),
         candidateEmail: candidate.email || "",
         position: candidate.position || "",
-        employmentContractDocumentId: employmentContractDocumentIdInput ? employmentContractDocumentIdInput.value : "",
-        welcomePackDocumentId: welcomePackDocumentIdInput ? welcomePackDocumentIdInput.value : "",
-        handbookDocumentId: handbookDocumentIdInput ? handbookDocumentIdInput.value : "",
-        inductionPackDocumentId: inductionPackDocumentIdInput ? inductionPackDocumentIdInput.value : "",
-        companyPoliciesDocumentId: companyPoliciesDocumentIdInput ? companyPoliciesDocumentIdInput.value : ""
+        employmentContractDocumentId: employmentContractDocumentIdInput && employmentContractDocumentIdInput.value
+            ? employmentContractDocumentIdInput.value
+            : existingAssignment.employmentContractDocumentId || "",
+        welcomePackDocumentId: welcomePackDocumentIdInput && welcomePackDocumentIdInput.value
+            ? welcomePackDocumentIdInput.value
+            : existingAssignment.welcomePackDocumentId || "",
+        handbookDocumentId: handbookDocumentIdInput && handbookDocumentIdInput.value
+            ? handbookDocumentIdInput.value
+            : existingAssignment.handbookDocumentId || "",
+        inductionPackDocumentId: inductionPackDocumentIdInput && inductionPackDocumentIdInput.value
+            ? inductionPackDocumentIdInput.value
+            : existingAssignment.inductionPackDocumentId || "",
+        companyPoliciesDocumentId: companyPoliciesDocumentIdInput && companyPoliciesDocumentIdInput.value
+            ? companyPoliciesDocumentIdInput.value
+            : existingAssignment.companyPoliciesDocumentId || ""
     };
 
     const hasAtLeastOneSelectedDocument = Boolean(
