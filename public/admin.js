@@ -3932,12 +3932,41 @@ function renderEmploymentDocumentCandidateOptions(selectedId = "") {
     employmentDocumentCandidateIdInput.innerHTML = options.join("");
 }
 
+function autoSelectSingleEmploymentDocument(selectElement) {
+    if (!selectElement || selectElement.value) return;
+
+    const realOptions = Array.from(selectElement.options || []).filter(option => String(option.value || "").trim());
+
+    if (realOptions.length === 1) {
+        selectElement.value = realOptions[0].value;
+    }
+}
+
 function renderEmploymentDocumentSelectors(assignment = {}) {
-    if (employmentContractDocumentIdInput) employmentContractDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employment Contract", assignment.employmentContractDocumentId);
-    if (welcomePackDocumentIdInput) welcomePackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Welcome Pack", assignment.welcomePackDocumentId);
-    if (handbookDocumentIdInput) handbookDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employee Handbook", assignment.handbookDocumentId);
-    if (inductionPackDocumentIdInput) inductionPackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Induction Pack", assignment.inductionPackDocumentId);
-    if (companyPoliciesDocumentIdInput) companyPoliciesDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Company Policies", assignment.companyPoliciesDocumentId);
+    if (employmentContractDocumentIdInput) {
+        employmentContractDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employment Contract", assignment.employmentContractDocumentId);
+        autoSelectSingleEmploymentDocument(employmentContractDocumentIdInput);
+    }
+
+    if (welcomePackDocumentIdInput) {
+        welcomePackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Welcome Pack", assignment.welcomePackDocumentId);
+        autoSelectSingleEmploymentDocument(welcomePackDocumentIdInput);
+    }
+
+    if (handbookDocumentIdInput) {
+        handbookDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Employee Handbook", assignment.handbookDocumentId);
+        autoSelectSingleEmploymentDocument(handbookDocumentIdInput);
+    }
+
+    if (inductionPackDocumentIdInput) {
+        inductionPackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Induction Pack", assignment.inductionPackDocumentId);
+        autoSelectSingleEmploymentDocument(inductionPackDocumentIdInput);
+    }
+
+    if (companyPoliciesDocumentIdInput) {
+        companyPoliciesDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Company Policies", assignment.companyPoliciesDocumentId);
+        autoSelectSingleEmploymentDocument(companyPoliciesDocumentIdInput);
+    }
 }
 
 function renderEmploymentDocumentAssignmentControls() {
@@ -4057,6 +4086,25 @@ async function saveEmploymentDocumentAssignment() {
         inductionPackDocumentId: inductionPackDocumentIdInput ? inductionPackDocumentIdInput.value : "",
         companyPoliciesDocumentId: companyPoliciesDocumentIdInput ? companyPoliciesDocumentIdInput.value : ""
     };
+
+    const hasAtLeastOneSelectedDocument = Boolean(
+        payload.employmentContractDocumentId ||
+        payload.welcomePackDocumentId ||
+        payload.handbookDocumentId ||
+        payload.inductionPackDocumentId ||
+        payload.companyPoliciesDocumentId
+    );
+
+    if (!hasAtLeastOneSelectedDocument) {
+        const message = "Please select at least one employment document before assigning.";
+        showToast(message, "error");
+
+        if (employmentDocumentAssignmentMessage) {
+            employmentDocumentAssignmentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(message)}</p>`;
+        }
+
+        return;
+    }
 
     try {
         const response = await fetch(`${API_BASE}/api/admin/employment-document-assignments`, {
