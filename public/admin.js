@@ -3833,6 +3833,7 @@ async function uploadEmploymentDocument() {
         clearEmploymentDocumentForm();
         await loadEmploymentDocuments();
         renderEmploymentDocuments();
+        renderEmploymentDocumentAssignmentControls();
         await loadAuditLogs();
         renderAuditTrail();
     } catch (error) {
@@ -3868,6 +3869,7 @@ async function deleteEmploymentDocument(id) {
         showToast(data.message || "Employment document deleted successfully.", "success");
         await loadEmploymentDocuments();
         renderEmploymentDocuments();
+        renderEmploymentDocumentAssignmentControls();
         await loadAuditLogs();
         renderAuditTrail();
     } catch (error) {
