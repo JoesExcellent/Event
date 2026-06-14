@@ -36,6 +36,20 @@ function setStatus(id, value) {
     element.className = "candidate-status-badge " + statusClass(value);
 }
 
+function setDocumentName(id, documentRecord) {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    if (documentRecord && documentRecord.documentName) {
+        const uploadedText = documentRecord.uploadedAt ? `Uploaded ${formatDate(documentRecord.uploadedAt)}` : "Assigned document";
+        element.textContent = `${documentRecord.documentName} — ${uploadedText}`;
+        element.style.color = "#f2f2f2";
+    } else {
+        element.textContent = "No document record assigned";
+        element.style.color = "rgba(255, 255, 255, 0.65)";
+    }
+}
+
 function statusClass(value) {
     const status = String(value || "").toLowerCase();
 
@@ -290,9 +304,17 @@ function renderCandidate(candidate) {
     setStatus("candidateInductionPackStatus", hasInductionPack ? "Available" : "Not Available");
     setStatus("candidatePoliciesStatus", hasCompanyPolicies ? "Available" : "Not Available");
 
+    const assignedDocuments = employmentDocumentAssignment.assignedDocuments || {};
+    setDocumentName("candidateEmploymentContractName", assignedDocuments.employmentContract);
+    setDocumentName("candidateWelcomePackName", assignedDocuments.welcomePack);
+    setDocumentName("candidateHandbookName", assignedDocuments.employeeHandbook);
+    setDocumentName("candidateInductionPackName", assignedDocuments.inductionPack);
+    setDocumentName("candidatePoliciesName", assignedDocuments.companyPolicies);
+
     const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasInductionPack, hasCompanyPolicies].filter(Boolean).length;
+    const resolvedDocumentCount = Object.values(assignedDocuments).filter(Boolean).length;
     const documentNote = availableDocumentCount
-        ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. Contract acceptance and electronic signature actions are available below when a contract is assigned.`
+        ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. ${resolvedDocumentCount ? "Document names are now shown above." : "Document names will appear after the document records are resolved."} Contract acceptance and electronic signature actions are available below when a contract is assigned.`
         : "Employment documents have not yet been assigned by the recruitment team.";
     setText("candidateEmploymentDocumentNote", documentNote);
     renderContractAcceptanceCentre(candidate, hasEmploymentContract);
