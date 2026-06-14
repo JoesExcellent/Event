@@ -19,6 +19,7 @@ const acceptInterviewBtn = document.getElementById("acceptInterviewBtn");
 const declineInterviewBtn = document.getElementById("declineInterviewBtn");
 const interviewResponseActions = document.getElementById("interviewResponseActions");
 const interviewResponseMessage = document.getElementById("interviewResponseMessage");
+let currentCandidateProfile = null;
 
 function setText(id, value) {
     const element = document.getElementById(id);
@@ -209,6 +210,7 @@ async function loadCandidateProfile(showRefreshFeedback = false) {
 
 function renderCandidate(candidate) {
     if (!candidate) return;
+    currentCandidateProfile = candidate;
 
     setText("welcomeCandidateName", candidate.fullName || candidate.name || "Candidate");
     const applicationReference = candidate.applicationReference || candidate.id || "";
@@ -290,12 +292,163 @@ function renderCandidate(candidate) {
 
     const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasInductionPack, hasCompanyPolicies].filter(Boolean).length;
     const documentNote = availableDocumentCount
-        ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. Secure downloads will be added in the next phase.`
+        ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. Contract acceptance and electronic signature actions are available below when a contract is assigned.`
         : "Employment documents have not yet been assigned by the recruitment team.";
     setText("candidateEmploymentDocumentNote", documentNote);
+    renderContractAcceptanceCentre(candidate, hasEmploymentContract);
 
     setText("lastCommunicationAction", candidate.lastCommunicationAction || "No recent communication recorded.");
     setText("lastCommunicationAt", formatDate(candidate.lastCommunicationAt));
+}
+
+
+function getContractAcceptanceCentre() {
+    let panel = document.getElementById("contractAcceptanceCentrePanel");
+    const note = document.getElementById("candidateEmploymentDocumentNote");
+
+    if (!panel && note && note.parentElement) {
+        panel = document.createElement("div");
+        panel.id = "contractAcceptanceCentrePanel";
+        panel.className = "info-row";
+        panel.style.gridColumn = "1 / -1";
+        panel.innerHTML = `
+            <div class="info-label">Contract Acceptance</div>
+            <div class="info-value">
+                <p id="contractAcceptanceCentreMessage" class="response-message" style="margin-bottom:12px;"></p>
+                <div id="contractAcceptanceActions" class="interview-action-buttons" style="margin-bottom:12px;"></div>
+                <div id="electronicSignatureBox" style="margin-top:12px; display:none;">
+                    <label for="electronicSignatureName">Electronic Signature Name</label>
+                    <input type="text" id="electronicSignatureName" placeholder="Enter your full legal name">
+                    <button type="button" id="submitElectronicSignatureBtn" class="btn">Submit Electronic Signature</button>
+                </div>
+            </div>
+        `;
+        note.parentElement.insertAdjacentElement("afterend", panel);
+    }
+
+    return panel;
+}
+
+function renderContractAcceptanceCentre(candidate, hasEmploymentContract) {
+    const panel = getContractAcceptanceCentre();
+    if (!panel) return;
+
+    const message = document.getElementById("contractAcceptanceCentreMessage");
+    const actions = document.getElementById("contractAcceptanceActions");
+    const signatureBox = document.getElementById("electronicSignatureBox");
+    const signatureName = document.getElementById("electronicSignatureName");
+
+    const contractAcceptance = candidate.contractAcceptanceStatus || "Not Sent";
+    const signatureStatus = candidate.eSignatureStatus || "Not Required";
+    const accepted = String(contractAcceptance).toLowerCase().includes("accepted");
+    const declined = String(contractAcceptance).toLowerCase().includes("declined");
+    const signed = String(signatureStatus).toLowerCase().includes("signed");
+
+    if (!hasEmploymentContract) {
+        panel.style.display = "none";
+        return;
+    }
+
+    panel.style.display = "grid";
+
+    if (message) {
+        if (signed) {
+            message.textContent = `Electronic signature submitted${candidate.eSignatureSubmittedAt ? " on " + formatDate(candidate.eSignatureSubmittedAt) : ""}.`;
+            message.style.color = "#7dffad";
+        } else if (accepted) {
+            message.textContent = "Your contract has been accepted. You may now submit your electronic signature.";
+            message.style.color = "#7dffad";
+        } else if (declined) {
+            message.textContent = "You have declined the contract. The recruitment team will review this response.";
+            message.style.color = "#ff9a9a";
+        } else {
+            message.textContent = "Please review your contract information. You can accept, decline, or submit your electronic signature.";
+            message.style.color = "#ffcc66";
+        }
+    }
+
+    if (actions) {
+        actions.innerHTML = `
+            <button type="button" id="acceptContractBtn" class="btn" ${accepted || signed ? "disabled" : ""}>Accept Contract</button>
+            <button type="button" id="declineContractBtn" class="btn btn-danger" ${declined || signed ? "disabled" : ""}>Decline Contract</button>
+        `;
+
+        document.getElementById("acceptContractBtn")?.addEventListener("click", function () {
+            submitContractAction("accept");
+        });
+
+        document.getElementById("declineContractBtn")?.addEventListener("click", function () {
+            submitContractAction("decline");
+        });
+    }
+
+    if (signatureBox) {
+        signatureBox.style.display = declined || signed ? "none" : "block";
+    }
+
+    if (signatureName) {
+        signatureName.value = candidate.eSignatureName || signatureName.value || "";
+    }
+
+    document.getElementById("submitElectronicSignatureBtn")?.addEventListener("click", function () {
+        submitContractAction("signature");
+    });
+}
+
+async function submitContractAction(action) {
+    const token = getCandidateToken();
+
+    if (!token) {
+        showLogin("Please sign in again.");
+        return;
+    }
+
+    const actionLabels = {
+        accept: "accept this contract",
+        decline: "decline this contract",
+        signature: "submit your electronic signature"
+    };
+
+    if (!window.confirm(`Are you sure you want to ${actionLabels[action] || "continue"}?`)) {
+        return;
+    }
+
+    const signatureName = document.getElementById("electronicSignatureName")?.value.trim() || "";
+    if (action === "signature" && !signatureName) {
+        setPortalRefreshMessage("Please enter your full legal name before submitting your electronic signature.", "#ff9a9a");
+        return;
+    }
+
+    const endpointMap = {
+        accept: "/api/candidate/contract-accept",
+        decline: "/api/candidate/contract-decline",
+        signature: "/api/candidate/e-signature"
+    };
+
+    try {
+        setPortalRefreshMessage("Saving contract response...", "#ffffff");
+
+        const response = await fetch(endpointMap[action], {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ signatureName })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to save contract response.");
+        }
+
+        renderCandidate(result.candidate);
+        setPortalRefreshMessage(result.message || "Contract response saved.", "#7dffad");
+    } catch (error) {
+        console.error(error);
+        setPortalRefreshMessage(error.message || "Failed to save contract response.", "#ff9a9a");
+    }
 }
 
 

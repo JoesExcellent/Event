@@ -17,6 +17,7 @@ let allAuditLogs = [];
 let allNotifications = [];
 let allEmploymentDocuments = [];
 let allEmploymentDocumentAssignments = [];
+let allContractAcceptances = [];
 let auditCurrentPage = 1;
 const AUDIT_RECORDS_PER_PAGE = 15;
 let selectedVacancyId = null;
@@ -428,6 +429,7 @@ async function refreshDashboard(showMessage = false) {
     await loadNotifications();
     await loadEmploymentDocuments();
     await loadEmploymentDocumentAssignments();
+    await loadContractAcceptances();
 
     updateCommandCentre();
     renderActivityFeed();
@@ -4247,6 +4249,34 @@ function setPortalAccessMessage(message, isError = false) {
     box.style.marginTop = "14px";
 }
 
+
+async function loadContractAcceptances() {
+    if (!authToken) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/contracts`, {
+            headers: {
+                Authorization: `Bearer ${authToken}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to load contract acceptance records.");
+        }
+
+        allContractAcceptances = Array.isArray(data.acceptances) ? data.acceptances : [];
+    } catch (error) {
+        console.error(error);
+        allContractAcceptances = [];
+    }
+}
+
+function getContractAcceptanceForApplication(applicationId) {
+    return allContractAcceptances.find(record => record.candidateId === applicationId || record.id === applicationId) || null;
+}
+
 function getSelectedPortalApplication() {
     const id = modalApplicationId || selectedApplicationId;
     return allApplications.find(app => app.id === id) || null;
@@ -4255,13 +4285,15 @@ function getSelectedPortalApplication() {
 function fillPortalAccessForm(application) {
     if (!application) return;
 
+    const contractRecord = getContractAcceptanceForApplication(application.id) || {};
+
     const map = {
         portalCandidateName: getCandidateDisplayName(application),
         portalCandidateEmail: application.email || "",
         portalAccessStatus: application.portalAccessStatus || "",
         documentDownloadStatus: application.documentDownloadStatus || "",
-        contractAcceptanceStatus: application.contractAcceptanceStatus || "",
-        eSignatureStatus: application.eSignatureStatus || "",
+        contractAcceptanceStatus: contractRecord.contractAcceptanceStatus || application.contractAcceptanceStatus || "",
+        eSignatureStatus: contractRecord.eSignatureStatus || application.eSignatureStatus || "",
         selfServiceStatus: application.selfServiceStatus || "",
         portalAccessDate: application.portalAccessDate || "",
         portalAccessNotes: application.portalAccessNotes || ""
@@ -4470,8 +4502,8 @@ function renderPortalAccessTable() {
             <td>${escapeHtml(app.email || "")}</td>
             <td>${escapeHtml(app.portalAccessStatus || "")}</td>
             <td>${escapeHtml(app.documentDownloadStatus || "")}</td>
-            <td>${escapeHtml(app.contractAcceptanceStatus || "")}</td>
-            <td>${escapeHtml(app.selfServiceStatus || "")}</td>
+            <td>${escapeHtml((getContractAcceptanceForApplication(app.id)?.contractAcceptanceStatus || app.contractAcceptanceStatus || ""))}<br><small>${escapeHtml(getContractAcceptanceForApplication(app.id)?.eSignatureName ? "Signed by: " + getContractAcceptanceForApplication(app.id).eSignatureName : "")}</small></td>
+            <td>${escapeHtml(app.selfServiceStatus || "")}<br><small>${escapeHtml(getContractAcceptanceForApplication(app.id)?.eSignatureStatus ? "E-Signature: " + getContractAcceptanceForApplication(app.id).eSignatureStatus : "")}</small></td>
         </tr>
     `).join("");
 }
@@ -4486,6 +4518,7 @@ window.sendPortalInvite = sendPortalInvite;
 window.markContractAccepted = markContractAccepted;
 window.clearPortalAccessForm = clearPortalAccessForm;
 window.renderPortalAccessTable = renderPortalAccessTable;
+window.loadContractAcceptances = loadContractAcceptances;
 
 
 notificationSearchInput?.addEventListener("input", renderNotifications);
