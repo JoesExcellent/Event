@@ -2389,6 +2389,11 @@ function cleanCandidateApplication(application) {
         documentDownloadStatus: application.documentDownloadStatus || "Not Available",
         contractAcceptanceStatus: application.contractAcceptanceStatus || "Not Sent",
         eSignatureStatus: application.eSignatureStatus || "Not Required",
+        contractAcceptanceDecision: application.contractAcceptanceDecision || application.contractAcceptanceStatus || "Not Sent",
+        contractAcceptedAt: application.contractAcceptedAt || "",
+        contractDeclinedAt: application.contractDeclinedAt || "",
+        eSignatureName: application.eSignatureName || "",
+        eSignatureSubmittedAt: application.eSignatureSubmittedAt || "",
         selfServiceStatus: application.selfServiceStatus || "Not Enabled",
         portalAccessDate: application.portalAccessDate || "",
         portalAccessNotes: application.portalAccessNotes || "",
@@ -2512,6 +2517,215 @@ app.get("/api/candidate/profile", requireCandidateAuth, async (req, res) => {
         res.status(500).json({ message: "Failed to load candidate profile." });
     }
 });
+
+
+
+/* =====================================================
+   CONTRACT ACCEPTANCE & ELECTRONIC SIGNATURE CENTRE
+===================================================== */
+
+function normaliseContractAcceptanceForClient(doc) {
+    const data = doc.data ? doc.data() : doc;
+
+    return {
+        id: doc.id || data.id || data.candidateId || "",
+        candidateId: data.candidateId || doc.id || "",
+        candidateName: data.candidateName || "Candidate",
+        candidateEmail: data.candidateEmail || "",
+        position: data.position || "",
+        contractStatus: data.contractStatus || "Sent",
+        contractAcceptanceStatus: data.contractAcceptanceStatus || "Not Sent",
+        contractAcceptanceDecision: data.contractAcceptanceDecision || data.contractAcceptanceStatus || "Not Sent",
+        eSignatureStatus: data.eSignatureStatus || "Not Required",
+        eSignatureName: data.eSignatureName || "",
+        acceptedAt: data.acceptedAt || "",
+        declinedAt: data.declinedAt || "",
+        eSignatureSubmittedAt: data.eSignatureSubmittedAt || "",
+        updatedAt: data.updatedAt || "",
+        source: data.source || "Candidate Portal"
+    };
+}
+
+async function saveContractAcceptanceRecord(candidateId, application, payload) {
+    const id = clean(candidateId);
+    const now = nowIso();
+    const existingDoc = await db.collection("contractAcceptances").doc(id).get();
+    const existing = existingDoc.exists ? existingDoc.data() : {};
+
+    const record = {
+        candidateId: id,
+        candidateName: application.fullName || application.name || "Candidate",
+        candidateEmail: application.email || "",
+        position: application.position || "",
+        contractStatus: payload.contractStatus || application.contractStatus || existing.contractStatus || "Sent",
+        contractAcceptanceStatus: payload.contractAcceptanceStatus || existing.contractAcceptanceStatus || application.contractAcceptanceStatus || "Not Sent",
+        contractAcceptanceDecision: payload.contractAcceptanceDecision || payload.contractAcceptanceStatus || existing.contractAcceptanceDecision || application.contractAcceptanceDecision || "Not Sent",
+        eSignatureStatus: payload.eSignatureStatus || existing.eSignatureStatus || application.eSignatureStatus || "Not Required",
+        eSignatureName: payload.eSignatureName !== undefined ? payload.eSignatureName : (existing.eSignatureName || application.eSignatureName || ""),
+        acceptedAt: payload.acceptedAt !== undefined ? payload.acceptedAt : (existing.acceptedAt || application.contractAcceptedAt || ""),
+        declinedAt: payload.declinedAt !== undefined ? payload.declinedAt : (existing.declinedAt || application.contractDeclinedAt || ""),
+        eSignatureSubmittedAt: payload.eSignatureSubmittedAt !== undefined ? payload.eSignatureSubmittedAt : (existing.eSignatureSubmittedAt || application.eSignatureSubmittedAt || ""),
+        source: payload.source || "Candidate Portal",
+        updatedAt: now
+    };
+
+    if (!existing.createdAt) {
+        record.createdAt = now;
+    }
+
+    await db.collection("contractAcceptances").doc(id).set(record, { merge: true });
+    return { id, ...record };
+}
+
+async function candidateContractActionHandler(req, res, action) {
+    try {
+        const candidateId = req.candidate.applicationId;
+        const doc = await db.collection("applications").doc(candidateId).get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const application = { id: doc.id, ...doc.data() };
+        if ((application.email || "").toLowerCase() !== (req.candidate.email || "").toLowerCase()) {
+            return res.status(403).json({ message: "Candidate profile mismatch." });
+        }
+
+        const now = nowIso();
+        const signatureName = clean(req.body.signatureName);
+        let updateData = {
+            updatedAt: now,
+            lastCommunicationAt: now
+        };
+        let acceptancePayload = { source: "Candidate Portal" };
+        let auditAction = "CONTRACT_ACTION";
+        let notificationTitle = "Contract Action";
+        let message = "Contract action saved.";
+
+        if (action === "accept") {
+            updateData = {
+                ...updateData,
+                contractAcceptanceStatus: "Accepted",
+                contractAcceptanceDecision: "Accepted",
+                contractAcceptedAt: now,
+                documentDownloadStatus: application.documentDownloadStatus || "Acknowledged",
+                portalAccessStatus: application.portalAccessStatus || "Active",
+                lastCommunicationAction: "Contract Accepted"
+            };
+            acceptancePayload = {
+                ...acceptancePayload,
+                contractAcceptanceStatus: "Accepted",
+                contractAcceptanceDecision: "Accepted",
+                acceptedAt: now,
+                declinedAt: ""
+            };
+            auditAction = "CONTRACT_ACCEPTED";
+            notificationTitle = "Contract Accepted";
+            message = "Contract accepted successfully.";
+        }
+
+        if (action === "decline") {
+            updateData = {
+                ...updateData,
+                contractAcceptanceStatus: "Declined",
+                contractAcceptanceDecision: "Declined",
+                contractDeclinedAt: now,
+                eSignatureStatus: "Rejected",
+                lastCommunicationAction: "Contract Declined"
+            };
+            acceptancePayload = {
+                ...acceptancePayload,
+                contractAcceptanceStatus: "Declined",
+                contractAcceptanceDecision: "Declined",
+                declinedAt: now,
+                eSignatureStatus: "Rejected"
+            };
+            auditAction = "CONTRACT_DECLINED";
+            notificationTitle = "Contract Declined";
+            message = "Contract declined successfully.";
+        }
+
+        if (action === "signature") {
+            if (!signatureName) {
+                return res.status(400).json({ message: "Please enter your full legal name before submitting your electronic signature." });
+            }
+
+            updateData = {
+                ...updateData,
+                contractAcceptanceStatus: "Accepted",
+                contractAcceptanceDecision: "Accepted",
+                contractAcceptedAt: application.contractAcceptedAt || now,
+                eSignatureStatus: "Signed",
+                eSignatureName: signatureName,
+                eSignatureSubmittedAt: now,
+                documentDownloadStatus: application.documentDownloadStatus || "Acknowledged",
+                portalAccessStatus: application.portalAccessStatus || "Active",
+                lastCommunicationAction: "Electronic Signature Submitted"
+            };
+            acceptancePayload = {
+                ...acceptancePayload,
+                contractAcceptanceStatus: "Accepted",
+                contractAcceptanceDecision: "Accepted",
+                acceptedAt: application.contractAcceptedAt || now,
+                eSignatureStatus: "Signed",
+                eSignatureName: signatureName,
+                eSignatureSubmittedAt: now
+            };
+            auditAction = "E_SIGNATURE_SUBMITTED";
+            notificationTitle = "Electronic Signature Submitted";
+            message = "Electronic signature submitted successfully.";
+        }
+
+        await db.collection("applications").doc(candidateId).set(updateData, { merge: true });
+        const acceptance = await saveContractAcceptanceRecord(candidateId, application, acceptancePayload);
+
+        await logAudit({
+            actionType: auditAction,
+            actorType: "CANDIDATE",
+            actorEmail: application.email || req.candidate.email || "",
+            candidateId,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || req.candidate.email || "",
+            description: `${notificationTitle} by ${application.fullName || application.name || "Candidate"}.`,
+            metadata: acceptance
+        });
+
+        await createNotification({
+            type: auditAction,
+            title: notificationTitle,
+            candidateId,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || req.candidate.email || "",
+            candidatePosition: application.position || "",
+            message: `${application.fullName || application.name || "Candidate"} completed action: ${notificationTitle}.`,
+            actorType: "CANDIDATE",
+            actorEmail: application.email || req.candidate.email || "",
+            source: "Candidate Portal"
+        });
+
+        const updatedDoc = await db.collection("applications").doc(candidateId).get();
+        const updatedApplication = { id: updatedDoc.id, ...updatedDoc.data() };
+        const candidatePayload = cleanCandidateApplication(updatedApplication);
+        candidatePayload.employmentDocumentAssignment = await getEmploymentDocumentAssignmentForCandidate(candidateId);
+        candidatePayload.contractAcceptanceRecord = acceptance;
+
+        res.json({ message, candidate: candidatePayload, acceptance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to save contract action." });
+    }
+}
+
+async function listContractAcceptancesHandler(req, res) {
+    try {
+        const snapshot = await db.collection("contractAcceptances").orderBy("updatedAt", "desc").get();
+        const acceptances = snapshot.docs.map(normaliseContractAcceptanceForClient);
+        res.json({ acceptances });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to load contract acceptance records." });
+    }
+}
 
 app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, res) => {
     try {
@@ -3201,6 +3415,12 @@ async function deleteEmploymentDocumentAssignmentHandler(req, res) {
         res.status(500).json({ message: "Failed to clear employment document assignment." });
     }
 }
+
+
+app.post("/api/candidate/contract-accept", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "accept"));
+app.post("/api/candidate/contract-decline", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "decline"));
+app.post("/api/candidate/e-signature", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "signature"));
+app.get("/api/admin/contracts", requireAuth, listContractAcceptancesHandler);
 
 app.get("/api/admin/employment-document-assignments", requireAuth, listEmploymentDocumentAssignmentsHandler);
 app.get("/api/admin/employment-document-assignments/:candidateId", requireAuth, getEmploymentDocumentAssignmentHandler);
