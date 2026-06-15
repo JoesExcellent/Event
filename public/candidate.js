@@ -483,18 +483,32 @@ function renderContractAcceptanceCentre(candidate, hasEmploymentContract) {
     }
 
     if (actions) {
-        actions.innerHTML = `
-            <button type="button" id="acceptContractBtn" class="btn" ${accepted || signed ? "disabled" : ""}>Accept Contract</button>
-            <button type="button" id="declineContractBtn" class="btn btn-danger" ${declined || signed ? "disabled" : ""}>Decline Contract</button>
-        `;
+        if (signed) {
+            actions.innerHTML = `
+                <div class="response-message" style="color:#7dffad; font-weight:bold; line-height:1.5;">
+                    Contract completed and electronic signature received. No further contract action is required.
+                </div>
+            `;
+        } else if (declined) {
+            actions.innerHTML = `
+                <div class="response-message" style="color:#ff9a9a; font-weight:bold; line-height:1.5;">
+                    Contract declined. The recruitment team will review this response.
+                </div>
+            `;
+        } else {
+            actions.innerHTML = `
+                <button type="button" id="acceptContractBtn" class="btn" ${accepted ? "disabled" : ""}>Accept Contract</button>
+                <button type="button" id="declineContractBtn" class="btn btn-danger">Decline Contract</button>
+            `;
 
-        document.getElementById("acceptContractBtn")?.addEventListener("click", function () {
-            submitContractAction("accept");
-        });
+            document.getElementById("acceptContractBtn")?.addEventListener("click", function () {
+                submitContractAction("accept");
+            });
 
-        document.getElementById("declineContractBtn")?.addEventListener("click", function () {
-            submitContractAction("decline");
-        });
+            document.getElementById("declineContractBtn")?.addEventListener("click", function () {
+                submitContractAction("decline");
+            });
+        }
     }
 
     if (signatureBox) {
@@ -505,9 +519,12 @@ function renderContractAcceptanceCentre(candidate, hasEmploymentContract) {
         signatureName.value = candidate.eSignatureName || signatureName.value || "";
     }
 
-    document.getElementById("submitElectronicSignatureBtn")?.addEventListener("click", function () {
-        submitContractAction("signature");
-    });
+    const submitElectronicSignatureBtn = document.getElementById("submitElectronicSignatureBtn");
+    if (submitElectronicSignatureBtn && !declined && !signed) {
+        submitElectronicSignatureBtn.addEventListener("click", function () {
+            submitContractAction("signature");
+        });
+    }
 }
 
 async function submitContractAction(action) {
