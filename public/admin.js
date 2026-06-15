@@ -104,6 +104,7 @@ const offerCentreHired = document.getElementById("offerCentreHired");
 
 const employmentDocumentTypeInput = document.getElementById("employmentDocumentType");
 const employmentDocumentNameInput = document.getElementById("employmentDocumentName");
+const employmentDocumentFileInput = document.getElementById("employmentDocumentFile");
 const employmentDocumentLibraryTableBody = document.getElementById("employmentDocumentLibraryTableBody");
 const employmentDocumentMessage = document.getElementById("employmentDocumentMessage");
 const documentContractStatus = document.getElementById("documentContractStatus");
@@ -3783,7 +3784,10 @@ function renderEmploymentDocuments() {
         return `
             <tr>
                 <td>${escapeHtml(documentRecord.documentType || "Employment Document")}</td>
-                <td>${escapeHtml(documentRecord.documentName || "Untitled Document")}</td>
+                <td>
+                    ${escapeHtml(documentRecord.documentName || "Untitled Document")}
+                    ${documentRecord.originalFileName || documentRecord.fileName ? `<div style="margin-top:6px; color:rgba(255,255,255,0.65); font-size:0.82rem;">File: ${escapeHtml(documentRecord.originalFileName || documentRecord.fileName)}</div>` : ""}
+                </td>
                 <td>${escapeHtml(formatEmploymentDocumentDate(documentRecord.uploadedAt))}</td>
                 <td><span class="ats-status-badge ${statusClass}">${statusText}</span></td>
                 <td>
@@ -3797,39 +3801,63 @@ function renderEmploymentDocuments() {
 function clearEmploymentDocumentForm() {
     if (employmentDocumentTypeInput) employmentDocumentTypeInput.value = "";
     if (employmentDocumentNameInput) employmentDocumentNameInput.value = "";
+    if (employmentDocumentFileInput) employmentDocumentFileInput.value = "";
     if (employmentDocumentMessage) employmentDocumentMessage.innerHTML = "";
 }
 
 async function uploadEmploymentDocument() {
     const documentType = employmentDocumentTypeInput ? employmentDocumentTypeInput.value.trim() : "";
     const documentName = employmentDocumentNameInput ? employmentDocumentNameInput.value.trim() : "";
+    const selectedFile = employmentDocumentFileInput && employmentDocumentFileInput.files
+        ? employmentDocumentFileInput.files[0]
+        : null;
 
     if (!documentType || !documentName) {
         showToast("Please choose a document type and enter a document name.", "error");
         return;
     }
 
+    if (!selectedFile) {
+        showToast("Please choose a PDF, DOCX, DOC or TXT file before uploading.", "error");
+        if (employmentDocumentMessage) {
+            employmentDocumentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">Please choose a real employment document file before uploading.</p>`;
+        }
+        return;
+    }
+
+    const allowedExtensions = ["pdf", "doc", "docx", "txt"];
+    const fileExtension = String(selectedFile.name || "").split(".").pop().toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+        showToast("Only PDF, DOC, DOCX and TXT employment documents can be uploaded.", "error");
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_BASE}/api/admin/employment-documents`, {
+        const formData = new FormData();
+        formData.append("documentType", documentType);
+        formData.append("documentName", documentName);
+        formData.append("employmentDocumentFile", selectedFile);
+
+        const response = await fetch(`${API_BASE}/api/admin/employment-documents/upload`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: `Bearer ${authToken}`
             },
-            body: JSON.stringify({ documentType, documentName })
+            body: formData
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.message || "Failed to save employment document.");
+            throw new Error(data.message || "Failed to upload employment document file.");
         }
 
         if (employmentDocumentMessage) {
-            employmentDocumentMessage.innerHTML = `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment document saved successfully.")}</p>`;
+            employmentDocumentMessage.innerHTML = `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment document file uploaded successfully.")}</p>`;
         }
 
-        showToast(data.message || "Employment document saved successfully.", "success");
+        showToast(data.message || "Employment document file uploaded successfully.", "success");
         clearEmploymentDocumentForm();
         await loadEmploymentDocuments();
         renderEmploymentDocuments();
@@ -3838,9 +3866,9 @@ async function uploadEmploymentDocument() {
         renderAuditTrail();
     } catch (error) {
         console.error(error);
-        showToast(error.message || "Failed to save employment document.", "error");
+        showToast(error.message || "Failed to upload employment document file.", "error");
         if (employmentDocumentMessage) {
-            employmentDocumentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to save employment document.")}</p>`;
+            employmentDocumentMessage.innerHTML = `<p style="color:#ff9a9a; font-weight:700;">${escapeHtml(error.message || "Failed to upload employment document file.")}</p>`;
         }
     }
 }

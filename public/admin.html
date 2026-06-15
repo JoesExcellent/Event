@@ -1433,7 +1433,7 @@ Joe's Excellent Events & Management</textarea>
 
     <section class="ats-panel">
         <h2>Upload Employment Document Record</h2>
-        <p>Add a document record to the Employment Documents library. File upload and secure download handling will be connected after this Firestore foundation is confirmed stable.</p>
+        <p>Upload a real employment document file to Firebase Storage and save its metadata in the Employment Documents library.</p>
 
         <div class="form-grid">
             <div class="form-group">
@@ -1452,9 +1452,14 @@ Joe's Excellent Events & Management</textarea>
                 <label for="employmentDocumentName">Document Name</label>
                 <input type="text" id="employmentDocumentName" placeholder="Example: Chief Composer Contract.pdf">
             </div>
+
+            <div class="form-group full">
+                <label for="employmentDocumentFile">Employment Document File</label>
+                <input type="file" id="employmentDocumentFile" accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            </div>
         </div>
 
-        <button id="uploadEmploymentDocumentBtn" type="button">Upload Document Record</button>
+        <button id="uploadEmploymentDocumentBtn" type="button">Upload Real Employment File</button>
         <button id="clearEmploymentDocumentBtn" type="button">Clear Document Form</button>
         <div id="employmentDocumentMessage"></div>
     </section>
