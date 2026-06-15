@@ -43,7 +43,8 @@ function initialiseFirebase() {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+            credential: admin.credential.cert(serviceAccount),
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "temc-recruitment-system.firebasestorage.app"
         });
         return;
     }
@@ -52,19 +53,22 @@ function initialiseFirebase() {
         const json = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, "base64").toString("utf8");
         const serviceAccount = JSON.parse(json);
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+            credential: admin.credential.cert(serviceAccount),
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "temc-recruitment-system.firebasestorage.app"
         });
         return;
     }
 
     admin.initializeApp({
-        credential: admin.credential.applicationDefault()
+        credential: admin.credential.applicationDefault(),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "temc-recruitment-system.firebasestorage.app"
     });
 }
 
 initialiseFirebase();
 
 const db = admin.firestore();
+const employmentDocumentsBucket = admin.storage().bucket(process.env.FIREBASE_STORAGE_BUCKET || "temc-recruitment-system.firebasestorage.app");
 
 /* =====================================================
    MULTER FILE UPLOADS
@@ -3126,6 +3130,14 @@ function normaliseEmploymentDocumentForClient(doc) {
         uploadedBy: data.uploadedBy || "Unknown Admin",
         uploadedAt: data.uploadedAt || data.createdAt || "",
         updatedAt: data.updatedAt || "",
+        fileName: data.fileName || "",
+        originalFileName: data.originalFileName || data.fileName || "",
+        fileType: data.fileType || "",
+        fileSize: data.fileSize || 0,
+        storagePath: data.storagePath || "",
+        storageBucket: data.storageBucket || "",
+        storageUri: data.storageUri || "",
+        hasStoredFile: Boolean(data.storagePath),
         active: data.active !== false
     };
 }
@@ -3191,6 +3203,127 @@ async function createEmploymentDocumentHandler(req, res) {
         res.status(500).json({ message: "Failed to save employment document." });
     }
 }
+
+
+function getEmploymentDocumentStorageFolder(documentType) {
+    const type = String(documentType || "").toLowerCase();
+
+    if (type === "employment contract") return "contracts";
+    if (type === "welcome pack") return "welcome-packs";
+    if (type === "employee handbook") return "handbooks";
+    if (type === "induction pack") return "inductions";
+    if (type === "company policies") return "policies";
+
+    return "general";
+}
+
+function makeSafeStorageFileName(fileName) {
+    const original = path.basename(String(fileName || "employment-document"));
+    const ext = path.extname(original).toLowerCase();
+    const baseName = path.basename(original, ext)
+        .replace(/[^a-zA-Z0-9._-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "") || "employment-document";
+
+    return `${Date.now()}-${baseName}${ext || ".pdf"}`;
+}
+
+function validateEmploymentDocumentFile(file) {
+    if (!file) {
+        return "Please choose a real employment document file before uploading.";
+    }
+
+    const allowedExtensions = [".pdf", ".doc", ".docx", ".txt"];
+    const extension = path.extname(file.originalname || "").toLowerCase();
+
+    if (!allowedExtensions.includes(extension)) {
+        return "Only PDF, DOC, DOCX and TXT employment documents can be uploaded.";
+    }
+
+    return "";
+}
+
+async function createEmploymentDocumentUploadHandler(req, res) {
+    let tempFilePath = req.file?.path || "";
+
+    try {
+        const documentType = clean(req.body.documentType);
+        const documentName = clean(req.body.documentName);
+
+        if (!documentType) {
+            return res.status(400).json({ message: "Document type is required." });
+        }
+
+        if (!documentName) {
+            return res.status(400).json({ message: "Document name is required." });
+        }
+
+        const fileError = validateEmploymentDocumentFile(req.file);
+        if (fileError) {
+            return res.status(400).json({ message: fileError });
+        }
+
+        const folder = getEmploymentDocumentStorageFolder(documentType);
+        const safeFileName = makeSafeStorageFileName(req.file.originalname);
+        const storagePath = `employment-documents/${folder}/${safeFileName}`;
+
+        await employmentDocumentsBucket.upload(tempFilePath, {
+            destination: storagePath,
+            metadata: {
+                contentType: req.file.mimetype || "application/octet-stream",
+                metadata: {
+                    documentType,
+                    documentName,
+                    uploadedBy: req.user?.email || "Unknown Admin"
+                }
+            }
+        });
+
+        const uploadedAt = nowIso();
+        const documentRecord = {
+            documentType,
+            documentName,
+            fileName: safeFileName,
+            originalFileName: req.file.originalname || safeFileName,
+            fileType: req.file.mimetype || "application/octet-stream",
+            fileSize: req.file.size || 0,
+            storagePath,
+            storageBucket: employmentDocumentsBucket.name,
+            storageUri: `gs://${employmentDocumentsBucket.name}/${storagePath}`,
+            uploadedBy: req.user?.email || "Unknown Admin",
+            uploadedAt,
+            updatedAt: uploadedAt,
+            active: true
+        };
+
+        const ref = await db.collection("employmentDocuments").add(documentRecord);
+        const savedDocument = { id: ref.id, ...documentRecord };
+
+        await logAudit({
+            actionType: "EMPLOYMENT_DOCUMENT_FILE_UPLOADED",
+            actorType: "ADMIN",
+            actorEmail: req.user?.email || "Unknown Admin",
+            candidateId: ref.id,
+            candidateName: "Employment Documents Centre",
+            candidateEmail: "",
+            description: `${documentType} file uploaded: ${documentName}.`,
+            metadata: savedDocument
+        });
+
+        res.json({
+            message: "Employment document file uploaded successfully.",
+            document: savedDocument
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to upload employment document file." });
+    } finally {
+        if (tempFilePath) {
+            fs.promises.unlink(tempFilePath).catch(() => {});
+        }
+    }
+}
+
 
 async function deleteEmploymentDocumentHandler(req, res) {
     try {
@@ -3628,6 +3761,7 @@ app.delete("/api/admin/employment-document-assignments/:candidateId", requireAut
 
 app.get("/api/admin/employment-documents", requireAuth, listEmploymentDocumentsHandler);
 app.get("/api/employment-documents", requireAuth, listEmploymentDocumentsHandler);
+app.post("/api/admin/employment-documents/upload", requireAuth, requireEditor, upload.single("employmentDocumentFile"), createEmploymentDocumentUploadHandler);
 app.post("/api/admin/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
 app.post("/api/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
 app.delete("/api/admin/employment-documents/:id", requireAuth, requireEditor, deleteEmploymentDocumentHandler);
