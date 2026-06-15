@@ -3504,8 +3504,10 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
         }
 
         const accessedAt = nowIso();
-        const actionType = accessAction === "download" ? "EMPLOYMENT_DOCUMENT_DOWNLOAD_REQUESTED" : "EMPLOYMENT_DOCUMENT_VIEW_REQUESTED";
-        const readableAction = accessAction === "download" ? "download requested" : "view requested";
+        const candidateName = application.fullName || application.name || assignment.candidateName || "Candidate";
+        const candidateEmail = application.email || req.candidate.email || assignment.candidateEmail || "";
+        const actionType = accessAction === "download" ? "DOCUMENT_DOWNLOADED" : "DOCUMENT_VIEWED";
+        const readableAction = accessAction === "download" ? "downloaded" : "viewed";
 
         await db.collection("applications").doc(candidateId).set({
             documentDownloadStatus: accessAction === "download" ? "Downloaded" : "Viewed",
@@ -3515,14 +3517,28 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
             updatedAt: accessedAt
         }, { merge: true });
 
+        await db.collection("documentAuditLogs").add({
+            actionType,
+            action: accessAction,
+            candidateId,
+            candidateName,
+            candidateEmail,
+            documentId,
+            documentType: documentRecord.documentType,
+            documentName: documentRecord.documentName,
+            createdAt: accessedAt,
+            updatedAt: accessedAt,
+            source: "Candidate Portal"
+        });
+
         await logAudit({
             actionType,
             actorType: "CANDIDATE",
-            actorEmail: application.email || req.candidate.email || "",
+            actorEmail: candidateEmail,
             candidateId,
-            candidateName: application.fullName || application.name || "Candidate",
-            candidateEmail: application.email || req.candidate.email || "",
-            description: `${documentRecord.documentType} ${readableAction}: ${documentRecord.documentName}.`,
+            candidateName,
+            candidateEmail,
+            description: `${candidateName} ${readableAction} ${documentRecord.documentType}: ${documentRecord.documentName}.`,
             metadata: {
                 documentId,
                 documentType: documentRecord.documentType,
@@ -3532,18 +3548,65 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
             }
         });
 
-        res.json({
-            message: accessAction === "download"
-                ? `${documentRecord.documentName} is ready for secure download handling in the next phase.`
-                : `${documentRecord.documentName} is ready for secure viewing in the next phase.`,
-            document: documentRecord,
-            access: {
-                action: accessAction,
-                accessedAt,
-                downloadAvailable: false,
-                fileHandlingPhase: "Phase 6E.11-R2"
-            }
-        });
+        const safeFilenameBase = String(documentRecord.documentName || documentRecord.documentType || "employment-document")
+            .replace(/[^a-zA-Z0-9._-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "") || "employment-document";
+
+        if (accessAction === "download") {
+            const downloadText = [
+                "Joe's Excellent Events & Management",
+                "Secure Employment Document Download Record",
+                "",
+                `Candidate: ${candidateName}`,
+                `Candidate Email: ${candidateEmail}`,
+                `Document Type: ${documentRecord.documentType}`,
+                `Document Name: ${documentRecord.documentName}`,
+                `Accessed: ${accessedAt}`,
+                "",
+                "Secure file delivery is prepared. Full PDF/file storage can be connected in the next phase."
+            ].join("\n");
+
+            res.setHeader("Content-Type", "text/plain; charset=utf-8");
+            res.setHeader("Content-Disposition", `attachment; filename="${safeFilenameBase}.txt"`);
+            return res.send(downloadText);
+        }
+
+        const safeDocumentType = escapeHtml(documentRecord.documentType);
+        const safeDocumentName = escapeHtml(documentRecord.documentName);
+        const safeCandidateName = escapeHtml(candidateName);
+        const safeAccessedAt = escapeHtml(accessedAt);
+
+        const viewHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${safeDocumentName}</title>
+    <style>
+        body { font-family: Arial, Helvetica, sans-serif; background:#061726; color:#ffffff; padding:40px; line-height:1.6; }
+        .document-card { max-width:900px; margin:auto; background:#13283b; border:1px solid rgba(255,176,0,.45); border-radius:18px; padding:34px; }
+        h1 { color:#ff6a00; margin-top:0; }
+        .badge { display:inline-block; background:#27ae60; color:#ffffff; border-radius:999px; padding:8px 14px; font-weight:800; }
+        .muted { color:#d7e4ef; }
+    </style>
+</head>
+<body>
+    <main class="document-card">
+        <h1>${safeDocumentType}</h1>
+        <p class="badge">Secure View Confirmed</p>
+        <h2>${safeDocumentName}</h2>
+        <p><strong>Candidate:</strong> ${safeCandidateName}</p>
+        <p><strong>Accessed:</strong> ${safeAccessedAt}</p>
+        <p class="muted">This secure document view has been validated against the candidate portal assignment record and recorded in the audit trail.</p>
+        <p class="muted">Full PDF/file preview handling can be connected in the next phase.</p>
+    </main>
+</body>
+</html>`;
+
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.setHeader("Content-Disposition", `inline; filename="${safeFilenameBase}.html"`);
+        return res.send(viewHtml);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message || "Failed to access employment document." });
