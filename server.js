@@ -3687,22 +3687,39 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
             .replace(/^-|-$/g, "") || "employment-document";
 
         if (accessAction === "download") {
-            const downloadText = [
-                "Joe's Excellent Events & Management",
-                "Secure Employment Document Download Record",
-                "",
-                `Candidate: ${candidateName}`,
-                `Candidate Email: ${candidateEmail}`,
-                `Document Type: ${documentRecord.documentType}`,
-                `Document Name: ${documentRecord.documentName}`,
-                `Accessed: ${accessedAt}`,
-                "",
-                "Secure file delivery is prepared. Full PDF/file storage can be connected in the next phase."
-            ].join("\n");
+            if (!documentRecord.storagePath) {
+                return res.status(404).json({ message: "No stored file is connected to this employment document." });
+            }
 
-            res.setHeader("Content-Type", "text/plain; charset=utf-8");
-            res.setHeader("Content-Disposition", `attachment; filename="${safeFilenameBase}.txt"`);
-            return res.send(downloadText);
+            const file = employmentDocumentsBucket.file(documentRecord.storagePath);
+            const [exists] = await file.exists();
+
+            if (!exists) {
+                return res.status(404).json({ message: "Stored employment document file was not found." });
+            }
+
+            const downloadFileName = String(
+                documentRecord.originalFileName ||
+                documentRecord.fileName ||
+                `${safeFilenameBase}.pdf`
+            ).replace(/[\r\n"]/g, "").trim() || `${safeFilenameBase}.pdf`;
+
+            res.setHeader("Content-Type", documentRecord.fileType || "application/pdf");
+            res.setHeader("Content-Disposition", `attachment; filename="${downloadFileName}"`);
+            res.setHeader("X-Content-Type-Options", "nosniff");
+
+            const fileStream = file.createReadStream();
+
+            fileStream.on("error", (streamError) => {
+                console.error("Employment document download stream failed:", streamError);
+                if (!res.headersSent) {
+                    res.status(500).json({ message: "Failed to download employment document file." });
+                } else {
+                    res.end();
+                }
+            });
+
+            return fileStream.pipe(res);
         }
 
         const safeDocumentType = escapeHtml(documentRecord.documentType);
