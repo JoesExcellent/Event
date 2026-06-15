@@ -36,17 +36,85 @@ function setStatus(id, value) {
     element.className = "candidate-status-badge " + statusClass(value);
 }
 
-function setDocumentName(id, documentRecord) {
+function setDocumentName(id, documentRecord, documentLabel = "Employment Document") {
     const element = document.getElementById(id);
     if (!element) return;
 
+    element.innerHTML = "";
+
     if (documentRecord && documentRecord.documentName) {
         const uploadedText = documentRecord.uploadedAt ? `Uploaded ${formatDate(documentRecord.uploadedAt)}` : "Assigned document";
-        element.textContent = `${documentRecord.documentName} — ${uploadedText}`;
-        element.style.color = "#f2f2f2";
+
+        const nameLine = document.createElement("div");
+        nameLine.textContent = `${documentRecord.documentName} — ${uploadedText}`;
+        nameLine.style.color = "#f2f2f2";
+        nameLine.style.marginBottom = "10px";
+        element.appendChild(nameLine);
+
+        const actionBox = document.createElement("div");
+        actionBox.className = "interview-action-buttons";
+        actionBox.style.marginTop = "8px";
+
+        const viewButton = document.createElement("button");
+        viewButton.type = "button";
+        viewButton.className = "btn";
+        viewButton.textContent = "View Document";
+        viewButton.addEventListener("click", function () {
+            accessEmploymentDocument(documentRecord.id, "view", documentLabel);
+        });
+
+        const downloadButton = document.createElement("button");
+        downloadButton.type = "button";
+        downloadButton.className = "btn btn-secondary";
+        downloadButton.textContent = "Download Document";
+        downloadButton.addEventListener("click", function () {
+            accessEmploymentDocument(documentRecord.id, "download", documentLabel);
+        });
+
+        actionBox.appendChild(viewButton);
+        actionBox.appendChild(downloadButton);
+        element.appendChild(actionBox);
     } else {
         element.textContent = "No document record assigned";
         element.style.color = "rgba(255, 255, 255, 0.65)";
+    }
+}
+
+async function accessEmploymentDocument(documentId, action = "view", documentLabel = "Employment Document") {
+    const token = getCandidateToken();
+
+    if (!token) {
+        showLogin("Please sign in again to access your document.");
+        return;
+    }
+
+    if (!documentId) {
+        setPortalRefreshMessage("This document is not available yet.", "#ff9a9a");
+        return;
+    }
+
+    const actionText = action === "download" ? "Preparing secure download" : "Preparing secure view";
+
+    try {
+        setPortalRefreshMessage(`${actionText} for ${documentLabel}...`, "#ffffff");
+
+        const response = await fetch(`/api/candidate/employment-document/${encodeURIComponent(documentId)}/access?action=${encodeURIComponent(action)}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Unable to access this document.");
+        }
+
+        setPortalRefreshMessage(result.message || `${documentLabel} access confirmed.`, "#7dffad");
+    } catch (error) {
+        console.error(error);
+        setPortalRefreshMessage(error.message || "Unable to access this document.", "#ff9a9a");
     }
 }
 
@@ -305,11 +373,11 @@ function renderCandidate(candidate) {
     setStatus("candidatePoliciesStatus", hasCompanyPolicies ? "Available" : "Not Available");
 
     const assignedDocuments = employmentDocumentAssignment.assignedDocuments || {};
-    setDocumentName("candidateEmploymentContractName", assignedDocuments.employmentContract);
-    setDocumentName("candidateWelcomePackName", assignedDocuments.welcomePack);
-    setDocumentName("candidateHandbookName", assignedDocuments.employeeHandbook);
-    setDocumentName("candidateInductionPackName", assignedDocuments.inductionPack);
-    setDocumentName("candidatePoliciesName", assignedDocuments.companyPolicies);
+    setDocumentName("candidateEmploymentContractName", assignedDocuments.employmentContract, "Employment Contract");
+    setDocumentName("candidateWelcomePackName", assignedDocuments.welcomePack, "Welcome Pack");
+    setDocumentName("candidateHandbookName", assignedDocuments.employeeHandbook, "Employee Handbook");
+    setDocumentName("candidateInductionPackName", assignedDocuments.inductionPack, "Induction Pack");
+    setDocumentName("candidatePoliciesName", assignedDocuments.companyPolicies, "Company Policies");
 
     const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasInductionPack, hasCompanyPolicies].filter(Boolean).length;
     const resolvedDocumentCount = Object.values(assignedDocuments).filter(Boolean).length;
