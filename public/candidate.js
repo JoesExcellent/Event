@@ -93,25 +93,50 @@ async function accessEmploymentDocument(documentId, action = "view", documentLab
         return;
     }
 
-    const actionText = action === "download" ? "Preparing secure download" : "Preparing secure view";
+    const accessAction = action === "download" ? "download" : "view";
+    const actionText = accessAction === "download" ? "Preparing secure download" : "Opening secure view";
 
     try {
         setPortalRefreshMessage(`${actionText} for ${documentLabel}...`, "#ffffff");
 
-        const response = await fetch(`/api/candidate/employment-document/${encodeURIComponent(documentId)}/access?action=${encodeURIComponent(action)}`, {
+        const response = await fetch(`/api/candidate/employment-document/${encodeURIComponent(documentId)}/access?action=${encodeURIComponent(accessAction)}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
 
-        const result = await response.json();
+        const contentType = response.headers.get("content-type") || "";
 
         if (!response.ok) {
-            throw new Error(result.message || "Unable to access this document.");
+            if (contentType.includes("application/json")) {
+                const result = await response.json();
+                throw new Error(result.message || "Unable to access this document.");
+            }
+            throw new Error("Unable to access this document.");
         }
 
-        setPortalRefreshMessage(result.message || `${documentLabel} access confirmed.`, "#7dffad");
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        if (accessAction === "download") {
+            const downloadLink = document.createElement("a");
+            downloadLink.href = blobUrl;
+            downloadLink.download = `${String(documentLabel || "employment-document").replace(/[^a-z0-9]+/gi, "-")}.txt`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            downloadLink.remove();
+            window.setTimeout(function () {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 1000);
+            setPortalRefreshMessage(`${documentLabel} secure download recorded.`, "#7dffad");
+        } else {
+            window.open(blobUrl, "_blank", "noopener,noreferrer");
+            window.setTimeout(function () {
+                window.URL.revokeObjectURL(blobUrl);
+            }, 60000);
+            setPortalRefreshMessage(`${documentLabel} secure view recorded.`, "#7dffad");
+        }
     } catch (error) {
         console.error(error);
         setPortalRefreshMessage(error.message || "Unable to access this document.", "#ff9a9a");
