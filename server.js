@@ -3458,10 +3458,105 @@ async function deleteEmploymentDocumentAssignmentHandler(req, res) {
 }
 
 
+
+async function candidateEmploymentDocumentAccessHandler(req, res) {
+    try {
+        const candidateId = req.candidate.applicationId;
+        const documentId = clean(req.params.documentId);
+        const requestedAction = clean(req.query.action || "view").toLowerCase();
+        const accessAction = requestedAction === "download" ? "download" : "view";
+
+        if (!documentId) {
+            return res.status(400).json({ message: "Employment document ID is required." });
+        }
+
+        const candidateDoc = await db.collection("applications").doc(candidateId).get();
+        if (!candidateDoc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const application = { id: candidateDoc.id, ...candidateDoc.data() };
+
+        if ((application.email || "").toLowerCase() !== (req.candidate.email || "").toLowerCase()) {
+            return res.status(403).json({ message: "Candidate document access denied." });
+        }
+
+        const assignment = await getEmploymentDocumentAssignmentForCandidate(candidateId);
+        if (!assignment) {
+            return res.status(404).json({ message: "No employment documents have been assigned to this candidate." });
+        }
+
+        const assignedDocumentIds = [
+            assignment.employmentContractDocumentId,
+            assignment.welcomePackDocumentId,
+            assignment.handbookDocumentId,
+            assignment.inductionPackDocumentId,
+            assignment.companyPoliciesDocumentId
+        ].filter(Boolean);
+
+        if (!assignedDocumentIds.includes(documentId)) {
+            return res.status(403).json({ message: "This employment document is not assigned to your candidate portal." });
+        }
+
+        const documentRecord = await getEmploymentDocumentRecordById(documentId);
+        if (!documentRecord) {
+            return res.status(404).json({ message: "Employment document record not found or inactive." });
+        }
+
+        const accessedAt = nowIso();
+        const actionType = accessAction === "download" ? "EMPLOYMENT_DOCUMENT_DOWNLOAD_REQUESTED" : "EMPLOYMENT_DOCUMENT_VIEW_REQUESTED";
+        const readableAction = accessAction === "download" ? "download requested" : "view requested";
+
+        await db.collection("applications").doc(candidateId).set({
+            documentDownloadStatus: accessAction === "download" ? "Downloaded" : "Viewed",
+            lastEmploymentDocumentAccessedAt: accessedAt,
+            lastEmploymentDocumentAccessedId: documentId,
+            lastEmploymentDocumentAccessedName: documentRecord.documentName,
+            updatedAt: accessedAt
+        }, { merge: true });
+
+        await logAudit({
+            actionType,
+            actorType: "CANDIDATE",
+            actorEmail: application.email || req.candidate.email || "",
+            candidateId,
+            candidateName: application.fullName || application.name || "Candidate",
+            candidateEmail: application.email || req.candidate.email || "",
+            description: `${documentRecord.documentType} ${readableAction}: ${documentRecord.documentName}.`,
+            metadata: {
+                documentId,
+                documentType: documentRecord.documentType,
+                documentName: documentRecord.documentName,
+                accessAction,
+                accessedAt
+            }
+        });
+
+        res.json({
+            message: accessAction === "download"
+                ? `${documentRecord.documentName} is ready for secure download handling in the next phase.`
+                : `${documentRecord.documentName} is ready for secure viewing in the next phase.`,
+            document: documentRecord,
+            access: {
+                action: accessAction,
+                accessedAt,
+                downloadAvailable: false,
+                fileHandlingPhase: "Phase 6E.11-R2"
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || "Failed to access employment document." });
+    }
+}
+
 app.post("/api/candidate/contract-accept", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "accept"));
 app.post("/api/candidate/contract-decline", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "decline"));
 app.post("/api/candidate/e-signature", requireCandidateAuth, (req, res) => candidateContractActionHandler(req, res, "signature"));
 app.get("/api/admin/contracts", requireAuth, listContractAcceptancesHandler);
+app.get("/api/candidate/employment-document/:documentId/access", requireCandidateAuth, candidateEmploymentDocumentAccessHandler);
+app.get("/api/candidate/document/:documentId", requireCandidateAuth, candidateEmploymentDocumentAccessHandler);
+
 
 app.get("/api/admin/employment-document-assignments", requireAuth, listEmploymentDocumentAssignmentsHandler);
 app.get("/api/admin/employment-document-assignments/:candidateId", requireAuth, getEmploymentDocumentAssignmentHandler);
