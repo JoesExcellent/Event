@@ -589,8 +589,14 @@ async function sendEmail({ to, subject, html, replyTo = "" }) {
     return result;
 }
 
+function getRecruitmentEmail() {
+    return process.env.RECRUITMENT_EMAIL ||
+        process.env.RECRUITER_NOTIFICATION_EMAIL ||
+        "recruitment@joesexcellentmanagement.co.uk";
+}
+
 function getRecruiterNotificationEmail() {
-    return process.env.RECRUITER_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || "joseph.eldridge1964@gmail.com";
+    return getRecruitmentEmail();
 }
 
 function maskApplicationReference(reference) {
@@ -944,6 +950,105 @@ async function adminLoginHandler(req, res) {
 app.post("/api/admin/login", adminLoginHandler);
 app.post("/admin/login", adminLoginHandler);
 
+async function sendNewApplicationNotification(applicationId, application) {
+    const recruitmentEmail = getRecruitmentEmail();
+    const candidateName = application.fullName || application.name || "Candidate";
+    const safeCandidateName = escapeHtml(candidateName);
+    const safeCandidateEmail = escapeHtml(application.email || "Not provided");
+    const safePhone = escapeHtml(application.phone || "Not provided");
+    const safeAddress = escapeHtml(application.address || "Not provided");
+    const safePosition = escapeHtml(application.position || "Not specified");
+    const safeAvailability = escapeHtml(application.availability || "Not provided");
+    const safeMessage = escapeHtml(application.message || "No additional information provided.").replace(/\n/g, "<br>");
+    const safeReference = escapeHtml(applicationId || "Not available");
+    const safeCvUrl = application.cv?.url ? escapeHtml(application.cv.url) : "";
+    const safeExtraFileUrl = application.extraFile?.url ? escapeHtml(application.extraFile.url) : "";
+
+    const submittedAt = new Date(application.createdAt || nowIso());
+    const submittedDate = submittedAt.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "Europe/London"
+    });
+    const submittedTime = submittedAt.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/London",
+        timeZoneName: "short"
+    });
+
+    const fileRows = [
+        safeCvUrl
+            ? `<tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;width:190px;">Curriculum Vitae</td><td style="padding:10px 0;"><a href="${safeCvUrl}" style="color:#ffffff;text-decoration:underline;">Open uploaded curriculum vitae</a></td></tr>`
+            : "",
+        safeExtraFileUrl
+            ? `<tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;width:190px;">Additional File</td><td style="padding:10px 0;"><a href="${safeExtraFileUrl}" style="color:#ffffff;text-decoration:underline;">Open additional file</a></td></tr>`
+            : ""
+    ].join("");
+
+    return sendEmail({
+        to: recruitmentEmail,
+        replyTo: application.email,
+        subject: `New Application – ${application.position || "General Opportunity"} – ${candidateName}`,
+        html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Application Received</title>
+</head>
+<body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#061421;">
+        <tr>
+            <td align="center" style="padding:40px 18px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:760px;background:#132f44;border:2px solid #ff6a00;border-radius:24px;overflow:hidden;">
+                    <tr>
+                        <td style="padding:38px 42px 24px;text-align:center;background:#020b14;border-bottom:2px solid #ff6a00;">
+                            <div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;margin-bottom:10px;">Joe's Excellent Events &amp; Management</div>
+                            <h1 style="margin:0;color:#ff6a00;font-size:34px;line-height:1.2;">New Application Received</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:36px 42px;">
+                            <p style="margin:0 0 24px;font-size:17px;line-height:1.7;color:#ffffff;">
+                                A new application has been submitted through the website. Replying to this email will address the response directly to the applicant.
+                            </p>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;font-size:16px;line-height:1.6;color:#ffffff;">
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;width:190px;">Applicant</td><td style="padding:10px 0;">${safeCandidateName}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Email</td><td style="padding:10px 0;"><a href="mailto:${safeCandidateEmail}" style="color:#ffffff;text-decoration:underline;">${safeCandidateEmail}</a></td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Phone</td><td style="padding:10px 0;">${safePhone}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Address</td><td style="padding:10px 0;">${safeAddress}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Position</td><td style="padding:10px 0;">${safePosition}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Availability</td><td style="padding:10px 0;">${safeAvailability}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Application Reference</td><td style="padding:10px 0;">${safeReference}</td></tr>
+                                <tr><td style="padding:10px 0;color:#ffb000;font-weight:700;vertical-align:top;">Submitted</td><td style="padding:10px 0;">${escapeHtml(submittedDate)} at ${escapeHtml(submittedTime)}</td></tr>
+                                ${fileRows}
+                            </table>
+
+                            <div style="margin-top:28px;padding:24px;background:#0b2a44;border-left:4px solid #ff6a00;border-radius:10px;">
+                                <div style="color:#ffb000;font-weight:700;margin-bottom:10px;">Applicant's Message</div>
+                                <div style="font-size:16px;line-height:1.7;color:#ffffff;">${safeMessage}</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:22px 42px;text-align:center;background:#020b14;color:#d8e0e7;font-size:13px;line-height:1.6;">
+                            Recruitment Team · Joe's Excellent Events &amp; Management<br>
+                            recruitment@joesexcellentmanagement.co.uk
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`
+    });
+}
+
 /* =====================================================
    PUBLIC APPLICATION SUBMISSION
 ===================================================== */
@@ -995,6 +1100,36 @@ async function applicationSubmitHandler(req, res) {
             }
 
             const docRef = await db.collection("applications").add(application);
+
+            try {
+                const notificationResult = await sendNewApplicationNotification(docRef.id, application);
+
+                await docRef.update({
+                    recruitmentNotificationSent: true,
+                    recruitmentNotificationEmailId: notificationResult.id || "",
+                    recruitmentNotificationRecipient: getRecruitmentEmail(),
+                    updatedAt: nowIso()
+                });
+
+                await logCommunication({
+                    applicationId: docRef.id,
+                    application: { id: docRef.id, ...application },
+                    communicationType: "Recruitment Notification",
+                    action: "New Application Notification Sent",
+                    status: "Sent",
+                    emailId: notificationResult.id || "",
+                    subject: `New Application – ${application.position || "General Opportunity"} – ${application.fullName || application.name || "Candidate"}`,
+                    extra: { recruiterEmail: getRecruitmentEmail() }
+                });
+            } catch (notificationError) {
+                console.error("Recruitment notification email failed:", notificationError);
+
+                await docRef.update({
+                    recruitmentNotificationSent: false,
+                    recruitmentNotificationError: notificationError.message || "Email failed to send.",
+                    updatedAt: nowIso()
+                }).catch(updateError => console.error("Notification failure status update failed:", updateError));
+            }
 
             try {
                 const emailResult = await sendTemplateEmail("applicationReceived", { id: docRef.id, ...application });
