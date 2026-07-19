@@ -553,12 +553,12 @@ app.post("/api/admin/email-templates/:id/restore", requireAuth, requireEditor, r
 app.post("/api/email-templates/:id/restore", requireAuth, requireEditor, restoreEmailTemplateHandler);
 
 
-async function sendEmail({ to, subject, html, replyTo = "" }) {
+async function sendEmail({ to, subject, html, replyTo = "", from = "" }) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error("RESEND_API_KEY is missing.");
     }
 
-    const fromEmail = process.env.FROM_EMAIL || "Joe's Excellent Events & Management <onboarding@resend.dev>";
+    const fromEmail = from || process.env.FROM_EMAIL || "Joe's Excellent Events & Management <onboarding@resend.dev>";
     const emailPayload = {
         from: fromEmail,
         to,
@@ -593,6 +593,10 @@ function getRecruitmentEmail() {
     return process.env.RECRUITMENT_EMAIL ||
         process.env.RECRUITER_NOTIFICATION_EMAIL ||
         "recruitment@joesexcellentmanagement.co.uk";
+}
+
+function getRecruitmentFromEmail() {
+    return `Recruitment Team - Joe's Excellent Events & Management <${getRecruitmentEmail()}>`;
 }
 
 function getRecruiterNotificationEmail() {
@@ -650,6 +654,7 @@ Joe's Excellent Events & Management`;
 
     return sendEmail({
         to: recruiterEmail,
+        from: getRecruitmentFromEmail(),
         subject,
         html: buildEmailHtml(`Candidate Interview ${responseLabel}`, "Recruitment Team", body)
     });
@@ -741,6 +746,7 @@ async function sendTemplateEmail(templateId, application, extraData = {}) {
 
     return sendEmail({
         to: application.email,
+        from: getRecruitmentFromEmail(),
         subject,
         html
     });
@@ -989,6 +995,7 @@ async function sendNewApplicationNotification(applicationId, application) {
 
     return sendEmail({
         to: recruitmentEmail,
+        from: getRecruitmentFromEmail(),
         replyTo: application.email,
         subject: `New Application – ${application.position || "General Opportunity"} – ${candidateName}`,
         html: `
@@ -1036,7 +1043,8 @@ async function sendNewApplicationNotification(applicationId, application) {
                     </tr>
                     <tr>
                         <td style="padding:22px 42px;text-align:center;background:#020b14;color:#d8e0e7;font-size:13px;line-height:1.6;">
-                            Recruitment Team · Joe's Excellent Events &amp; Management<br>
+                            Recruitment Team<br>
+                            Joe's Excellent Events &amp; Management<br>
                             recruitment@joesexcellentmanagement.co.uk
                         </td>
                     </tr>
@@ -3136,6 +3144,7 @@ Joe's Excellent Events & Management`;
 
         const emailResult = await sendEmail({
             to: application.email,
+            from: getRecruitmentFromEmail(),
             subject,
             html: buildEmailHtml("Candidate Portal Access", candidateName, body)
         });
