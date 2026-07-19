@@ -3123,14 +3123,14 @@ app.post("/api/contact", async (req, res) => {
             const notificationEmail = await sendEmail({
                 to: contactEmail,
                 replyTo: contactMessage.email,
-                subject: `Website enquiry - ${contactMessage.subject}`,
+                subject: `New Website Enquiry – ${contactMessage.subject}`,
                 html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Website Contact Enquiry</title>
+    <title>New Website Enquiry</title>
 </head>
 <body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#061421;">
@@ -3140,47 +3140,46 @@ app.post("/api/contact", async (req, res) => {
                     <tr>
                         <td style="padding:38px 42px 26px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.15);">
                             <p style="margin:0 0 10px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Joe's Excellent Events &amp; Management</p>
-                            <h1 style="margin:0;color:#ff6a00;font-size:36px;line-height:1.2;">New Website Contact Enquiry</h1>
+                            <h1 style="margin:0;color:#ff6a00;font-size:36px;line-height:1.2;">New Website Enquiry</h1>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:34px 42px 18px;color:#ffffff;font-size:16px;line-height:1.7;">
-                            <p style="margin:0 0 26px;">Hello,</p>
-                            <p style="margin:0 0 28px;">A new website contact enquiry has been received. The details are shown below.</p>
+                            <p style="margin:0 0 30px;">A new enquiry has been submitted through the Joe's Excellent Events &amp; Management website.</p>
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
                                 <tr>
-                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;width:140px;vertical-align:top;">Name</td>
-                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeName}</td>
+                                    <td style="padding:0 0 20px;color:#ffb066;font-size:16px;font-weight:700;width:140px;vertical-align:top;">Name</td>
+                                    <td style="padding:0 0 20px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeName}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Email</td>
-                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;"><a href="mailto:${safeEmail}" style="color:#ffb066;text-decoration:underline;">${safeEmail}</a></td>
+                                    <td style="padding:0 0 20px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Email</td>
+                                    <td style="padding:0 0 20px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;"><a href="mailto:${safeEmail}" style="color:#ffffff;text-decoration:underline;">${safeEmail}</a></td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Telephone</td>
-                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safePhone}</td>
+                                    <td style="padding:0 0 20px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Telephone</td>
+                                    <td style="padding:0 0 20px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safePhone}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Subject</td>
-                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeSubject}</td>
+                                    <td style="padding:0 0 20px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Subject</td>
+                                    <td style="padding:0 0 20px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeSubject}</td>
                                 </tr>
-                                <tr>
-                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Submitted</td>
-                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${submittedDate}<br>${submittedTime}</td>
-                                </tr>
+
                             </table>
                         </td>
                     </tr>
                     <tr>
                         <td style="padding:6px 42px 34px;">
-                            <p style="margin:0 0 12px;color:#ffb066;font-size:16px;font-weight:700;">Message</p>
+                            <p style="margin:0 0 8px;color:#ffb066;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;">Submitted</p>
+                            <p style="margin:0 0 24px;color:#ffffff;font-size:15px;line-height:1.6;">${submittedDate}<br>${submittedTime}</p>
+                            <p style="margin:0 0 12px;color:#ffb066;font-size:16px;font-weight:700;">Visitor's Message</p>
                             <div style="padding:22px 24px;background:#0b2233;border-left:4px solid #ff6a00;border-radius:12px;color:#ffffff;font-size:16px;line-height:1.75;">${safeMessage}</div>
                             <p style="margin:22px 0 0;color:#d7e0e7;font-size:14px;line-height:1.6;"><strong style="color:#ffffff;">GDPR consent:</strong> Confirmed</p>
-                            <p style="margin:12px 0 0;color:#d7e0e7;font-size:14px;line-height:1.6;">Use Reply to respond directly to ${safeEmail}.</p>
+                            <div style="margin:24px 0 0;border-top:1px solid rgba(255,255,255,0.16);"></div>
+                            <p style="margin:18px 0 0;color:#b9c7d2;font-size:12px;line-height:1.6;">Use Reply to respond directly to <a href="mailto:${safeEmail}" style="color:#ffb066;text-decoration:underline;">${safeEmail}</a>.</p>
                         </td>
                     </tr>
                     <tr>
-                        <td style="padding:20px 42px 28px;text-align:center;color:#b9c7d2;font-size:13px;line-height:1.6;border-top:1px solid rgba(255,255,255,0.12);">
+                        <td style="padding:18px 42px 24px;text-align:center;color:#9fb0bd;font-size:11px;line-height:1.6;border-top:1px solid rgba(255,255,255,0.12);">
                             This enquiry was submitted through the Joe's Excellent Events &amp; Management website.
                         </td>
                     </tr>
