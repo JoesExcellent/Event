@@ -3050,23 +3050,143 @@ app.post("/api/applications/:id/portal-invite", requireAuth, requireEditor, hand
 
 app.post("/api/contact", async (req, res) => {
     try {
-        const message = {
+        const contactMessage = {
             name: clean(req.body.name),
-            email: clean(req.body.email),
+            email: clean(req.body.email).toLowerCase(),
             phone: clean(req.body.phone),
             subject: clean(req.body.subject),
             message: clean(req.body.message),
-            createdAt: nowIso()
+            gdprConsent: bool(
+                req.body.gdprConsent ??
+                req.body.gdpr ??
+                req.body.consent ??
+                req.body.privacyConsent
+            ),
+            createdAt: nowIso(),
+            emailStatus: "Pending"
         };
 
-        await db.collection("contactMessages").add(message);
+        if (
+            !contactMessage.name ||
+            !contactMessage.email ||
+            !contactMessage.phone ||
+            !contactMessage.subject ||
+            !contactMessage.message
+        ) {
+            return res.status(400).json({
+                message: "Please complete all required contact fields."
+            });
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailPattern.test(contactMessage.email)) {
+            return res.status(400).json({
+                message: "Please enter a valid email address."
+            });
+        }
+
+        if (!contactMessage.gdprConsent) {
+            return res.status(400).json({
+                message: "Please confirm that you consent to your information being used to respond to your enquiry."
+            });
+        }
+
+        const contactEmail = process.env.CONTACT_EMAIL || "info@joesexcellentmanagement.co.uk";
+        const safeName = escapeHtml(contactMessage.name);
+        const safeEmail = escapeHtml(contactMessage.email);
+        const safePhone = escapeHtml(contactMessage.phone);
+        const safeSubject = escapeHtml(contactMessage.subject);
+        const safeMessage = escapeHtml(contactMessage.message).replace(/\n/g, "<br>");
+
+        const messageRef = await db.collection("contactMessages").add(contactMessage);
+
+        try {
+            const notificationEmail = await sendEmail({
+                to: contactEmail,
+                subject: `Website enquiry - ${contactMessage.subject}`,
+                html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>New Website Enquiry</title>
+</head>
+<body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <div style="max-width:900px;margin:0 auto;padding:48px 24px;background:#061421;">
+        <div style="background:#132f44;border:2px solid #ff6a00;border-radius:28px;padding:48px;color:#ffffff;">
+            <h1 style="margin:0 0 32px;text-align:center;color:#ff6a00;font-size:38px;line-height:1.2;">
+                New Website Enquiry
+            </h1>
+            <p><strong>Name:</strong> ${safeName}</p>
+            <p><strong>Email:</strong> ${safeEmail}</p>
+            <p><strong>Telephone:</strong> ${safePhone}</p>
+            <p><strong>Subject:</strong> ${safeSubject}</p>
+            <p><strong>Message:</strong></p>
+            <p style="line-height:1.7;">${safeMessage}</p>
+            <p><strong>GDPR consent:</strong> Confirmed</p>
+        </div>
+    </div>
+</body>
+</html>`
+            });
+
+            const acknowledgementEmail = await sendEmail({
+                to: contactMessage.email,
+                subject: "We have received your enquiry",
+                html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>We Have Received Your Enquiry</title>
+</head>
+<body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <div style="max-width:900px;margin:0 auto;padding:48px 24px;background:#061421;">
+        <div style="background:#132f44;border:2px solid #ff6a00;border-radius:28px;padding:48px;color:#ffffff;">
+            <h1 style="margin:0 0 32px;text-align:center;color:#ff6a00;font-size:38px;line-height:1.2;">
+                Thank You for Contacting Us
+            </h1>
+            <p>Dear ${safeName},</p>
+            <p style="line-height:1.7;">
+                Thank you for contacting Joe's Excellent Events &amp; Management.
+                We have received your enquiry and will respond as soon as possible.
+            </p>
+            <p><strong>Your subject:</strong> ${safeSubject}</p>
+            <p style="margin-top:32px;line-height:1.7;">
+                Kind regards,<br><br>
+                Joe's Excellent Events &amp; Management
+            </p>
+        </div>
+    </div>
+</body>
+</html>`
+            });
+
+            await messageRef.update({
+                emailStatus: "Sent",
+                notificationEmailId: notificationEmail.id || "",
+                acknowledgementEmailId: acknowledgementEmail.id || "",
+                emailSentAt: nowIso()
+            });
+        } catch (emailError) {
+            await messageRef.update({
+                emailStatus: "Failed",
+                emailError: emailError.message || "Email delivery failed.",
+                emailFailedAt: nowIso()
+            });
+
+            throw emailError;
+        }
 
         res.json({
             message: "Message sent successfully."
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Failed to send message." });
+        console.error("Contact form error:", error);
+        res.status(500).json({
+            message: "Your message could not be sent. Please try again."
+        });
     }
 });
 
