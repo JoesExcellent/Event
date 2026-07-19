@@ -553,12 +553,22 @@ app.post("/api/admin/email-templates/:id/restore", requireAuth, requireEditor, r
 app.post("/api/email-templates/:id/restore", requireAuth, requireEditor, restoreEmailTemplateHandler);
 
 
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, subject, html, replyTo = "" }) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error("RESEND_API_KEY is missing.");
     }
 
     const fromEmail = process.env.FROM_EMAIL || "Joe's Excellent Events & Management <onboarding@resend.dev>";
+    const emailPayload = {
+        from: fromEmail,
+        to,
+        subject,
+        html
+    };
+
+    if (replyTo) {
+        emailPayload.reply_to = replyTo;
+    }
 
     const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -566,12 +576,7 @@ async function sendEmail({ to, subject, html }) {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            from: fromEmail,
-            to,
-            subject,
-            html
-        })
+        body: JSON.stringify(emailPayload)
     });
 
     const result = await response.json();
@@ -3104,29 +3109,61 @@ app.post("/api/contact", async (req, res) => {
         try {
             const notificationEmail = await sendEmail({
                 to: contactEmail,
+                replyTo: contactMessage.email,
                 subject: `Website enquiry - ${contactMessage.subject}`,
                 html: `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Website Enquiry</title>
 </head>
 <body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-    <div style="max-width:900px;margin:0 auto;padding:48px 24px;background:#061421;">
-        <div style="background:#132f44;border:2px solid #ff6a00;border-radius:28px;padding:48px;color:#ffffff;">
-            <h1 style="margin:0 0 32px;text-align:center;color:#ff6a00;font-size:38px;line-height:1.2;">
-                New Website Enquiry
-            </h1>
-            <p><strong>Name:</strong> ${safeName}</p>
-            <p><strong>Email:</strong> ${safeEmail}</p>
-            <p><strong>Telephone:</strong> ${safePhone}</p>
-            <p><strong>Subject:</strong> ${safeSubject}</p>
-            <p><strong>Message:</strong></p>
-            <p style="line-height:1.7;">${safeMessage}</p>
-            <p><strong>GDPR consent:</strong> Confirmed</p>
-        </div>
-    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#061421;">
+        <tr>
+            <td align="center" style="padding:40px 18px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:760px;background:#132f44;border:2px solid #ff6a00;border-radius:24px;overflow:hidden;">
+                    <tr>
+                        <td style="padding:38px 42px 26px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.15);">
+                            <p style="margin:0 0 10px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Joe's Excellent Events &amp; Management</p>
+                            <h1 style="margin:0;color:#ff6a00;font-size:36px;line-height:1.2;">New Website Enquiry</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:34px 42px 12px;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
+                                <tr>
+                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;width:140px;vertical-align:top;">Name</td>
+                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Email</td>
+                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;"><a href="mailto:${safeEmail}" style="color:#ffffff;text-decoration:underline;">${safeEmail}</a></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Telephone</td>
+                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safePhone}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0 0 16px;color:#ffb066;font-size:16px;font-weight:700;vertical-align:top;">Subject</td>
+                                    <td style="padding:0 0 16px;color:#ffffff;font-size:16px;line-height:1.6;vertical-align:top;">${safeSubject}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 42px 34px;">
+                            <p style="margin:0 0 12px;color:#ffb066;font-size:16px;font-weight:700;">Message</p>
+                            <div style="padding:22px 24px;background:#0b2233;border-left:4px solid #ff6a00;border-radius:12px;color:#ffffff;font-size:16px;line-height:1.75;">${safeMessage}</div>
+                            <p style="margin:22px 0 0;color:#d7e0e7;font-size:14px;line-height:1.6;"><strong style="color:#ffffff;">GDPR consent:</strong> Confirmed</p>
+                            <p style="margin:12px 0 0;color:#d7e0e7;font-size:14px;line-height:1.6;">Replying to this email will address your response directly to ${safeEmail}.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`
             });
@@ -3136,29 +3173,48 @@ app.post("/api/contact", async (req, res) => {
                 subject: "We have received your enquiry",
                 html: `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>We Have Received Your Enquiry</title>
 </head>
 <body style="margin:0;padding:0;background:#061421;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-    <div style="max-width:900px;margin:0 auto;padding:48px 24px;background:#061421;">
-        <div style="background:#132f44;border:2px solid #ff6a00;border-radius:28px;padding:48px;color:#ffffff;">
-            <h1 style="margin:0 0 32px;text-align:center;color:#ff6a00;font-size:38px;line-height:1.2;">
-                Thank You for Contacting Us
-            </h1>
-            <p>Dear ${safeName},</p>
-            <p style="line-height:1.7;">
-                Thank you for contacting Joe's Excellent Events &amp; Management.
-                We have received your enquiry and will respond as soon as possible.
-            </p>
-            <p><strong>Your subject:</strong> ${safeSubject}</p>
-            <p style="margin-top:32px;line-height:1.7;">
-                Kind regards,<br><br>
-                Joe's Excellent Events &amp; Management
-            </p>
-        </div>
-    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;background:#061421;">
+        <tr>
+            <td align="center" style="padding:40px 18px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:760px;background:#132f44;border:2px solid #ff6a00;border-radius:24px;overflow:hidden;">
+                    <tr>
+                        <td style="padding:42px 42px 30px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.15);">
+                            <p style="margin:0 0 12px;color:#ffffff;font-size:15px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Joe's Excellent Events &amp; Management</p>
+                            <h1 style="margin:0;color:#ff6a00;font-size:36px;line-height:1.2;">Thank You for Contacting Us</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:36px 42px 18px;color:#ffffff;font-size:17px;line-height:1.75;">
+                            <p style="margin:0 0 22px;">Dear ${safeName},</p>
+                            <p style="margin:0 0 22px;">Thank you for contacting Joe's Excellent Events &amp; Management. Your enquiry has been received safely, and a member of our team will respond as soon as possible.</p>
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:28px 0;background:#0b2233;border-left:4px solid #ff6a00;border-radius:12px;">
+                                <tr>
+                                    <td style="padding:20px 24px;">
+                                        <p style="margin:0 0 8px;color:#ffb066;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Your enquiry subject</p>
+                                        <p style="margin:0;color:#ffffff;font-size:17px;line-height:1.6;">${safeSubject}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:0 0 22px;">Please keep this email for your records. There is no need to submit the form again.</p>
+                            <p style="margin:34px 0 0;">Kind regards,<br><strong style="color:#ffb066;">Joe's Excellent Events &amp; Management</strong></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:20px 42px 30px;text-align:center;color:#b9c7d2;font-size:13px;line-height:1.6;border-top:1px solid rgba(255,255,255,0.12);">
+                            This acknowledgement was sent automatically in response to your website enquiry.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`
             });
