@@ -131,6 +131,14 @@ function requireEditor(req, res, next) {
     next();
 }
 
+function requireOwner(req, res, next) {
+    if (!req.user || String(req.user.role || "").toLowerCase() !== "owner") {
+        return res.status(403).json({ message: "Owner access required." });
+    }
+
+    next();
+}
+
 /* =====================================================
    HELPERS
 ===================================================== */
@@ -1308,6 +1316,105 @@ async function listApplicationsHandler(req, res) {
 app.get("/api/admin/applications", requireAuth, listApplicationsHandler);
 app.get("/api/applications", requireAuth, listApplicationsHandler);
 
+function calculateApplicationAtsScore(application) {
+    let score = 0;
+
+    if (application.fullName) score += 10;
+    if (application.email) score += 10;
+    if (application.phone) score += 10;
+    if (application.position) score += 10;
+    if (application.availability) score += 10;
+    if (application.message && application.message.length > 20) score += 15;
+    if (application.cv) score += 15;
+    if (application.rating) score += Number(application.rating) * 4;
+
+    return Math.min(score, 100);
+}
+
+function csvCell(value) {
+    let text = value === null || value === undefined ? "" : String(value);
+
+    // Prevent spreadsheet formula execution when a CSV is opened in Excel or similar software.
+    if (/^[=+\-@]/.test(text)) {
+        text = `'${text}`;
+    }
+
+    return `"${text.replace(/"/g, '""')}"`;
+}
+
+function formatCsvApplicationDate(value) {
+    if (!value) return "N/A";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+
+    return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
+
+async function exportApplicationsCsvHandler(req, res) {
+    try {
+        const requestedIds = Array.isArray(req.body?.applicationIds)
+            ? [...new Set(req.body.applicationIds.map(id => clean(id)).filter(Boolean))]
+            : [];
+
+        if (!requestedIds.length) {
+            return res.status(400).json({ message: "No applications selected for export." });
+        }
+
+        if (requestedIds.length > 1000) {
+            return res.status(400).json({ message: "Too many applications selected for one export." });
+        }
+
+        const documents = await Promise.all(
+            requestedIds.map(id => db.collection("applications").doc(id).get())
+        );
+
+        const applications = documents
+            .filter(doc => doc.exists)
+            .map(normaliseApplicationForClient);
+
+        const rows = applications.map(application => [
+            application.fullName || "",
+            application.email || "",
+            application.position || "",
+            formatCsvApplicationDate(application.createdAt),
+            application.status || "New",
+            application.rating || "",
+            calculateApplicationAtsScore(application),
+            application.notes || ""
+        ].map(csvCell).join(","));
+
+        const csv = [
+            ["Name", "Email", "Position", "Date Applied", "Status", "Rating", "ATS Score", "Notes"].map(csvCell).join(","),
+            ...rows
+        ].join("\n");
+
+        await logAudit({
+            actionType: "APPLICATIONS_EXPORTED",
+            actorType: "ADMIN",
+            actorEmail: req.user.email || "",
+            description: `${applications.length} application record(s) exported to CSV.`,
+            extra: {
+                role: req.user.role,
+                recordCount: applications.length
+            }
+        });
+
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", 'attachment; filename="filtered-applications.csv"');
+        res.send(`\uFEFF${csv}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to export applications." });
+    }
+}
+
+app.post("/api/admin/applications/export-csv", requireAuth, requireOwner, exportApplicationsCsvHandler);
+
 
 
 async function listAuditLogsHandler(req, res) {
@@ -1519,8 +1626,8 @@ async function deleteApplicationHandler(req, res) {
     }
 }
 
-app.delete("/api/admin/applications/:id", requireAuth, requireEditor, deleteApplicationHandler);
-app.delete("/api/applications/:id", requireAuth, requireEditor, deleteApplicationHandler);
+app.delete("/api/admin/applications/:id", requireAuth, requireOwner, deleteApplicationHandler);
+app.delete("/api/applications/:id", requireAuth, requireOwner, deleteApplicationHandler);
 
 /* =====================================================
    ADMIN EMAIL ACTIONS
@@ -2114,7 +2221,7 @@ app.patch("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, re
     }
 });
 
-app.delete("/api/admin/vacancies/:id", requireAuth, requireEditor, async (req, res) => {
+app.delete("/api/admin/vacancies/:id", requireAuth, requireOwner, async (req, res) => {
     try {
         await db.collection("vacancies").doc(req.params.id).delete();
 
@@ -3453,9 +3560,9 @@ async function deleteContactMessageHandler(req, res) {
 app.get("/api/admin/contact-messages", requireAuth, listContactMessagesHandler);
 app.get("/api/contact-messages", requireAuth, listContactMessagesHandler);
 app.patch("/api/contact-messages/:id", requireAuth, requireEditor, updateContactMessageHandler);
-app.delete("/api/contact-messages/:id", requireAuth, requireEditor, deleteContactMessageHandler);
+app.delete("/api/contact-messages/:id", requireAuth, requireOwner, deleteContactMessageHandler);
 app.patch("/api/admin/contact-messages/:id", requireAuth, requireEditor, updateContactMessageHandler);
-app.delete("/api/admin/contact-messages/:id", requireAuth, requireEditor, deleteContactMessageHandler);
+app.delete("/api/admin/contact-messages/:id", requireAuth, requireOwner, deleteContactMessageHandler);
 
 
 
@@ -4117,15 +4224,15 @@ app.get("/api/candidate/document/:documentId", requireCandidateAuth, candidateEm
 app.get("/api/admin/employment-document-assignments", requireAuth, listEmploymentDocumentAssignmentsHandler);
 app.get("/api/admin/employment-document-assignments/:candidateId", requireAuth, getEmploymentDocumentAssignmentHandler);
 app.post("/api/admin/employment-document-assignments", requireAuth, requireEditor, saveEmploymentDocumentAssignmentHandler);
-app.delete("/api/admin/employment-document-assignments/:candidateId", requireAuth, requireEditor, deleteEmploymentDocumentAssignmentHandler);
+app.delete("/api/admin/employment-document-assignments/:candidateId", requireAuth, requireOwner, deleteEmploymentDocumentAssignmentHandler);
 
 app.get("/api/admin/employment-documents", requireAuth, listEmploymentDocumentsHandler);
 app.get("/api/employment-documents", requireAuth, listEmploymentDocumentsHandler);
 app.post("/api/admin/employment-documents/upload", requireAuth, requireEditor, upload.single("employmentDocumentFile"), createEmploymentDocumentUploadHandler);
 app.post("/api/admin/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
 app.post("/api/employment-documents", requireAuth, requireEditor, createEmploymentDocumentHandler);
-app.delete("/api/admin/employment-documents/:id", requireAuth, requireEditor, deleteEmploymentDocumentHandler);
-app.delete("/api/employment-documents/:id", requireAuth, requireEditor, deleteEmploymentDocumentHandler);
+app.delete("/api/admin/employment-documents/:id", requireAuth, requireOwner, deleteEmploymentDocumentHandler);
+app.delete("/api/employment-documents/:id", requireAuth, requireOwner, deleteEmploymentDocumentHandler);
 
 /* =====================================================
    FALLBACK
