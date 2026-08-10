@@ -1,7 +1,7 @@
 const API_BASE = "";
 
 let authToken = localStorage.getItem("adminToken") || "";
-let adminRole = localStorage.getItem("adminRole") || "";
+let adminRole = String(localStorage.getItem("adminRole") || "").trim().toLowerCase();
 let selectedApplicationId = null;
 let selectedContactMessageId = null;
 let modalApplicationId = null;
@@ -362,6 +362,12 @@ function calculateATSScore(application) {
 }
 
 function showLoggedInInfo() {
+    const exportCsvButton = document.getElementById("exportCsvBtn");
+    if (exportCsvButton) {
+        exportCsvButton.hidden = adminRole !== "owner";
+        exportCsvButton.disabled = adminRole !== "owner";
+    }
+
     if (adminInfo) {
         adminInfo.innerHTML = `<h3>Logged In As: ${escapeHtml(adminRole.toUpperCase())}</h3>`;
     }
@@ -371,7 +377,9 @@ function showLoggedInInfo() {
             <strong>Permissions:</strong>
             ${adminRole === "viewer"
                 ? "View-only access enabled."
-                : "Full recruitment management access enabled."}
+                : adminRole === "owner"
+                    ? "Owner access enabled, including deletion and sensitive export controls."
+                    : "Recruitment management access enabled. Destructive actions and sensitive exports require Owner access."}
         `;
     }
 }
@@ -397,7 +405,7 @@ async function loginAdmin() {
         }
 
         authToken = result.token;
-        adminRole = result.role;
+        adminRole = String(result.role || "").trim().toLowerCase();
 
         localStorage.setItem("adminToken", authToken);
         localStorage.setItem("adminRole", adminRole);
@@ -696,7 +704,7 @@ function renderApplications(applications) {
                 <button onclick="sendOfferEmail('${id}')">Offer Job</button>
                 <button onclick="markCandidateHired('${id}')">Mark Hired</button>
                 <button onclick="quickRejectApplication('${id}')">Reject</button>
-                <button onclick="deleteApplication('${id}')">Delete</button>
+                ${adminRole === "owner" ? `<button onclick="deleteApplication('${id}')">Delete</button>` : ""}
             </td>
         `;
 
@@ -1325,8 +1333,8 @@ async function saveCandidateNotes() {
 }
 
 async function deleteApplication(id) {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot delete applications.", "error");
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can delete applications.", "error");
         return;
     }
 
@@ -1633,7 +1641,7 @@ function renderContactMessages(messages) {
             <td>
                 <button onclick="viewContactMessage('${id}', '${name}', '${email}', '${phone}', '${subject}', '${text}')">View</button>
                 <button onclick="markMessageRead('${id}')">Mark Read</button>
-                <button onclick="deleteContactMessage('${id}')">Delete</button>
+                ${adminRole === "owner" ? `<button onclick="deleteContactMessage('${id}')">Delete</button>` : ""}
             </td>
         `;
 
@@ -1681,8 +1689,8 @@ async function markMessageRead(id) {
 }
 
 async function deleteContactMessage(id) {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot delete messages.", "error");
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can delete messages.", "error");
         return;
     }
 
@@ -2692,44 +2700,53 @@ async function restoreEmailTemplate(id = "") {
 }
 
 
-function exportApplicationsCSV() {
-    showToast("CSV export started.", "info");
+async function exportApplicationsCSV() {
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can export application data.", "error");
+        return;
+    }
 
     const applicationsToExport = getFilteredApplications();
+    const applicationIds = applicationsToExport.map(application => application.id).filter(Boolean);
 
-    const rows = applicationsToExport.map(application => {
-        return [
-            application.fullName || "",
-            application.email || "",
-            application.position || "",
-            formatDate(application.createdAt),
-            normaliseStatus(application.status),
-            application.rating || "",
-            calculateATSScore(application),
-            application.notes || ""
-        ].map(value => `"${String(value).replace(/"/g, '""')}"`).join(",");
-    });
+    if (!applicationIds.length) {
+        showToast("There are no filtered applications to export.", "error");
+        return;
+    }
 
-    const csvContent = [
-        `"Name","Email","Position","Date Applied","Status","Rating","ATS Score","Notes"`,
-        ...rows
-    ].join("\n");
+    showToast("CSV export started.", "info");
 
-    const blob = new Blob([csvContent], {
-        type: "text/csv"
-    });
+    try {
+        const response = await fetch(`${API_BASE}/api/admin/applications/export-csv`, {
+            method: "POST",
+            headers: {
+                ...getAuthHeaders(),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ applicationIds })
+        });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+        if (!response.ok) {
+            const result = await response.json().catch(() => ({}));
+            throw new Error(result.message || "CSV export failed.");
+        }
 
-    link.href = url;
-    link.download = "filtered-applications.csv";
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        link.href = url;
+        link.download = "filtered-applications.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-    URL.revokeObjectURL(url);
+        showToast("CSV export completed.", "success");
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || "CSV export failed.", "error");
+    }
 }
 
 
@@ -3179,7 +3196,7 @@ function renderVacancies(vacancies) {
                     <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Draft')">Draft</button>
                     <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Published')">Publish</button>
                     <button type="button" class="secondary-action" onclick="setVacancyStatus('${id}', 'Closed')">Close</button>
-                    <button type="button" class="danger-action" onclick="deleteVacancy('${id}')">Delete</button>
+                    ${adminRole === "owner" ? `<button type="button" class="danger-action" onclick="deleteVacancy('${id}')">Delete</button>` : ""}
                 </div>
             </td>
         `;
@@ -3313,8 +3330,8 @@ async function setVacancyStatus(id, status) {
 }
 
 async function deleteVacancy(id) {
-    if (adminRole === "viewer") {
-        showToast("Viewer accounts cannot delete vacancies.", "error");
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can delete vacancies.", "error");
         return;
     }
 
@@ -3791,7 +3808,7 @@ function renderEmploymentDocuments() {
                 <td>${escapeHtml(formatEmploymentDocumentDate(documentRecord.uploadedAt))}</td>
                 <td><span class="ats-status-badge ${statusClass}">${statusText}</span></td>
                 <td>
-                    <button type="button" onclick="deleteEmploymentDocument('${escapeHtml(documentRecord.id)}')">Delete</button>
+                    ${adminRole === "owner" ? `<button type="button" onclick="deleteEmploymentDocument('${escapeHtml(documentRecord.id)}')">Delete</button>` : ""}
                 </td>
             </tr>
         `;
@@ -3874,6 +3891,11 @@ async function uploadEmploymentDocument() {
 }
 
 async function deleteEmploymentDocument(id) {
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can delete employment documents.", "error");
+        return;
+    }
+
     if (!id) return;
 
     if (!confirm("Delete this employment document record?")) {
@@ -4073,7 +4095,7 @@ function renderEmploymentDocumentAssignments() {
             <td>${escapeHtml(formatEmploymentDocumentDate(assignment.updatedAt || assignment.assignedAt))}</td>
             <td>
                 <button type="button" onclick="selectEmploymentDocumentAssignment('${escapeHtml(assignment.candidateId || assignment.id)}')">Select</button>
-                <button type="button" onclick="clearEmploymentDocumentAssignment('${escapeHtml(assignment.candidateId || assignment.id)}')">Clear</button>
+                ${adminRole === "owner" ? `<button type="button" onclick="clearEmploymentDocumentAssignment('${escapeHtml(assignment.candidateId || assignment.id)}')">Clear</button>` : ""}
             </td>
         </tr>
     `).join("");
@@ -4187,6 +4209,11 @@ async function saveEmploymentDocumentAssignment() {
 }
 
 async function clearEmploymentDocumentAssignment(candidateIdOverride = "") {
+    if (adminRole !== "owner") {
+        showToast("Only the Owner can clear employment document assignments.", "error");
+        return;
+    }
+
     const candidateId = candidateIdOverride || (employmentDocumentCandidateIdInput ? employmentDocumentCandidateIdInput.value.trim() : "");
 
     if (!candidateId) {
