@@ -4131,9 +4131,6 @@ async function saveEmploymentDocumentAssignment() {
 
     const payload = {
         candidateId,
-        candidateName: getCandidateDisplayName(candidate),
-        candidateEmail: candidate.email || "",
-        position: candidate.position || "",
         employmentContractDocumentId: employmentContractDocumentIdInput && employmentContractDocumentIdInput.value
             ? employmentContractDocumentIdInput.value
             : existingAssignment.employmentContractDocumentId || "",
