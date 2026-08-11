@@ -3934,27 +3934,83 @@ async function saveEmploymentDocumentAssignmentHandler(req, res) {
         }
 
         const candidate = { id: candidateDoc.id, ...candidateDoc.data() };
-        const candidateName = clean(req.body.candidateName) || candidate.fullName || candidate.name || "Candidate";
-        const candidateEmail = clean(req.body.candidateEmail) || candidate.email || "";
-        const position = clean(req.body.position) || candidate.position || "";
+        const candidateName = candidate.fullName || candidate.name || "Candidate";
+        const candidateEmail = candidate.email || "";
+        const position = candidate.position || "";
+
+        const candidateStatus = clean(candidate.status).toLowerCase();
+        const employmentStatus = clean(candidate.employmentStatus).toLowerCase();
+        const offerResponse = clean(candidate.offerResponseStatus || candidate.offerResponse).toLowerCase();
+        const candidateIsAssignable =
+            candidateStatus === "hired" ||
+            employmentStatus === "hired" ||
+            candidateStatus === "offer accepted" ||
+            offerResponse === "offer accepted";
+
+        if (!candidateIsAssignable) {
+            return res.status(400).json({
+                message: "Employment documents can only be assigned to a hired candidate or a candidate with an accepted offer."
+            });
+        }
+
+        const requestedDocumentIds = {
+            employmentContractDocumentId: clean(req.body.employmentContractDocumentId),
+            welcomePackDocumentId: clean(req.body.welcomePackDocumentId),
+            handbookDocumentId: clean(req.body.handbookDocumentId),
+            inductionPackDocumentId: clean(req.body.inductionPackDocumentId),
+            companyPoliciesDocumentId: clean(req.body.companyPoliciesDocumentId)
+        };
+
+        if (!Object.values(requestedDocumentIds).some(Boolean)) {
+            return res.status(400).json({ message: "Please select at least one employment document before assigning." });
+        }
+
+        const expectedDocumentTypes = {
+            employmentContractDocumentId: "Employment Contract",
+            welcomePackDocumentId: "Welcome Pack",
+            handbookDocumentId: "Employee Handbook",
+            inductionPackDocumentId: "Induction Pack",
+            companyPoliciesDocumentId: "Company Policies"
+        };
+
+        for (const [fieldName, documentId] of Object.entries(requestedDocumentIds)) {
+            if (!documentId) continue;
+
+            const documentRecord = await getEmploymentDocumentRecordById(documentId);
+            if (!documentRecord) {
+                return res.status(400).json({
+                    message: `${expectedDocumentTypes[fieldName]} document is unavailable or inactive.`
+                });
+            }
+
+            if (clean(documentRecord.documentType) !== expectedDocumentTypes[fieldName]) {
+                return res.status(400).json({
+                    message: `Selected document does not match the required ${expectedDocumentTypes[fieldName]} type.`
+                });
+            }
+        }
+
+        const assignmentRef = db.collection("employmentDocumentAssignments").doc(candidateId);
+        const existingAssignmentDoc = await assignmentRef.get();
+        const existingAssignment = existingAssignmentDoc.exists
+            ? normaliseEmploymentDocumentAssignmentForClient(existingAssignmentDoc)
+            : null;
+        const timestamp = nowIso();
 
         const assignmentRecord = {
             candidateId,
             candidateName,
             candidateEmail,
             position,
-            employmentContractDocumentId: clean(req.body.employmentContractDocumentId),
-            welcomePackDocumentId: clean(req.body.welcomePackDocumentId),
-            handbookDocumentId: clean(req.body.handbookDocumentId),
-            inductionPackDocumentId: clean(req.body.inductionPackDocumentId),
-            companyPoliciesDocumentId: clean(req.body.companyPoliciesDocumentId),
-            assignedBy: req.user?.email || "Unknown Admin",
-            assignedAt: req.body.assignedAt || nowIso(),
-            updatedAt: nowIso(),
+            ...requestedDocumentIds,
+            assignedBy: existingAssignment?.assignedBy || req.user?.email || "Unknown Admin",
+            assignedAt: existingAssignment?.assignedAt || timestamp,
+            updatedBy: req.user?.email || "Unknown Admin",
+            updatedAt: timestamp,
             active: true
         };
 
-        await db.collection("employmentDocumentAssignments").doc(candidateId).set(assignmentRecord, { merge: true });
+        await assignmentRef.set(assignmentRecord, { merge: true });
 
         await db.collection("applications").doc(candidateId).set({
             documentDownloadStatus: "Available",
