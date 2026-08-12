@@ -4228,41 +4228,39 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
             return fileStream.pipe(res);
         }
 
-        const safeDocumentType = escapeHtml(documentRecord.documentType);
-        const safeDocumentName = escapeHtml(documentRecord.documentName);
-        const safeCandidateName = escapeHtml(candidateName);
-        const safeAccessedAt = escapeHtml(accessedAt);
+        if (!documentRecord.storagePath) {
+            return res.status(404).json({ message: "No stored file is connected to this employment document." });
+        }
 
-        const viewHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${safeDocumentName}</title>
-    <style>
-        body { font-family: Arial, Helvetica, sans-serif; background:#061726; color:#ffffff; padding:40px; line-height:1.6; }
-        .document-card { max-width:900px; margin:auto; background:#13283b; border:1px solid rgba(255,176,0,.45); border-radius:18px; padding:34px; }
-        h1 { color:#ff6a00; margin-top:0; }
-        .badge { display:inline-block; background:#27ae60; color:#ffffff; border-radius:999px; padding:8px 14px; font-weight:800; }
-        .muted { color:#d7e4ef; }
-    </style>
-</head>
-<body>
-    <main class="document-card">
-        <h1>${safeDocumentType}</h1>
-        <p class="badge">Secure View Confirmed</p>
-        <h2>${safeDocumentName}</h2>
-        <p><strong>Candidate:</strong> ${safeCandidateName}</p>
-        <p><strong>Accessed:</strong> ${safeAccessedAt}</p>
-        <p class="muted">This secure document view has been validated against the candidate portal assignment record and recorded in the audit trail.</p>
-        <p class="muted">Full PDF/file preview handling can be connected in the next phase.</p>
-    </main>
-</body>
-</html>`;
+        const file = employmentDocumentsBucket.file(documentRecord.storagePath);
+        const [exists] = await file.exists();
 
-        res.setHeader("Content-Type", "text/html; charset=utf-8");
-        res.setHeader("Content-Disposition", `inline; filename="${safeFilenameBase}.html"`);
-        return res.send(viewHtml);
+        if (!exists) {
+            return res.status(404).json({ message: "Stored employment document file was not found." });
+        }
+
+        const viewFileName = String(
+            documentRecord.originalFileName ||
+            documentRecord.fileName ||
+            `${safeFilenameBase}.pdf`
+        ).replace(/[\r\n"]/g, "").trim() || `${safeFilenameBase}.pdf`;
+
+        res.setHeader("Content-Type", documentRecord.fileType || "application/pdf");
+        res.setHeader("Content-Disposition", `inline; filename="${viewFileName}"`);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+
+        const fileStream = file.createReadStream();
+
+        fileStream.on("error", (streamError) => {
+            console.error("Employment document view stream failed:", streamError);
+            if (!res.headersSent) {
+                res.status(500).json({ message: "Failed to view employment document file." });
+            } else {
+                res.end();
+            }
+        });
+
+        return fileStream.pipe(res);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message || "Failed to access employment document." });
