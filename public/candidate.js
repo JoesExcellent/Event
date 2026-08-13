@@ -19,6 +19,10 @@ const acceptInterviewBtn = document.getElementById("acceptInterviewBtn");
 const declineInterviewBtn = document.getElementById("declineInterviewBtn");
 const interviewResponseActions = document.getElementById("interviewResponseActions");
 const interviewResponseMessage = document.getElementById("interviewResponseMessage");
+const acceptOfferBtn = document.getElementById("acceptOfferBtn");
+const declineOfferBtn = document.getElementById("declineOfferBtn");
+const offerResponseActions = document.getElementById("offerResponseActions");
+const offerResponseMessage = document.getElementById("offerResponseMessage");
 let currentCandidateProfile = null;
 
 function setText(id, value) {
@@ -357,6 +361,7 @@ function renderCandidate(candidate) {
     updateInterviewResponseControls(interviewResponseValue);
 
     setStatus("offerResponseStatus", candidate.offerResponseStatus || "Not Yet Recorded");
+    updateOfferResponseControls(candidate);
     setText("candidateStartDate", formatDate(candidate.candidateStartDate));
     setStatus("contractStatus", candidate.contractStatus || "Not Sent");
     setStatus("onboardingStatus", candidate.onboardingStatus || "Not Started");
@@ -584,6 +589,112 @@ async function submitContractAction(action) {
 }
 
 
+function updateOfferResponseControls(candidate) {
+    const offerResponse = String(candidate?.offerResponseStatus || "").toLowerCase();
+    const applicationStatus = String(candidate?.status || "").toLowerCase();
+
+    const offerExists =
+        offerResponse.includes("offer pending") ||
+        offerResponse.includes("offer accepted") ||
+        offerResponse.includes("offer declined") ||
+        applicationStatus === "offer made" ||
+        applicationStatus === "offer accepted" ||
+        applicationStatus === "offer declined";
+
+    const accepted = offerResponse.includes("accepted") || applicationStatus === "offer accepted";
+    const declined = offerResponse.includes("declined") || applicationStatus === "offer declined";
+    const pending = offerExists && !accepted && !declined;
+
+    if (offerResponseActions) {
+        offerResponseActions.style.display = offerExists ? "grid" : "none";
+    }
+
+    if (!offerExists) {
+        return;
+    }
+
+    if (acceptOfferBtn) {
+        acceptOfferBtn.disabled = false;
+        acceptOfferBtn.style.display = pending ? "inline-block" : "none";
+    }
+
+    if (declineOfferBtn) {
+        declineOfferBtn.disabled = false;
+        declineOfferBtn.style.display = pending ? "inline-block" : "none";
+    }
+
+    if (offerResponseMessage) {
+        if (accepted) {
+            offerResponseMessage.textContent = "You have accepted this conditional offer of employment. The recruitment team will now continue the hiring process.";
+            offerResponseMessage.style.color = "#7dffad";
+        } else if (declined) {
+            offerResponseMessage.textContent = "You have declined this conditional offer of employment. The recruitment team has been notified.";
+            offerResponseMessage.style.color = "#ff9a9a";
+        } else {
+            offerResponseMessage.textContent = "A conditional offer of employment has been made to you. Please accept or decline the offer below.";
+            offerResponseMessage.style.color = "#ffcc66";
+        }
+    }
+}
+
+async function submitOfferResponse(responseValue) {
+    const token = getCandidateToken();
+
+    if (!token) {
+        showLogin("Please sign in again.");
+        return;
+    }
+
+    const isDecline = responseValue === "declined";
+    const isAccept = responseValue === "accepted";
+
+    if (isDecline && !window.confirm("Are you sure you want to decline this conditional offer of employment?")) {
+        return;
+    }
+
+    if (isAccept && !window.confirm("Are you sure you want to accept this conditional offer of employment?")) {
+        return;
+    }
+
+    if (acceptOfferBtn) acceptOfferBtn.disabled = true;
+    if (declineOfferBtn) declineOfferBtn.disabled = true;
+
+    if (offerResponseMessage) {
+        offerResponseMessage.textContent = isDecline ? "Declining offer..." : "Accepting offer...";
+        offerResponseMessage.style.color = "#ffffff";
+    }
+
+    try {
+        const response = await fetch("/api/candidate/offer-response", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ response: responseValue })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || "Failed to save offer response.");
+        }
+
+        renderCandidate(result.candidate);
+        setPortalRefreshMessage(result.message || "Offer response saved successfully.", "#7dffad");
+    } catch (error) {
+        console.error(error);
+
+        if (offerResponseMessage) {
+            offerResponseMessage.textContent = error.message || "Failed to save offer response.";
+            offerResponseMessage.style.color = "#ff9a9a";
+        }
+
+        if (acceptOfferBtn) acceptOfferBtn.disabled = false;
+        if (declineOfferBtn) declineOfferBtn.disabled = false;
+    }
+}
+
 function updateInterviewResponseControls(responseValue) {
     const response = String(responseValue || "").toLowerCase();
     const hasAccepted = response.includes("accepted");
@@ -704,6 +815,18 @@ if (acceptInterviewBtn) {
 if (declineInterviewBtn) {
     declineInterviewBtn.addEventListener("click", function () {
         submitInterviewResponse("declined");
+    });
+}
+
+if (acceptOfferBtn) {
+    acceptOfferBtn.addEventListener("click", function () {
+        submitOfferResponse("accepted");
+    });
+}
+
+if (declineOfferBtn) {
+    declineOfferBtn.addEventListener("click", function () {
+        submitOfferResponse("declined");
     });
 }
 
