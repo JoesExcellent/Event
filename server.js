@@ -2633,6 +2633,7 @@ function cleanCandidateApplication(application) {
         invitationSent: Boolean(application.invitationSent),
         reminderSent: Boolean(application.reminderSent),
         offerResponseStatus: application.offerResponseStatus || "Not Yet Recorded",
+        offerResponseAt: application.offerResponseAt || "",
         candidateStartDate: application.candidateStartDate || "",
         contractStatus: application.contractStatus || "Not Sent",
         onboardingStatus: application.onboardingStatus || "Not Started",
@@ -3124,6 +3125,173 @@ app.post("/api/candidate/interview-response", requireCandidateAuth, async (req, 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Failed to save interview response." });
+    }
+});
+
+
+/* =====================================================
+   CANDIDATE OFFER RESPONSE
+===================================================== */
+
+app.post("/api/candidate/offer-response", requireCandidateAuth, async (req, res) => {
+    try {
+        const responseValue = clean(req.body.response).toLowerCase();
+
+        const responseMap = {
+            accepted: {
+                status: "Offer Accepted",
+                offerResponseStatus: "Offer Accepted",
+                lastCommunicationAction: "Offer Accepted",
+                confirmationMessage: "Your conditional offer of employment has been accepted successfully."
+            },
+            declined: {
+                status: "Offer Declined",
+                offerResponseStatus: "Offer Declined",
+                lastCommunicationAction: "Offer Declined",
+                confirmationMessage: "Your conditional offer of employment has been declined."
+            }
+        };
+
+        const responseData = responseMap[responseValue];
+
+        if (!responseData) {
+            return res.status(400).json({ message: "Invalid offer response." });
+        }
+
+        const candidateId = req.candidate.applicationId;
+        const docRef = db.collection("applications").doc(candidateId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Candidate application not found." });
+        }
+
+        const application = {
+            id: doc.id,
+            ...doc.data()
+        };
+
+        if ((application.email || "").toLowerCase() !== (req.candidate.email || "").toLowerCase()) {
+            return res.status(403).json({ message: "Candidate profile mismatch." });
+        }
+
+        const currentOfferResponse = clean(application.offerResponseStatus);
+        const currentStatus = clean(application.status);
+        const offerExists =
+            application.offerSent === true ||
+            currentStatus === "Offer Made" ||
+            currentStatus === "Offer Accepted" ||
+            currentStatus === "Offer Declined" ||
+            ["Offer Pending", "Offer Accepted", "Offer Declined"].includes(currentOfferResponse);
+
+        if (!offerExists) {
+            return res.status(409).json({ message: "No active employment offer is available for this application." });
+        }
+
+        if (["Offer Accepted", "Offer Declined"].includes(currentOfferResponse) || ["Offer Accepted", "Offer Declined"].includes(currentStatus)) {
+            return res.status(409).json({ message: "Your offer response has already been recorded. Please contact the recruitment team if it needs to be changed." });
+        }
+
+        const timestamp = nowIso();
+        const responseHistoryEntry = {
+            action: responseData.lastCommunicationAction,
+            timestamp,
+            source: "Candidate Portal"
+        };
+
+        const updateData = {
+            status: responseData.status,
+            offerResponseStatus: responseData.offerResponseStatus,
+            offerResponseAt: timestamp,
+            lastCommunicationAction: responseData.lastCommunicationAction,
+            lastCommunicationAt: timestamp,
+            updatedAt: timestamp,
+            responseHistory: admin.firestore.FieldValue.arrayUnion(responseHistoryEntry)
+        };
+
+        if (responseValue === "accepted") {
+            updateData.contractStatus = application.contractStatus || "Sent";
+            updateData.onboardingStatus = application.onboardingStatus && application.onboardingStatus !== "Not Started"
+                ? application.onboardingStatus
+                : "In Progress";
+        } else {
+            updateData.contractStatus = application.contractStatus || "Sent";
+            updateData.onboardingStatus = application.onboardingStatus || "Not Started";
+        }
+
+        await docRef.update(updateData);
+
+        const existingResponseHistory = Array.isArray(application.responseHistory)
+            ? application.responseHistory
+            : [];
+
+        const updatedApplication = {
+            ...application,
+            ...updateData,
+            responseHistory: [
+                ...existingResponseHistory,
+                responseHistoryEntry
+            ]
+        };
+
+        await logCommunication({
+            applicationId: candidateId,
+            application: updatedApplication,
+            communicationType: "Candidate Offer Response",
+            action: responseData.lastCommunicationAction,
+            status: "Recorded",
+            subject: responseData.lastCommunicationAction,
+            extra: {
+                recruiterEmail: "candidate-portal",
+                followUp: responseValue === "declined"
+                    ? "Candidate declined the conditional offer. Recruiter follow-up required."
+                    : "Candidate accepted the conditional offer. Continue the hiring process."
+            }
+        });
+
+        const auditAction = responseValue === "accepted" ? "OFFER_ACCEPTED" : "OFFER_DECLINED";
+
+        await logAudit({
+            actionType: auditAction,
+            actorType: "CANDIDATE",
+            actorEmail: updatedApplication.email || req.candidate.email || "",
+            candidateId,
+            candidateName: updatedApplication.fullName || updatedApplication.name || "Candidate",
+            candidateEmail: updatedApplication.email || "",
+            description: `${updatedApplication.fullName || updatedApplication.name || "Candidate"} ${responseValue === "accepted" ? "accepted" : "declined"} the conditional offer of employment through the Candidate Portal.`,
+            extra: {
+                offerResponseStatus: responseData.offerResponseStatus,
+                position: updatedApplication.position || ""
+            }
+        });
+
+        await createNotification({
+            type: auditAction,
+            title: responseData.lastCommunicationAction,
+            candidateId,
+            candidateName: updatedApplication.fullName || updatedApplication.name || "Candidate",
+            candidateEmail: updatedApplication.email || "",
+            candidatePosition: updatedApplication.position || "",
+            message: `${updatedApplication.fullName || updatedApplication.name || "Candidate"} ${responseValue === "accepted" ? "accepted" : "declined"} the conditional offer of employment.`,
+            actorType: "CANDIDATE",
+            actorEmail: updatedApplication.email || req.candidate.email || "",
+            source: "Candidate Portal",
+            extra: {
+                offerResponseStatus: responseData.offerResponseStatus,
+                offerResponseAt: timestamp
+            }
+        });
+
+        const candidatePayload = cleanCandidateApplication(updatedApplication);
+        candidatePayload.employmentDocumentAssignment = await getEmploymentDocumentAssignmentForCandidate(candidateId);
+
+        res.json({
+            message: responseData.confirmationMessage,
+            candidate: candidatePayload
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to save offer response." });
     }
 });
 
