@@ -4110,6 +4110,48 @@ function selectEmploymentDocumentAssignment(candidateId) {
     showToast("Employment document assignment selected.", "info");
 }
 
+async function syncEmploymentDocumentWorkflowStatuses(candidate, assignmentPayload) {
+    if (!candidate || !candidate.id) return;
+
+    const updatePayload = {};
+
+    if (
+        assignmentPayload.employmentContractDocumentId &&
+        !["Sent", "Completed"].includes(String(candidate.contractStatus || "").trim())
+    ) {
+        updatePayload.contractStatus = "Sent";
+    }
+
+    if (
+        assignmentPayload.welcomePackDocumentId &&
+        String(candidate.welcomePackStatus || "Not Sent").trim() !== "Sent"
+    ) {
+        updatePayload.welcomePackStatus = "Sent";
+    }
+
+    if (
+        assignmentPayload.handbookDocumentId &&
+        String(candidate.handbookStatus || "Not Sent").trim() !== "Sent"
+    ) {
+        updatePayload.handbookStatus = "Sent";
+    }
+
+    if (!Object.keys(updatePayload).length) return;
+
+    const response = await fetch(`${API_BASE}/api/applications/${candidate.id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updatePayload)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Employment documents were assigned, but the candidate onboarding statuses could not be updated.");
+    }
+}
+
+
 async function saveEmploymentDocumentAssignment() {
     const candidateId = employmentDocumentCandidateIdInput ? employmentDocumentCandidateIdInput.value.trim() : "";
 
@@ -4183,11 +4225,28 @@ async function saveEmploymentDocumentAssignment() {
             throw new Error(data.message || "Failed to assign employment documents.");
         }
 
-        if (employmentDocumentAssignmentMessage) {
-            employmentDocumentAssignmentMessage.innerHTML = `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment documents assigned successfully.")}</p>`;
+        let workflowSyncError = null;
+
+        try {
+            await syncEmploymentDocumentWorkflowStatuses(candidate, payload);
+        } catch (syncError) {
+            console.error(syncError);
+            workflowSyncError = syncError;
         }
 
-        showToast(data.message || "Employment documents assigned successfully.", "success");
+        if (employmentDocumentAssignmentMessage) {
+            employmentDocumentAssignmentMessage.innerHTML = workflowSyncError
+                ? `<p style="color:#ffd166; font-weight:700;">Employment documents assigned successfully, but the Offer & Onboarding status could not be updated automatically.</p>`
+                : `<p style="color:#7dffad; font-weight:700;">${escapeHtml(data.message || "Employment documents assigned successfully.")}</p>`;
+        }
+
+        showToast(
+            workflowSyncError
+                ? "Documents assigned, but Offer & Onboarding status sync needs attention."
+                : (data.message || "Employment documents assigned successfully."),
+            workflowSyncError ? "error" : "success"
+        );
+
         await loadApplications();
         await loadEmploymentDocumentAssignments();
         renderEmploymentDocumentAssignmentControls();
