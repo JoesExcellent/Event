@@ -2257,7 +2257,7 @@ async function saveOfferTrackingForApplication(id, payload, showSuccess = true) 
     renderOfferHiringCentre();
     renderOfferTrackingTable();
     renderPortalAccessTable();
-    renderVacancyIntelligence();
+    renderVacancyIntelligencePanel(allVacancies);
 
     if (showSuccess) {
         showToast(result.message || "Offer tracking saved.", "success");
