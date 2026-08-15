@@ -116,7 +116,6 @@ const employmentDocumentCandidatePositionInput = document.getElementById("employ
 const employmentContractDocumentIdInput = document.getElementById("employmentContractDocumentId");
 const welcomePackDocumentIdInput = document.getElementById("welcomePackDocumentId");
 const handbookDocumentIdInput = document.getElementById("handbookDocumentId");
-const inductionPackDocumentIdInput = document.getElementById("inductionPackDocumentId");
 const companyPoliciesDocumentIdInput = document.getElementById("companyPoliciesDocumentId");
 const employmentDocumentsLastUpdatedInput = document.getElementById("employmentDocumentsLastUpdated");
 const employmentDocumentsTableBody = document.getElementById("employmentDocumentsTableBody");
@@ -4008,11 +4007,6 @@ function renderEmploymentDocumentSelectors(assignment = {}) {
         autoSelectSingleEmploymentDocument(handbookDocumentIdInput);
     }
 
-    if (inductionPackDocumentIdInput) {
-        inductionPackDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Induction Pack", assignment.inductionPackDocumentId);
-        autoSelectSingleEmploymentDocument(inductionPackDocumentIdInput);
-    }
-
     if (companyPoliciesDocumentIdInput) {
         companyPoliciesDocumentIdInput.innerHTML = getEmploymentDocumentTypeOptions("Company Policies", assignment.companyPoliciesDocumentId);
         autoSelectSingleEmploymentDocument(companyPoliciesDocumentIdInput);
@@ -4045,7 +4039,6 @@ function updateEmploymentDocumentAssignmentFormFromCandidate(candidateId) {
     if (employmentContractDocumentIdInput) employmentContractDocumentIdInput.value = assignment.employmentContractDocumentId || "";
     if (welcomePackDocumentIdInput) welcomePackDocumentIdInput.value = assignment.welcomePackDocumentId || "";
     if (handbookDocumentIdInput) handbookDocumentIdInput.value = assignment.handbookDocumentId || "";
-    if (inductionPackDocumentIdInput) inductionPackDocumentIdInput.value = assignment.inductionPackDocumentId || "";
     if (companyPoliciesDocumentIdInput) companyPoliciesDocumentIdInput.value = assignment.companyPoliciesDocumentId || "";
 }
 
@@ -4090,7 +4083,6 @@ function renderEmploymentDocumentAssignments() {
             <td>${getEmploymentDocumentStatusBadge(assignment.employmentContractDocumentId)}</td>
             <td>${getEmploymentDocumentStatusBadge(assignment.welcomePackDocumentId)}</td>
             <td>${getEmploymentDocumentStatusBadge(assignment.handbookDocumentId)}</td>
-            <td>${getEmploymentDocumentStatusBadge(assignment.inductionPackDocumentId)}</td>
             <td>${getEmploymentDocumentStatusBadge(assignment.companyPoliciesDocumentId)}</td>
             <td>${escapeHtml(formatEmploymentDocumentDate(assignment.updatedAt || assignment.assignedAt))}</td>
             <td>
@@ -4182,9 +4174,6 @@ async function saveEmploymentDocumentAssignment() {
         handbookDocumentId: handbookDocumentIdInput && handbookDocumentIdInput.value
             ? handbookDocumentIdInput.value
             : existingAssignment.handbookDocumentId || "",
-        inductionPackDocumentId: inductionPackDocumentIdInput && inductionPackDocumentIdInput.value
-            ? inductionPackDocumentIdInput.value
-            : existingAssignment.inductionPackDocumentId || "",
         companyPoliciesDocumentId: companyPoliciesDocumentIdInput && companyPoliciesDocumentIdInput.value
             ? companyPoliciesDocumentIdInput.value
             : existingAssignment.companyPoliciesDocumentId || ""
@@ -4194,7 +4183,6 @@ async function saveEmploymentDocumentAssignment() {
         payload.employmentContractDocumentId ||
         payload.welcomePackDocumentId ||
         payload.handbookDocumentId ||
-        payload.inductionPackDocumentId ||
         payload.companyPoliciesDocumentId
     );
 

@@ -393,23 +393,20 @@ function renderCandidate(candidate) {
     const hasEmploymentContract = Boolean(employmentDocumentAssignment.employmentContractDocumentId || employmentDocumentAssignment.employmentContract);
     const hasWelcomePack = Boolean(employmentDocumentAssignment.welcomePackDocumentId || employmentDocumentAssignment.welcomePack);
     const hasHandbook = Boolean(employmentDocumentAssignment.handbookDocumentId || employmentDocumentAssignment.employeeHandbook || employmentDocumentAssignment.handbook);
-    const hasInductionPack = Boolean(employmentDocumentAssignment.inductionPackDocumentId || employmentDocumentAssignment.inductionPack);
     const hasCompanyPolicies = Boolean(employmentDocumentAssignment.companyPoliciesDocumentId || employmentDocumentAssignment.companyPolicies);
 
     setStatus("candidateEmploymentContractStatus", hasEmploymentContract ? "Available" : "Not Available");
     setStatus("candidateWelcomePackStatus", hasWelcomePack ? "Available" : "Not Available");
     setStatus("candidateHandbookStatus", hasHandbook ? "Available" : "Not Available");
-    setStatus("candidateInductionPackStatus", hasInductionPack ? "Available" : "Not Available");
     setStatus("candidatePoliciesStatus", hasCompanyPolicies ? "Available" : "Not Available");
 
     const assignedDocuments = employmentDocumentAssignment.assignedDocuments || {};
     setDocumentName("candidateEmploymentContractName", assignedDocuments.employmentContract, "Employment Contract");
     setDocumentName("candidateWelcomePackName", assignedDocuments.welcomePack, "Welcome Pack");
     setDocumentName("candidateHandbookName", assignedDocuments.employeeHandbook, "Employee Handbook");
-    setDocumentName("candidateInductionPackName", assignedDocuments.inductionPack, "Induction Pack");
     setDocumentName("candidatePoliciesName", assignedDocuments.companyPolicies, "Company Policies");
 
-    const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasInductionPack, hasCompanyPolicies].filter(Boolean).length;
+    const availableDocumentCount = [hasEmploymentContract, hasWelcomePack, hasHandbook, hasCompanyPolicies].filter(Boolean).length;
     const resolvedDocumentCount = Object.values(assignedDocuments).filter(Boolean).length;
     const documentNote = availableDocumentCount
         ? `${availableDocumentCount} employment document${availableDocumentCount === 1 ? " is" : "s are"} available. ${resolvedDocumentCount ? "Document names are now shown above." : "Document names will appear after the document records are resolved."} Contract acceptance and electronic signature actions are available below when a contract is assigned.`
