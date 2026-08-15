@@ -3639,6 +3639,10 @@ async function createEmploymentDocumentHandler(req, res) {
             return res.status(400).json({ message: "Document name is required." });
         }
 
+        if (documentType.toLowerCase() === "induction pack") {
+            return res.status(400).json({ message: "Induction Pack is no longer used as an employment document type." });
+        }
+
         const documentRecord = {
             documentType,
             documentName,
@@ -3679,7 +3683,6 @@ function getEmploymentDocumentStorageFolder(documentType) {
     if (type === "employment contract") return "contracts";
     if (type === "welcome pack") return "welcome-packs";
     if (type === "employee handbook") return "handbooks";
-    if (type === "induction pack") return "inductions";
     if (type === "company policies") return "policies";
 
     return "general";
@@ -3724,6 +3727,10 @@ async function createEmploymentDocumentUploadHandler(req, res) {
 
         if (!documentName) {
             return res.status(400).json({ message: "Document name is required." });
+        }
+
+        if (documentType.toLowerCase() === "induction pack") {
+            return res.status(400).json({ message: "Induction Pack is no longer used as an employment document type." });
         }
 
         const fileError = validateEmploymentDocumentFile(req.file);
@@ -3847,7 +3854,6 @@ function normaliseEmploymentDocumentAssignmentForClient(doc) {
         employmentContractDocumentId: data.employmentContractDocumentId || data.employmentContract || "",
         welcomePackDocumentId: data.welcomePackDocumentId || data.welcomePack || "",
         handbookDocumentId: data.handbookDocumentId || data.employeeHandbook || data.handbook || "",
-        inductionPackDocumentId: data.inductionPackDocumentId || data.inductionPack || "",
         companyPoliciesDocumentId: data.companyPoliciesDocumentId || data.companyPolicies || "",
         assignedBy: data.assignedBy || "Unknown Admin",
         assignedAt: data.assignedAt || data.createdAt || "",
@@ -3874,13 +3880,11 @@ async function resolveEmploymentDocumentRecordsForAssignment(assignment) {
         employmentContract,
         welcomePack,
         employeeHandbook,
-        inductionPack,
         companyPolicies
     ] = await Promise.all([
         getEmploymentDocumentRecordById(assignment.employmentContractDocumentId),
         getEmploymentDocumentRecordById(assignment.welcomePackDocumentId),
         getEmploymentDocumentRecordById(assignment.handbookDocumentId),
-        getEmploymentDocumentRecordById(assignment.inductionPackDocumentId),
         getEmploymentDocumentRecordById(assignment.companyPoliciesDocumentId)
     ]);
 
@@ -3890,8 +3894,7 @@ async function resolveEmploymentDocumentRecordsForAssignment(assignment) {
             employmentContract,
             welcomePack,
             employeeHandbook,
-            inductionPack,
-            companyPolicies
+                companyPolicies
         }
     };
 }
@@ -3975,7 +3978,6 @@ async function saveEmploymentDocumentAssignmentHandler(req, res) {
             employmentContractDocumentId: clean(req.body.employmentContractDocumentId),
             welcomePackDocumentId: clean(req.body.welcomePackDocumentId),
             handbookDocumentId: clean(req.body.handbookDocumentId),
-            inductionPackDocumentId: clean(req.body.inductionPackDocumentId),
             companyPoliciesDocumentId: clean(req.body.companyPoliciesDocumentId)
         };
 
@@ -3987,7 +3989,6 @@ async function saveEmploymentDocumentAssignmentHandler(req, res) {
             employmentContractDocumentId: "Employment Contract",
             welcomePackDocumentId: "Welcome Pack",
             handbookDocumentId: "Employee Handbook",
-            inductionPackDocumentId: "Induction Pack",
             companyPoliciesDocumentId: "Company Policies"
         };
 
@@ -4147,7 +4148,6 @@ async function candidateEmploymentDocumentAccessHandler(req, res) {
             assignment.employmentContractDocumentId,
             assignment.welcomePackDocumentId,
             assignment.handbookDocumentId,
-            assignment.inductionPackDocumentId,
             assignment.companyPoliciesDocumentId
         ].filter(Boolean);
 
